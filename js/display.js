@@ -51,28 +51,46 @@ class Display {
     const baseWidth = (this.CHARS_WIDE * baseCharWidth) + (this.BORDER_SIZE * 2);
     const baseHeight = (this.LINES_TALL * baseLineHeight) + (this.BORDER_SIZE * 2);
     
-    // Calculate scale factor based on available screen space and pixel ratio
+    // Calculate scale factors separately for width and height
     const availableWidth = width * 0.9; // Use 90% of screen width
     const availableHeight = height * 0.7; // Use 70% of screen height
     
-    let scaleFactor = Math.min(
-      availableWidth / baseWidth,
-      availableHeight / baseHeight
-    );
+    let scaleFactorX = availableWidth / baseWidth;
+    let scaleFactorY = availableHeight / baseHeight;
     
-    // Ensure minimum readable size and account for high-DPI displays
-    scaleFactor = Math.max(scaleFactor, pixelRatio * 0.8);
-    scaleFactor = Math.max(1, Math.round(scaleFactor));
+    // Detect Kindle devices and adjust for their aspect ratios
+    const isKindleColorsoft = (width === 636 && height === 740) || (pixelRatio === 2 && width > 600 && width < 700);
+    const isKindleScribe = width > 1000 && height > 1000;
+    
+    if (isKindleColorsoft) {
+      // Kindle Colorsoft: reduce vertical scaling to prevent stretching
+      scaleFactorY *= 0.6; // Squish vertically by 40%
+      console.log('Kindle Colorsoft detected - applying vertical compression');
+    } else if (isKindleScribe) {
+      // Kindle Scribe: different aspect ratio handling
+      scaleFactorY *= 0.8;
+      console.log('Kindle Scribe detected - applying aspect ratio correction');
+    }
+    
+    // Ensure minimum readable size
+    scaleFactorX = Math.max(scaleFactorX, 1);
+    scaleFactorY = Math.max(scaleFactorY, 1);
+    
+    // Round for crisp rendering
+    scaleFactorX = Math.round(scaleFactorX);
+    scaleFactorY = Math.round(scaleFactorY);
     
     // Set dimensions
     this.LOGICAL_WIDTH = baseWidth;
     this.LOGICAL_HEIGHT = baseHeight;
     
-    // Configure canvas
+    // Configure canvas with separate X and Y scaling
     this.canvas.width = this.LOGICAL_WIDTH;
     this.canvas.height = this.LOGICAL_HEIGHT;
-    this.canvas.style.width = (this.LOGICAL_WIDTH * scaleFactor) + 'px';
-    this.canvas.style.height = (this.LOGICAL_HEIGHT * scaleFactor) + 'px';
+    this.canvas.style.width = (this.LOGICAL_WIDTH * scaleFactorX) + 'px';
+    this.canvas.style.height = (this.LOGICAL_HEIGHT * scaleFactorY) + 'px';
+    
+    console.log(`Display setup: ${width}x${height}, pixelRatio: ${pixelRatio}, scaleX: ${scaleFactorX}, scaleY: ${scaleFactorY}`);
     
     // Disable image smoothing for crisp scaling
     this.ctx.imageSmoothingEnabled = false;
