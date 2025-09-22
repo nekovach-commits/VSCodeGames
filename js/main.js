@@ -46,12 +46,12 @@ class TRS80System {
     this.display.setTextColor();
     const startPos = this.display.getTextStartPosition();
     
-    // Draw text
-    this.font.drawText(this.input.getText(), startPos.x, startPos.y);
+    // Draw text with scroll offset (pass text buffer directly)
+    this.font.drawText(this.input.textLines, startPos.x, startPos.y, this.input.scrollOffset);
     
     // Draw cursor if visible
     if (this.input.isCursorVisible()) {
-      this.font.drawCursor(this.input.getText(), startPos.x, startPos.y);
+      this.font.drawCursorAtScreenPosition(this.input.cursorRow, this.input.cursorCol, startPos.x, startPos.y, this.input.textLines, this.input.scrollOffset);
     }
   }
   

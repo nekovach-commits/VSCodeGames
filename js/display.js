@@ -126,8 +126,15 @@ class Display {
     this.ctx.fillRect(this.LOGICAL_WIDTH - borderThickness, 0, borderThickness, this.LOGICAL_HEIGHT); // Right
   }
   
-  drawPixelBlock(x, y, blockSize = this.BLOCK_SIZE) {
-    this.ctx.fillRect(x, y, blockSize, blockSize);
+  drawPixelBlock(x, y, blockSize = this.BLOCK_SIZE, color = null) {
+    if (color) {
+      const oldColor = this.ctx.fillStyle;
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(x, y, blockSize, blockSize);
+      this.ctx.fillStyle = oldColor;
+    } else {
+      this.ctx.fillRect(x, y, blockSize, blockSize);
+    }
   }
   
   setTextColor() {
