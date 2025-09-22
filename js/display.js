@@ -1,0 +1,165 @@
+// display.js - TRS-80 Model 100 Display and Graphics Module
+
+class Display {
+  constructor() {
+    // Display configuration
+    this.BLOCK_SIZE = 4; // 4x4 pixels for maximum crispness
+    this.GAP = 1;
+    this.CELL = this.BLOCK_SIZE + this.GAP;
+    
+    // Character grid dimensions
+    this.CHARS_WIDE = 40;
+    this.LINES_TALL = 10;
+    this.BORDER_SIZE = 4;
+    
+    // Canvas dimensions
+    this.LOGICAL_WIDTH = 0;
+    this.LOGICAL_HEIGHT = 0;
+    
+    // Canvas references
+    this.canvas = null;
+    this.ctx = null;
+    
+    // Colors
+    this.BACKGROUND_COLOR = '#c8d4b8'; // Light green LCD background
+    this.GRID_COLOR = '#b0c0a0'; // Slightly darker green for background grid blocks
+    this.TEXT_COLOR = '#1a3d1a'; // Dark green text blocks
+    this.BORDER_COLOR = '#1a3d1a'; // Dark green border
+  }
+  
+  init() {
+    this.canvas = document.getElementById('retro-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.setupCanvas();
+    return this;
+  }
+  
+  getScreenDimensions() {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      pixelRatio: window.devicePixelRatio || 1
+    };
+  }
+  
+  setupCanvas() {
+    const { width, height, pixelRatio } = this.getScreenDimensions();
+    
+    // Calculate responsive scaling for different devices
+    const baseCharWidth = (5 + 1) * this.CELL; // 6 cells per character  
+    const baseLineHeight = (7 + 1) * this.CELL; // 8 cells per line
+    const baseWidth = (this.CHARS_WIDE * baseCharWidth) + (this.BORDER_SIZE * 2);
+    const baseHeight = (this.LINES_TALL * baseLineHeight) + (this.BORDER_SIZE * 2);
+    
+    // Calculate scale factor based on available screen space and pixel ratio
+    const availableWidth = width * 0.9; // Use 90% of screen width
+    const availableHeight = height * 0.7; // Use 70% of screen height
+    
+    let scaleFactor = Math.min(
+      availableWidth / baseWidth,
+      availableHeight / baseHeight
+    );
+    
+    // Ensure minimum readable size and account for high-DPI displays
+    scaleFactor = Math.max(scaleFactor, pixelRatio * 0.8);
+    scaleFactor = Math.max(1, Math.round(scaleFactor));
+    
+    // Set dimensions
+    this.LOGICAL_WIDTH = baseWidth;
+    this.LOGICAL_HEIGHT = baseHeight;
+    
+    // Configure canvas
+    this.canvas.width = this.LOGICAL_WIDTH;
+    this.canvas.height = this.LOGICAL_HEIGHT;
+    this.canvas.style.width = (this.LOGICAL_WIDTH * scaleFactor) + 'px';
+    this.canvas.style.height = (this.LOGICAL_HEIGHT * scaleFactor) + 'px';
+    
+    // Disable image smoothing for crisp scaling
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.webkitImageSmoothingEnabled = false;
+    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.msImageSmoothingEnabled = false;
+  }
+  
+  clearScreen() {
+    this.ctx.fillStyle = this.BACKGROUND_COLOR;
+    this.ctx.fillRect(0, 0, this.LOGICAL_WIDTH, this.LOGICAL_HEIGHT);
+    
+    // Draw authentic LCD background grid
+    this.drawBackgroundGrid();
+  }
+  
+  drawBackgroundGrid() {
+    this.ctx.fillStyle = this.GRID_COLOR;
+    
+    // Calculate the text area dimensions
+    const textAreaWidth = this.CHARS_WIDE * (5 + 1) * this.CELL; // 40 chars * 6 cells each
+    const textAreaHeight = this.LINES_TALL * (7 + 1) * this.CELL; // 10 lines * 8 cells each
+    
+    // Starting position (after border)
+    const startX = this.BORDER_SIZE;
+    const startY = this.BORDER_SIZE;
+    
+    // Draw grid of background blocks covering the entire text area
+    for (let row = 0; row < this.LINES_TALL * 8; row++) { // 8 cells per line
+      for (let col = 0; col < this.CHARS_WIDE * 6; col++) { // 6 cells per character
+        const x = startX + col * this.CELL;
+        const y = startY + row * this.CELL;
+        
+        // Only draw if within bounds
+        if (x + this.BLOCK_SIZE <= this.LOGICAL_WIDTH - this.BORDER_SIZE && 
+            y + this.BLOCK_SIZE <= this.LOGICAL_HEIGHT - this.BORDER_SIZE) {
+          this.drawPixelBlock(x, y, this.BLOCK_SIZE);
+        }
+      }
+    }
+  }
+  
+  drawBorder() {
+    this.ctx.fillStyle = this.BORDER_COLOR;
+    const borderThickness = this.BORDER_SIZE;
+    
+    // Simple rectangular border like TRS-80 Model 100
+    this.ctx.fillRect(0, 0, this.LOGICAL_WIDTH, borderThickness); // Top
+    this.ctx.fillRect(0, this.LOGICAL_HEIGHT - borderThickness, this.LOGICAL_WIDTH, borderThickness); // Bottom
+    this.ctx.fillRect(0, 0, borderThickness, this.LOGICAL_HEIGHT); // Left
+    this.ctx.fillRect(this.LOGICAL_WIDTH - borderThickness, 0, borderThickness, this.LOGICAL_HEIGHT); // Right
+  }
+  
+  drawPixelBlock(x, y, blockSize = this.BLOCK_SIZE) {
+    this.ctx.fillRect(x, y, blockSize, blockSize);
+  }
+  
+  setTextColor() {
+    this.ctx.fillStyle = this.TEXT_COLOR;
+  }
+  
+  getTextStartPosition() {
+    return {
+      x: this.BORDER_SIZE,
+      y: this.BORDER_SIZE
+    };
+  }
+  
+  getCharacterDimensions() {
+    return {
+      width: (5 + 1) * this.CELL, // 5 pixel character + 1 space
+      height: (7 + 1) * this.CELL  // 7 pixel height + 1 space
+    };
+  }
+  
+  updateResolutionInfo() {
+    const { width, height, pixelRatio } = this.getScreenDimensions();
+    const resolutionElement = document.getElementById('resolution-info');
+    if (resolutionElement) {
+      const cssWidth = parseInt(this.canvas.style.width);
+      const cssHeight = parseInt(this.canvas.style.height);
+      const scaleFactor = Math.round(cssWidth / this.LOGICAL_WIDTH);
+      
+      resolutionElement.textContent = `${width}×${height} screen • ${this.LOGICAL_WIDTH}×${this.LOGICAL_HEIGHT} canvas • ${scaleFactor}× scale • Pixel Ratio: ${pixelRatio}`;
+    }
+  }
+}
+
+// Export for use in other modules
+window.Display = Display;

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Spider Solitaire — Kindle e‑ink</title>
+<link rel="stylesheet" href="css/spider.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="group">
+      <button id="newBtn">New</button>
+      <button id="undoBtn" disabled>Undo</button>
+      <button id="dealBtn" disabled>Deal</button>
+    </div>
+    <div class="group">
+      <select id="difficulty">
+        <option value="1">1‑suit</option>
+        <option value="2">2‑suit</option>
+        <option value="4" selected>4‑suit</option>
+      </select>
+      <select id="mode">
+        <option value="color">Color</option>
+        <option value="mono">Mono</option>
+      </select>
+    </div>
+  </div>
+
+  <main class="board" id="board"></main>
+
+  <div class="status">
+    <span>Score: <span id="score">0</span></span>
+    <span>Moves: <span id="moves">0</span></span>
+    <span>Completed: <span id="completed">0</span>/8</span>
+    <span id="hint" style="margin-left:auto;"></span>
+  </div>
+
+<script type="module" src="js/ui.js"></script>
+</body>
+</html>
