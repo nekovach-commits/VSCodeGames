@@ -32,6 +32,8 @@ class InputHandler {
   
   setupKeyboardEvents() {
     const container = document.getElementById('retro-container');
+    const kindleInput = document.getElementById('kindle-input');
+    const kindleButton = document.getElementById('kindle-keyboard-btn');
     
     // Focus the container so it can receive keyboard events
     container.focus();
@@ -39,59 +41,77 @@ class InputHandler {
     // Add keyboard event listeners to the container
     container.addEventListener('keydown', this.handleKeyInput);
     
-    // Make sure container stays focused when clicked
-    container.addEventListener('click', () => container.focus());
+    // Add keyboard support for the hidden input (for Kindle devices)
+    if (kindleInput) {
+      kindleInput.addEventListener('input', (e) => {
+        const inputValue = e.target.value;
+        if (inputValue.length > 0) {
+          // Process each character
+          for (let char of inputValue) {
+            this.processCharacter(char);
+          }
+          // Clear the input for next characters
+          e.target.value = '';
+          this.onTextChange && this.onTextChange();
+        }
+      });
+      
+      kindleInput.addEventListener('keydown', (e) => {
+        // Handle special keys from Kindle keyboard
+        if (e.key === 'Enter') {
+          this.processCharacter('\n');
+          this.onTextChange && this.onTextChange();
+          e.preventDefault();
+        } else if (e.key === 'Backspace') {
+          this.handleBackspace();
+          this.onTextChange && this.onTextChange();
+          e.preventDefault();
+        }
+      });
+    }
     
-    // Keep focus when the page is clicked
+    // Kindle keyboard button
+    if (kindleButton) {
+      kindleButton.addEventListener('click', () => {
+        if (kindleInput) {
+          kindleInput.focus();
+          kindleInput.click(); // Try to trigger keyboard
+          // Also try to show keyboard programmatically
+          if (kindleInput.setSelectionRange) {
+            kindleInput.setSelectionRange(0, 0);
+          }
+        }
+      });
+    }
+    
+    // Make sure container stays focused when clicked
+    container.addEventListener('click', () => {
+      container.focus();
+    });
+    
+    // Keep focus when the page is clicked (except for Kindle button)
     document.addEventListener('click', (e) => {
-      if (!container.contains(e.target)) {
+      if (!container.contains(e.target) && e.target.id !== 'kindle-keyboard-btn') {
         container.focus();
       }
     });
+    
+    // Auto-detect mobile/Kindle and show hint
+    this.detectMobileDevice();
   }
   
   handleKeyInput(e) {
     let needsRedraw = false;
     
     if (e.key.length === 1) {
-      // Add printable character at current cursor screen position
-      const char = e.key.toUpperCase();
-      if (this.font.FONT_DATA[char]) {
-        // Place character in text buffer at current screen position
-        const actualRow = this.cursorRow + this.scrollOffset;
-        this.textLines[actualRow][this.cursorCol] = char;
-        
-        // Move cursor right
-        this.cursorCol++;
-        if (this.cursorCol >= 40) {
-          this.cursorCol = 0;
-          this.moveCursorDown();
-        }
-        
-        needsRedraw = true;
-      }
+      // Add printable character using shared method
+      this.processCharacter(e.key);
+      needsRedraw = true;
     } else if (e.key === 'Backspace') {
-      // Move cursor left and delete character
-      if (this.cursorCol > 0) {
-        this.cursorCol--;
-      } else if (this.cursorRow > 0 || this.scrollOffset > 0) {
-        // Move to end of previous line
-        if (this.cursorRow > 0) {
-          this.cursorRow--;
-        } else {
-          this.scrollOffset--;
-        }
-        this.cursorCol = 39;
-      }
-      
-      // Delete character at cursor position
-      const actualRow = this.cursorRow + this.scrollOffset;
-      this.textLines[actualRow][this.cursorCol] = ' ';
+      this.handleBackspace();
       needsRedraw = true;
     } else if (e.key === 'Enter') {
-      // Move to start of next line
-      this.cursorCol = 0;
-      this.moveCursorDown();
+      this.processCharacter('\n');
       needsRedraw = true;
     } else if (e.key === 'ArrowLeft') {
       if (this.cursorCol > 0) {
@@ -322,6 +342,68 @@ class InputHandler {
   
   getCursorScreenPosition() {
     return { row: this.cursorRow, col: this.cursorCol };
+  }
+  
+  processCharacter(char) {
+    // Process a single character (used by both keyboard and hidden input)
+    if (char === '\n') {
+      // Move to start of next line
+      this.cursorCol = 0;
+      this.moveCursorDown();
+    } else {
+      const upperChar = char.toUpperCase();
+      if (this.font.FONT_DATA[upperChar]) {
+        // Place character in text buffer at current screen position
+        const actualRow = this.cursorRow + this.scrollOffset;
+        this.textLines[actualRow][this.cursorCol] = upperChar;
+        
+        // Move cursor right
+        this.cursorCol++;
+        if (this.cursorCol >= 40) {
+          this.cursorCol = 0;
+          this.moveCursorDown();
+        }
+      }
+    }
+  }
+  
+  handleBackspace() {
+    // Move cursor left and delete character
+    if (this.cursorCol > 0) {
+      this.cursorCol--;
+    } else if (this.cursorRow > 0 || this.scrollOffset > 0) {
+      // Move to end of previous line
+      if (this.cursorRow > 0) {
+        this.cursorRow--;
+      } else {
+        this.scrollOffset--;
+      }
+      this.cursorCol = 39;
+    }
+    
+    // Delete character at cursor position
+    const actualRow = this.cursorRow + this.scrollOffset;
+    this.textLines[actualRow][this.cursorCol] = ' ';
+  }
+  
+  detectMobileDevice() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Kindle/i.test(navigator.userAgent);
+    const isKindle = /Kindle/i.test(navigator.userAgent) || /Silk/i.test(navigator.userAgent);
+    
+    if (isKindle) {
+      console.log('Kindle device detected - keyboard button available');
+      const button = document.getElementById('kindle-keyboard-btn');
+      if (button) {
+        button.style.display = 'inline-block';
+        button.textContent = '⌨️ Touch to Type (Kindle Keyboard)';
+      }
+    } else if (isMobile) {
+      console.log('Mobile device detected');
+      const button = document.getElementById('kindle-keyboard-btn');
+      if (button) {
+        button.textContent = '⌨️ Touch to Type (Mobile Keyboard)';
+      }
+    }
   }
   
   // Event callbacks - set these from the main controller

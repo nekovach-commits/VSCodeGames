@@ -63,12 +63,12 @@ class Display {
     const isKindleScribe = width > 1000 && height > 1000;
     
     if (isKindleColorsoft) {
-      // Kindle Colorsoft: reduce vertical scaling to prevent stretching
-      scaleFactorY *= 0.6; // Squish vertically by 40%
-      console.log('Kindle Colorsoft detected - applying vertical compression');
+      // Kindle Colorsoft: reduce vertical scaling to prevent stretching (1/3 size)
+      scaleFactorY *= 0.33; // Squish vertically to 1/3 size
+      console.log('Kindle Colorsoft detected - applying aggressive vertical compression (1/3 size)');
     } else if (isKindleScribe) {
       // Kindle Scribe: different aspect ratio handling
-      scaleFactorY *= 0.8;
+      scaleFactorY *= 0.5; // More compression for Scribe too
       console.log('Kindle Scribe detected - applying aspect ratio correction');
     }
     

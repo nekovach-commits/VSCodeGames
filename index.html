@@ -9,10 +9,13 @@
 <body>
   <div id="retro-container" tabindex="0">
     <canvas id="retro-canvas"></canvas>
+    <!-- Hidden input for Kindle keyboard support -->
+    <input type="text" id="kindle-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="position: absolute; left: -9999px; opacity: 0;">
     <div id="keyboard-area">
       <div>
         <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
         <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete</p>
+        <p><button id="kindle-keyboard-btn" style="background: #c8d4b8; border: 1px solid #1a3d1a; padding: 8px; font-family: monospace;">📱 Show Keyboard (Kindle)</button></p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
       </div>
     </div>
