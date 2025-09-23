@@ -11,12 +11,9 @@
     <canvas id="retro-canvas"></canvas>
     <div id="keyboard-area">
       <div>
-        <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
-        <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete</p>
         <!-- TRS-80 Model 100 On-Screen Keyboard for Kindle/Mobile -->
-        <div id="trs80-keyboard-container" style="display: none; margin-top: 15px;">
-          <p style="font-family: monospace; color: #1a3d1a; font-size: 12px; margin-bottom: 10px;">TRS-80 MODEL 100 KEYBOARD</p>
-          <p style="font-family: monospace; color: #1a3d1a; font-size: 10px; margin-bottom: 10px;">Tap keys to type • Use arrow keys to navigate</p>
+        <div id="trs80-keyboard-container" style="display: none; margin-top: 5px;">
+          <p style="font-family: monospace; color: #1a3d1a; font-size: 10px; margin-bottom: 8px; text-align: center;">Tap keys to type • Use arrows to navigate</p>
           
           <!-- Function Keys Row (F1-F8) -->
           <div class="keyboard-row" style="margin-bottom: 5px;">
@@ -175,7 +172,13 @@
             white-space: nowrap;
           }
         </style>
-        <p>Resolution: <span id="resolution-info">Loading...</span></p>
+        
+        <!-- Desktop info - only shown when keyboard is hidden -->
+        <div id="desktop-info" style="margin-top: 15px;">
+          <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
+          <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
+          <p>Resolution: <span id="resolution-info">Loading...</span></p>
+        </div>
       </div>
     </div>
   </div>
@@ -317,8 +320,9 @@
       
       // Show TRS-80 keyboard for mobile/Kindle devices
       const keyboardContainer = document.getElementById('trs80-keyboard-container');
+      const desktopInfo = document.getElementById('desktop-info');
       
-      if (keyboardContainer) {
+      if (keyboardContainer && desktopInfo) {
         // Show keyboard for mobile devices (Kindle detection)
         console.log('User agent:', navigator.userAgent);
         console.log('Window width:', window.innerWidth);
@@ -327,9 +331,12 @@
             window.innerWidth < 800) {
           console.log('Mobile/Kindle device detected - showing TRS-80 keyboard');
           keyboardContainer.style.display = 'block';
+          desktopInfo.style.display = 'none'; // Hide desktop info to save space
           setupTRS80Keyboard();
         } else {
           console.log('Desktop device detected - hiding keyboard');
+          keyboardContainer.style.display = 'none';
+          desktopInfo.style.display = 'block'; // Show desktop info
         }
       }
       
