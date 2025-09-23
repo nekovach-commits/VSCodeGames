@@ -106,10 +106,12 @@ class InputHandler {
   }
   
   handleKeyInput(e) {
+    console.log('handleKeyInput called with key:', e.key);
     let needsRedraw = false;
     
     if (e.key.length === 1) {
       // Add printable character using shared method
+      console.log('Processing character:', e.key);
       this.processCharacter(e.key);
       needsRedraw = true;
     } else if (e.key === 'Backspace') {
@@ -350,6 +352,7 @@ class InputHandler {
   }
   
   processCharacter(char) {
+    console.log('processCharacter called with:', char);
     // Process a single character (used by both keyboard and hidden input)
     if (char === '\n') {
       // Move to start of next line
@@ -357,9 +360,11 @@ class InputHandler {
       this.moveCursorDown();
     } else {
       const upperChar = char.toUpperCase();
+      console.log('Processing character:', upperChar, 'Has font data:', !!this.font.FONT_DATA[upperChar]);
       if (this.font.FONT_DATA[upperChar]) {
         // Place character in text buffer at current screen position
         const actualRow = this.cursorRow + this.scrollOffset;
+        console.log('Placing character at textLines[' + actualRow + '][' + this.cursorCol + '] =', upperChar);
         this.textLines[actualRow][this.cursorCol] = upperChar;
         
         // Move cursor right

@@ -81,8 +81,11 @@ class PixelFont {
   }
   
   drawText(text, x, y, scrollOffset = 0) {
+    console.log('drawText called with:', { textType: typeof text, textLength: text?.length, text, x, y, scrollOffset });
+    
     // For backward compatibility, if text is passed as string, use old method
     if (typeof text === 'string') {
+      console.log('Using string method for text:', text);
       this.drawTextFromString(text, x, y, scrollOffset);
       return;
     }
@@ -91,6 +94,8 @@ class PixelFont {
     const textLines = text;
     const charDimensions = this.display.getCharacterDimensions();
     const maxLinesVisible = this.display.LINES_TALL;
+    
+    console.log('Using array method for textLines:', { linesCount: textLines?.length, maxVisible: maxLinesVisible });
     
     let currentY = y;
     
