@@ -11,165 +11,422 @@
     <canvas id="retro-canvas"></canvas>
     <div id="keyboard-area">
       <div>
-        <!-- TRS-80 Model 100 On-Screen Keyboard for Kindle/Mobile -->
-        <div id="trs80-keyboard-container" style="display: none; margin-top: 5px;">
-          <p style="font-family: monospace; color: #1a3d1a; font-size: 10px; margin-bottom: 8px; text-align: center;">Tap keys to type • Use arrows to navigate</p>
-          
-          <!-- Function Keys Row (F1-F8) -->
-          <div class="keyboard-row" style="margin-bottom: 5px;">
-            <button class="trs80-key function-key" data-key="F1">F1</button>
-            <button class="trs80-key function-key" data-key="F2">F2</button>
-            <button class="trs80-key function-key" data-key="F3">F3</button>
-            <button class="trs80-key function-key" data-key="F4">F4</button>
-            <button class="trs80-key function-key" data-key="F5">F5</button>
-            <button class="trs80-key function-key" data-key="F6">F6</button>
-            <button class="trs80-key function-key" data-key="F7">F7</button>
-            <button class="trs80-key function-key" data-key="F8">F8</button>
+        <!-- TRS-80 Model 100 Authentic On-Screen Keyboard -->
+        <div id="trs80-keyboard-container" class="trs80-keyboard" style="display: none;">
+          <div class="keyboard-info">
+            <span class="keyboard-title">TRS-80 MODEL 100 KEYBOARD</span>
+            <span class="keyboard-instructions">Tap keys to type • Arrow keys navigate • ESC clears screen</span>
           </div>
           
-          <!-- Number Row -->
-          <div class="keyboard-row" style="margin-bottom: 3px;">
-            <button class="trs80-key" data-key="1">1</button>
-            <button class="trs80-key" data-key="2">2</button>
-            <button class="trs80-key" data-key="3">3</button>
-            <button class="trs80-key" data-key="4">4</button>
-            <button class="trs80-key" data-key="5">5</button>
-            <button class="trs80-key" data-key="6">6</button>
-            <button class="trs80-key" data-key="7">7</button>
-            <button class="trs80-key" data-key="8">8</button>
-            <button class="trs80-key" data-key="9">9</button>
-            <button class="trs80-key" data-key="0">0</button>
-            <button class="trs80-key" data-key="-">-</button>
-            <button class="trs80-key" data-key="=">=</button>
-            <button class="trs80-key wide-key" data-key="Backspace">BKSP</button>
+          <!-- Function Keys Row (F1-F8) - Authentic TRS-80 positioning -->
+          <div class="keyboard-section function-section">
+            <div class="keyboard-row function-row">
+              <button class="trs80-key function-key" data-key="F1">F1</button>
+              <button class="trs80-key function-key" data-key="F2">F2</button>
+              <button class="trs80-key function-key" data-key="F3">F3</button>
+              <button class="trs80-key function-key" data-key="F4">F4</button>
+              <button class="trs80-key function-key" data-key="F5">F5</button>
+              <button class="trs80-key function-key" data-key="F6">F6</button>
+              <button class="trs80-key function-key" data-key="F7">F7</button>
+              <button class="trs80-key function-key" data-key="F8">F8</button>
+            </div>
           </div>
           
-          <!-- QWERTY Top Row -->
-          <div class="keyboard-row" style="margin-bottom: 3px;">
-            <button class="trs80-key" data-key="q">Q</button>
-            <button class="trs80-key" data-key="w">W</button>
-            <button class="trs80-key" data-key="e">E</button>
-            <button class="trs80-key" data-key="r">R</button>
-            <button class="trs80-key" data-key="t">T</button>
-            <button class="trs80-key" data-key="y">Y</button>
-            <button class="trs80-key" data-key="u">U</button>
-            <button class="trs80-key" data-key="i">I</button>
-            <button class="trs80-key" data-key="o">O</button>
-            <button class="trs80-key" data-key="p">P</button>
-            <button class="trs80-key" data-key="[">[</button>
-            <button class="trs80-key" data-key="]">]</button>
+          <!-- Main Keyboard Section -->
+          <div class="keyboard-section main-section">
+            <!-- Number Row with symbols -->
+            <div class="keyboard-row number-row">
+              <button class="trs80-key" data-key="1">1<span class="key-symbol">!</span></button>
+              <button class="trs80-key" data-key="2">2<span class="key-symbol">@</span></button>
+              <button class="trs80-key" data-key="3">3<span class="key-symbol">#</span></button>
+              <button class="trs80-key" data-key="4">4<span class="key-symbol">$</span></button>
+              <button class="trs80-key" data-key="5">5<span class="key-symbol">%</span></button>
+              <button class="trs80-key" data-key="6">6<span class="key-symbol">^</span></button>
+              <button class="trs80-key" data-key="7">7<span class="key-symbol">&</span></button>
+              <button class="trs80-key" data-key="8">8<span class="key-symbol">*</span></button>
+              <button class="trs80-key" data-key="9">9<span class="key-symbol">(</span></button>
+              <button class="trs80-key" data-key="0">0<span class="key-symbol">)</span></button>
+              <button class="trs80-key" data-key="-">-<span class="key-symbol">_</span></button>
+              <button class="trs80-key" data-key="=">=<span class="key-symbol">+</span></button>
+              <button class="trs80-key backspace-key" data-key="Backspace">BACKSPACE</button>
+            </div>
+            
+            <!-- QWERTY Top Row -->
+            <div class="keyboard-row qwerty-row">
+              <button class="trs80-key tab-key" data-key="Tab">TAB</button>
+              <button class="trs80-key" data-key="q">Q</button>
+              <button class="trs80-key" data-key="w">W</button>
+              <button class="trs80-key" data-key="e">E</button>
+              <button class="trs80-key" data-key="r">R</button>
+              <button class="trs80-key" data-key="t">T</button>
+              <button class="trs80-key" data-key="y">Y</button>
+              <button class="trs80-key" data-key="u">U</button>
+              <button class="trs80-key" data-key="i">I</button>
+              <button class="trs80-key" data-key="o">O</button>
+              <button class="trs80-key" data-key="p">P</button>
+              <button class="trs80-key" data-key="[">[<span class="key-symbol">{</span></button>
+              <button class="trs80-key" data-key="]">]<span class="key-symbol">}</span></button>
+            </div>
+            
+            <!-- QWERTY Middle Row -->
+            <div class="keyboard-row qwerty-row">
+              <button class="trs80-key caps-key" data-key="CapsLock">CAPS</button>
+              <button class="trs80-key" data-key="a">A</button>
+              <button class="trs80-key" data-key="s">S</button>
+              <button class="trs80-key" data-key="d">D</button>
+              <button class="trs80-key" data-key="f">F</button>
+              <button class="trs80-key" data-key="g">G</button>
+              <button class="trs80-key" data-key="h">H</button>
+              <button class="trs80-key" data-key="j">J</button>
+              <button class="trs80-key" data-key="k">K</button>
+              <button class="trs80-key" data-key="l">L</button>
+              <button class="trs80-key" data-key=";">;<span class="key-symbol">:</span></button>
+              <button class="trs80-key" data-key="'">'<span class="key-symbol">"</span></button>
+              <button class="trs80-key enter-key" data-key="Enter">ENTER</button>
+            </div>
+            
+            <!-- QWERTY Bottom Row -->
+            <div class="keyboard-row qwerty-row">
+              <button class="trs80-key shift-key" data-key="Shift">SHIFT</button>
+              <button class="trs80-key" data-key="z">Z</button>
+              <button class="trs80-key" data-key="x">X</button>
+              <button class="trs80-key" data-key="c">C</button>
+              <button class="trs80-key" data-key="v">V</button>
+              <button class="trs80-key" data-key="b">B</button>
+              <button class="trs80-key" data-key="n">N</button>
+              <button class="trs80-key" data-key="m">M</button>
+              <button class="trs80-key" data-key=",">,<span class="key-symbol">&lt;</span></button>
+              <button class="trs80-key" data-key=".">.<span class="key-symbol">&gt;</span></button>
+              <button class="trs80-key" data-key="/">/<span class="key-symbol">?</span></button>
+              <button class="trs80-key shift-key" data-key="Shift">SHIFT</button>
+            </div>
+            
+            <!-- Space and Control Row -->
+            <div class="keyboard-row control-row">
+              <button class="trs80-key ctrl-key" data-key="Control">CTRL</button>
+              <button class="trs80-key space-key" data-key=" ">SPACE</button>
+              <button class="trs80-key esc-key" data-key="Escape">ESC</button>
+            </div>
           </div>
           
-          <!-- QWERTY Middle Row -->
-          <div class="keyboard-row" style="margin-bottom: 3px;">
-            <button class="trs80-key" data-key="a">A</button>
-            <button class="trs80-key" data-key="s">S</button>
-            <button class="trs80-key" data-key="d">D</button>
-            <button class="trs80-key" data-key="f">F</button>
-            <button class="trs80-key" data-key="g">G</button>
-            <button class="trs80-key" data-key="h">H</button>
-            <button class="trs80-key" data-key="j">J</button>
-            <button class="trs80-key" data-key="k">K</button>
-            <button class="trs80-key" data-key="l">L</button>
-            <button class="trs80-key" data-key=";">;</button>
-            <button class="trs80-key" data-key="'">'</button>
-            <button class="trs80-key wide-key" data-key="Enter">ENTER</button>
-          </div>
-          
-          <!-- QWERTY Bottom Row -->
-          <div class="keyboard-row" style="margin-bottom: 3px;">
-            <button class="trs80-key" data-key="z">Z</button>
-            <button class="trs80-key" data-key="x">X</button>
-            <button class="trs80-key" data-key="c">C</button>
-            <button class="trs80-key" data-key="v">V</button>
-            <button class="trs80-key" data-key="b">B</button>
-            <button class="trs80-key" data-key="n">N</button>
-            <button class="trs80-key" data-key="m">M</button>
-            <button class="trs80-key" data-key=",">,</button>
-            <button class="trs80-key" data-key=".">.</button>
-            <button class="trs80-key" data-key="/">/</button>
-          </div>
-          
-          <!-- Space and Control Row -->
-          <div class="keyboard-row" style="margin-bottom: 8px;">
-            <button class="trs80-key space-key" data-key=" ">SPACE</button>
-            <button class="trs80-key command-key" data-key="Escape">ESC</button>
-          </div>
-          
-          <!-- Arrow Keys (Cursor Control) -->
-          <div class="keyboard-row">
-            <div style="display: inline-block; margin-right: 20px;">
-              <button class="trs80-key arrow-key" data-key="ArrowUp">↑</button><br>
-              <button class="trs80-key arrow-key" data-key="ArrowLeft">←</button>
-              <button class="trs80-key arrow-key" data-key="ArrowDown">↓</button>
-              <button class="trs80-key arrow-key" data-key="ArrowRight">→</button>
+          <!-- Arrow Keys Section (Right side cluster) -->
+          <div class="keyboard-section arrow-section">
+            <div class="arrow-cluster">
+              <div class="arrow-row">
+                <button class="trs80-key arrow-key" data-key="ArrowUp">↑</button>
+              </div>
+              <div class="arrow-row">
+                <button class="trs80-key arrow-key" data-key="ArrowLeft">←</button>
+                <button class="trs80-key arrow-key" data-key="ArrowDown">↓</button>
+                <button class="trs80-key arrow-key" data-key="ArrowRight">→</button>
+              </div>
             </div>
           </div>
         </div>
         
         <style>
-          .trs80-key {
-            font-family: monospace;
-            font-size: 12px;
-            font-weight: bold;
-            background: #c8d4b8;
-            border: 2px outset #c8d4b8;
+          /* TRS-80 Model 100 Authentic Keyboard Styling - Responsive Design */
+          .trs80-keyboard {
+            /* Scale based on screen width while maintaining aspect ratio */
+            width: min(95vw, 1000px);
+            max-width: 1000px;
+            margin: 1vh auto 0;
+            padding: 1.5vw;
+            background: linear-gradient(145deg, #d8e4c8, #c0d0b0);
+            border: 3px solid #a0b090;
+            border-radius: 8px;
+            box-shadow: 
+              inset 2px 2px 4px rgba(255,255,255,0.3),
+              inset -2px -2px 4px rgba(0,0,0,0.1),
+              0 4px 8px rgba(0,0,0,0.2);
+            font-family: 'Courier New', monospace;
+          }
+          
+          .keyboard-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5vh;
+            padding: 0 1vw;
+            font-size: min(2.5vw, 12px);
             color: #1a3d1a;
-            padding: 8px 10px;
-            margin: 2px;
-            min-width: 28px;
-            min-height: 32px;
+          }
+          
+          .keyboard-title {
+            font-weight: bold;
+            letter-spacing: 0.1em;
+          }
+          
+          .keyboard-instructions {
+            font-size: min(2vw, 10px);
+            opacity: 0.8;
+          }
+          
+          .keyboard-section {
+            margin-bottom: 1vh;
+          }
+          
+          .function-section {
+            padding-bottom: 1vh;
+            border-bottom: 1px solid #a0b090;
+            margin-bottom: 1.5vh;
+          }
+          
+          .main-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+          }
+          
+          .arrow-section {
+            position: absolute;
+            right: 1.5vw;
+            bottom: 1.5vw;
+          }
+          
+          .keyboard-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: min(1.5vw, 8px);
+            gap: min(0.8vw, 4px);
+          }
+          
+          .function-row {
+            justify-content: space-evenly;
+            gap: min(1.2vw, 6px);
+          }
+          
+          .qwerty-row, .number-row, .control-row {
+            justify-content: center;
+          }
+          
+          /* Base key styling - scales with viewport */
+          .trs80-key {
+            /* Responsive sizing */
+            min-width: min(6vw, 32px);
+            min-height: min(5vw, 28px);
+            padding: min(1vw, 6px) min(1.2vw, 8px);
+            margin: min(0.3vw, 2px);
+            
+            /* Typography scales with screen size */
+            font-family: 'Courier New', monospace;
+            font-size: min(2.2vw, 12px);
+            font-weight: bold;
+            line-height: 1;
+            text-align: center;
+            
+            /* Authentic TRS-80 styling with enhanced depth */
+            background: linear-gradient(145deg, #c8d4b8, #b8c4a8);
+            border: 2px outset #c8d4b8;
+            border-radius: min(0.5vw, 3px);
+            color: #1a3d1a;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+            
+            /* Enhanced visual depth */
+            box-shadow: 
+              0 2px 4px rgba(0,0,0,0.1),
+              inset 0 1px 0 rgba(255,255,255,0.3),
+              inset 0 -1px 0 rgba(0,0,0,0.1);
+            
+            /* Touch optimization */
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
-            -webkit-tap-highlight-color: rgba(26, 61, 26, 0.3);
+            -webkit-tap-highlight-color: rgba(26, 61, 26, 0.2);
             touch-action: manipulation;
             -webkit-touch-callout: none;
             -webkit-appearance: none;
             appearance: none;
             outline: none;
+            
+            /* Smooth interactions */
+            transition: all 0.1s ease;
+            
+            /* Prevent text wrapping */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            /* Ensure proper flexbox behavior */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+          }
+          
+          .trs80-key:hover {
+            background: linear-gradient(145deg, #d0d8c0, #c0c8b0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           }
           
           .trs80-key:active {
             border: 2px inset #c8d4b8;
-            background: #b0c0a0;
+            background: linear-gradient(145deg, #b0c0a0, #a8b898);
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
           }
           
+          /* Key size variations for authentic layout */
           .function-key {
-            background: #d0e0c0;
-            border: 2px outset #d0e0c0;
-            font-size: 10px;
-            min-width: 32px;
-            min-height: 28px;
+            min-width: min(5.5vw, 30px);
+            background: linear-gradient(145deg, #d0e0c0, #c0d0b0);
+            border-color: #d0e0c0;
+            font-size: min(1.8vw, 10px);
           }
           
           .function-key:active {
             border: 2px inset #d0e0c0;
-            background: #c0d0b0;
+            background: linear-gradient(145deg, #c0d0b0, #b0c0a0);
           }
           
-          .wide-key {
-            min-width: 60px;
+          .tab-key, .caps-key {
+            min-width: min(8vw, 44px);
+          }
+          
+          .backspace-key {
+            min-width: min(12vw, 66px);
+          }
+          
+          .enter-key {
+            min-width: min(10vw, 56px);
+          }
+          
+          .shift-key {
+            min-width: min(9vw, 50px);
+          }
+          
+          .ctrl-key, .esc-key {
+            min-width: min(7vw, 38px);
+            background: linear-gradient(145deg, #d0e0c0, #c0d0b0);
+            border-color: #d0e0c0;
           }
           
           .space-key {
-            min-width: 160px;
+            min-width: min(25vw, 140px);
+            flex-grow: 1;
+            max-width: min(35vw, 200px);
           }
           
-          .command-key, .arrow-key {
-            background: #d0e0c0;
-            border: 2px outset #d0e0c0;
-            font-weight: bold;
+          .arrow-key {
+            min-width: min(4.5vw, 26px);
+            min-height: min(4.5vw, 26px);
+            padding: min(0.8vw, 4px);
+            background: linear-gradient(145deg, #d0e0c0, #c0d0b0);
+            border-color: #d0e0c0;
+            font-size: min(2.5vw, 14px);
           }
           
-          .command-key:active, .arrow-key:active {
+          .arrow-key:active {
             border: 2px inset #d0e0c0;
-            background: #c0d0b0;
+            background: linear-gradient(145deg, #c0d0b0, #b0c0a0);
           }
           
-          .keyboard-row {
-            text-align: center;
-            white-space: nowrap;
+          /* Arrow cluster layout */
+          .arrow-cluster {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: min(0.5vw, 3px);
+          }
+          
+          .arrow-row {
+            display: flex;
+            gap: min(0.5vw, 3px);
+          }
+          
+          /* Key symbols (shift characters) */
+          .key-symbol {
+            font-size: min(1.5vw, 8px);
+            opacity: 0.6;
+            margin-left: min(0.3vw, 2px);
+            vertical-align: super;
+          }
+          
+          /* Responsive breakpoints */
+          @media (max-width: 768px) {
+            .trs80-keyboard {
+              width: 98vw;
+              padding: 2vw;
+            }
+            
+            .keyboard-instructions {
+              display: none; /* Hide on very small screens */
+            }
+            
+            .trs80-key {
+              min-width: 7vw;
+              min-height: 6vw;
+              font-size: 2.5vw;
+            }
+            
+            .function-key {
+              min-width: 6.5vw;
+              font-size: 2vw;
+            }
+            
+            .arrow-key {
+              min-width: 5.5vw;
+              min-height: 5.5vw;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .keyboard-title {
+              font-size: 3vw;
+            }
+            
+            .trs80-key {
+              min-width: 8vw;
+              min-height: 7vw;
+              font-size: 3vw;
+              padding: 1.5vw;
+            }
+            
+            .space-key {
+              min-width: 30vw;
+            }
+          }
+          
+          /* Large screen optimization */
+          @media (min-width: 1200px) {
+            .trs80-keyboard {
+              max-width: 1000px;
+            }
+            
+            .trs80-key {
+              min-width: 42px;
+              min-height: 36px;
+              font-size: 13px;
+            }
+            
+            .function-key {
+              min-width: 38px;
+              font-size: 11px;
+            }
+            
+            .arrow-key {
+              min-width: 32px;
+              min-height: 32px;
+            }
+          }
+          
+          /* High DPI / Kindle optimization */
+          @media (min-resolution: 200dpi) {
+            .trs80-key {
+              border-width: 1px;
+            }
+            
+            .trs80-keyboard {
+              border-width: 2px;
+            }
+          }
+          
+          /* Ultra-wide screen handling */
+          @media (min-width: 1600px) {
+            .trs80-keyboard {
+              max-width: 1200px;
+            }
           }
         </style>
         

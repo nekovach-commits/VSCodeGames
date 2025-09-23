@@ -34,6 +34,9 @@ export class TRS80Keyboard {
       this.display.addChar('\n');
     } else if (e.key === 'Backspace') {
       this.display.removeChar();
+    } else if (e.key === 'Tab') {
+      // Add 4 spaces for tab
+      this.display.addChar('    ');
     } else if (e.key === 'ArrowUp') {
       this.display.moveCursorUp();
     } else if (e.key === 'ArrowDown') {
@@ -44,6 +47,12 @@ export class TRS80Keyboard {
       this.display.moveCursorRight();
     } else if (e.key === 'Escape') {
       this.display.clearScreen();
+    } else if (e.key === 'CapsLock') {
+      // Toggle caps lock state (visual feedback could be added later)
+      console.log('Caps Lock toggled');
+    } else if (e.key === 'Shift' || e.key === 'Control') {
+      // Modifier keys - handled by browser for symbol input
+      console.log('Modifier key:', e.key);
     }
     
     this.display.render();
@@ -158,6 +167,9 @@ export class TRS80Keyboard {
       this.display.removeChar();
     } else if (keyValue === 'Enter') {
       this.display.addChar('\n');
+    } else if (keyValue === 'Tab') {
+      // Add 4 spaces for tab
+      this.display.addChar('    ');
     } else if (keyValue === 'Escape') {
       this.display.clearScreen();
     } else if (keyValue === 'ArrowUp') {
@@ -168,6 +180,16 @@ export class TRS80Keyboard {
       this.display.moveCursorLeft();
     } else if (keyValue === 'ArrowRight') {
       this.display.moveCursorRight();
+    } else if (keyValue === 'CapsLock') {
+      // Toggle caps lock state
+      console.log('Caps Lock toggled');
+      // Visual feedback could be added later
+    } else if (keyValue === 'Shift') {
+      console.log('Shift key pressed - use for symbols');
+      // Shift functionality handled by modifier state
+    } else if (keyValue === 'Control') {
+      console.log('Control key pressed');
+      // Control key functionality could be added later
     } else if (keyValue.startsWith('F')) {
       // Function keys - could add special functionality later
       console.log('Function key pressed:', keyValue);
