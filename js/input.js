@@ -33,7 +33,6 @@ class InputHandler {
   setupKeyboardEvents() {
     const container = document.getElementById('retro-container');
     const kindleInput = document.getElementById('kindle-input');
-    const kindleButton = document.getElementById('kindle-keyboard-btn');
     
     // Focus the container so it can receive keyboard events
     container.focus();
@@ -41,62 +40,62 @@ class InputHandler {
     // Add keyboard event listeners to the container
     container.addEventListener('keydown', this.handleKeyInput);
     
-    // Add keyboard support for the hidden input (for Kindle devices)
+    // Add keyboard support for the Kindle input field
     if (kindleInput) {
+      // Handle text input
       kindleInput.addEventListener('input', (e) => {
         const inputValue = e.target.value;
         if (inputValue.length > 0) {
-          // Process each character
-          for (let char of inputValue) {
-            this.processCharacter(char);
-          }
-          // Clear the input for next characters
-          e.target.value = '';
+          // Get the last character typed
+          const lastChar = inputValue[inputValue.length - 1];
+          this.processCharacter(lastChar);
+          
+          // Clear the input field to prevent text accumulation
+          setTimeout(() => {
+            e.target.value = '';
+          }, 10);
+          
           this.onTextChange && this.onTextChange();
         }
       });
       
+      // Handle special keys
       kindleInput.addEventListener('keydown', (e) => {
-        // Handle special keys from Kindle keyboard
         if (e.key === 'Enter') {
           this.processCharacter('\n');
           this.onTextChange && this.onTextChange();
           e.preventDefault();
         } else if (e.key === 'Backspace') {
-          this.handleBackspace();
-          this.onTextChange && this.onTextChange();
+          // Only handle backspace if input is empty
+          if (e.target.value === '') {
+            this.handleBackspace();
+            this.onTextChange && this.onTextChange();
+          }
           e.preventDefault();
         }
       });
-    }
-    
-    // Kindle keyboard button
-    if (kindleButton) {
-      kindleButton.addEventListener('click', () => {
-        if (kindleInput) {
-          kindleInput.focus();
-          kindleInput.click(); // Try to trigger keyboard
-          // Also try to show keyboard programmatically
-          if (kindleInput.setSelectionRange) {
-            kindleInput.setSelectionRange(0, 0);
-          }
-        }
+      
+      // Auto-focus on touch/click for mobile devices
+      kindleInput.addEventListener('touchstart', () => {
+        kindleInput.focus();
       });
+      
+      kindleInput.addEventListener('click', () => {
+        kindleInput.focus();
+      });
+      
+      // Update placeholder based on device
+      this.updateInputPlaceholder(kindleInput);
     }
     
-    // Make sure container stays focused when clicked
-    container.addEventListener('click', () => {
-      container.focus();
-    });
-    
-    // Keep focus when the page is clicked (except for Kindle button)
-    document.addEventListener('click', (e) => {
-      if (!container.contains(e.target) && e.target.id !== 'kindle-keyboard-btn') {
+    // Make sure container stays focused when clicked (except for input field)
+    container.addEventListener('click', (e) => {
+      if (e.target.id !== 'kindle-input') {
         container.focus();
       }
     });
     
-    // Auto-detect mobile/Kindle and show hint
+    // Auto-detect mobile/Kindle and show appropriate interface
     this.detectMobileDevice();
   }
   
@@ -389,20 +388,32 @@ class InputHandler {
   detectMobileDevice() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Kindle/i.test(navigator.userAgent);
     const isKindle = /Kindle/i.test(navigator.userAgent) || /Silk/i.test(navigator.userAgent);
+    const kindleInput = document.getElementById('kindle-input');
     
-    if (isKindle) {
-      console.log('Kindle device detected - keyboard button available');
-      const button = document.getElementById('kindle-keyboard-btn');
-      if (button) {
-        button.style.display = 'inline-block';
-        button.textContent = '⌨️ Touch to Type (Kindle Keyboard)';
+    if (isMobile && kindleInput) {
+      // Show the input field on mobile/Kindle devices
+      kindleInput.style.display = 'block';
+      console.log('Mobile/Kindle device detected - input field shown');
+      
+      // Update placeholder text based on device
+      if (isKindle) {
+        kindleInput.placeholder = "Touch here to activate Kindle keyboard";
+      } else {
+        kindleInput.placeholder = "Touch here to open on-screen keyboard";
       }
-    } else if (isMobile) {
-      console.log('Mobile device detected');
-      const button = document.getElementById('kindle-keyboard-btn');
-      if (button) {
-        button.textContent = '⌨️ Touch to Type (Mobile Keyboard)';
-      }
+      
+      // Auto-focus after a delay to potentially trigger keyboard
+      setTimeout(() => {
+        kindleInput.focus();
+        
+        // Try additional methods to trigger keyboard on Kindle
+        if (isKindle) {
+          kindleInput.click();
+          if (kindleInput.setSelectionRange) {
+            kindleInput.setSelectionRange(0, 0);
+          }
+        }
+      }, 1000);
     }
   }
   
