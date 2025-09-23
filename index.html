@@ -13,12 +13,14 @@
       <div>
         <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
         <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete</p>
-        <!-- Visible input field for Kindle keyboard support -->
-        <p>
-          <label for="kindle-input" style="font-family: monospace; color: #1a3d1a;">Touch to type on Kindle/Mobile:</label><br>
+        <!-- Hidden input field for Kindle keyboard support - only shown on mobile devices -->
+        <p id="kindle-input-container" style="display: none; margin-top: 15px;">
+          <label for="kindle-input" style="font-family: monospace; color: #1a3d1a; font-size: 12px;">Touch to type on Kindle/Mobile:</label><br>
           <input type="text" id="kindle-input" placeholder="Tap here to open keyboard..." 
                  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                 style="width: 300px; padding: 8px; background: #c8d4b8; border: 1px solid #1a3d1a; font-family: monospace; font-size: 14px;">
+                 style="width: 280px; padding: 6px; background: #c8d4b8; border: 1px solid #1a3d1a; 
+                        font-family: monospace; font-size: 12px; margin-top: 5px; 
+                        position: relative; z-index: 10;">
         </p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
       </div>

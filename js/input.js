@@ -389,10 +389,11 @@ class InputHandler {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Kindle/i.test(navigator.userAgent);
     const isKindle = /Kindle/i.test(navigator.userAgent) || /Silk/i.test(navigator.userAgent);
     const kindleInput = document.getElementById('kindle-input');
+    const kindleContainer = document.getElementById('kindle-input-container');
     
-    if (isMobile && kindleInput) {
-      // Show the input field on mobile/Kindle devices
-      kindleInput.style.display = 'block';
+    if (isMobile && kindleInput && kindleContainer) {
+      // Show the entire input container on mobile/Kindle devices
+      kindleContainer.style.display = 'block';
       console.log('Mobile/Kindle device detected - input field shown');
       
       // Update placeholder text based on device
@@ -402,18 +403,25 @@ class InputHandler {
         kindleInput.placeholder = "Touch here to open on-screen keyboard";
       }
       
-      // Auto-focus after a delay to potentially trigger keyboard
-      setTimeout(() => {
-        kindleInput.focus();
-        
-        // Try additional methods to trigger keyboard on Kindle
-        if (isKindle) {
-          kindleInput.click();
-          if (kindleInput.setSelectionRange) {
-            kindleInput.setSelectionRange(0, 0);
-          }
-        }
-      }, 1000);
+      // Less aggressive auto-focus to prevent screen blanking
+      if (isKindle) {
+        // On Kindle, wait longer before trying to focus to prevent screen issues
+        setTimeout(() => {
+          console.log('Attempting Kindle keyboard activation...');
+          kindleInput.focus();
+        }, 2000);
+      } else {
+        // On other mobile devices, try earlier
+        setTimeout(() => {
+          kindleInput.focus();
+        }, 500);
+      }
+    } else {
+      // On desktop, ensure the input container stays hidden
+      if (kindleContainer) {
+        kindleContainer.style.display = 'none';
+      }
+      console.log('Desktop device detected - input field hidden');
     }
   }
   
