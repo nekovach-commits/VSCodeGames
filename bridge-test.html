@@ -104,17 +104,20 @@
       "'": [0b00100,0b00100,0b00100,0,0,0,0]
     };
     
-    function drawChar(char, x, y, pixelSize = 4) {
+    function drawChar(char, x, y, pixelSize = 4, dotSize = 3) {
       const fontData = FONTS[char];
       if (!fontData) return;
       
       ctx.fillStyle = '#1a3d1a';
       
-      // Draw 5x7 font within the 6x8 character cell
+      // Draw 5x7 font within the 6x8 character cell with individual pixel gaps
       for (let row = 0; row < 7; row++) {
         for (let col = 0; col < 5; col++) {
           if (fontData[row] & (1 << (4 - col))) {
-            ctx.fillRect(x + col * pixelSize, y + row * pixelSize, pixelSize, pixelSize);
+            // Calculate position with gaps between pixels
+            const pixelX = x + col * pixelSize;
+            const pixelY = y + row * pixelSize;
+            ctx.fillRect(pixelX, pixelY, dotSize, dotSize);
           }
         }
       }
@@ -126,6 +129,7 @@
       
       // TRS-80 specifications: 40x10 characters, each 6x8 pixels
       const PIXEL_SIZE = 4; // Each TRS-80 pixel is 4x4 screen pixels
+      const PIXEL_DOT_SIZE = 3; // Each visible pixel dot is 3x3 with 1px gap
       const CHAR_WIDTH = 6 * PIXEL_SIZE;  // 6 pixels per character = 24px
       const CHAR_HEIGHT = 8 * PIXEL_SIZE; // 8 pixels per line = 32px
       const BORDER_SIZE = 20;
@@ -149,10 +153,12 @@
           const x = BORDER_SIZE + col * CHAR_WIDTH;
           const y = BORDER_SIZE + row * CHAR_HEIGHT;
           
-          // Draw 5x7 character background grid (font area only)
+          // Draw 5x7 character background grid with pixel gaps
           for (let r = 0; r < 7; r++) {
             for (let c = 0; c < 5; c++) {
-              ctx.fillRect(x + c * PIXEL_SIZE, y + r * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+              const pixelX = x + c * PIXEL_SIZE;
+              const pixelY = y + r * PIXEL_SIZE;
+              ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
             }
           }
         }
@@ -165,7 +171,7 @@
           if (char && char !== ' ') {
             const x = BORDER_SIZE + col * CHAR_WIDTH;
             const y = BORDER_SIZE + row * CHAR_HEIGHT;
-            drawChar(char, x, y, PIXEL_SIZE);
+            drawChar(char, x, y, PIXEL_SIZE, PIXEL_DOT_SIZE);
           }
         }
       }
@@ -176,10 +182,12 @@
       
       ctx.fillStyle = '#1a3d1a';
       
-      // Draw 5x7 cursor block (font area only)
+      // Draw 5x7 cursor block with pixel gaps
       for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 5; c++) {
-          ctx.fillRect(cursorX + c * PIXEL_SIZE, cursorY + r * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+          const pixelX = cursorX + c * PIXEL_SIZE;
+          const pixelY = cursorY + r * PIXEL_SIZE;
+          ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
         }
       }
       
@@ -192,7 +200,9 @@
           for (let row = 0; row < 7; row++) {
             for (let col = 0; col < 5; col++) {
               if (fontData[row] & (1 << (4 - col))) {
-                ctx.fillRect(cursorX + col * PIXEL_SIZE, cursorY + row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+                const pixelX = cursorX + col * PIXEL_SIZE;
+                const pixelY = cursorY + row * PIXEL_SIZE;
+                ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
               }
             }
           }
