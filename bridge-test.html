@@ -104,34 +104,31 @@
       "'": [0b00100,0b00100,0b00100,0,0,0,0]
     };
     
-    function drawChar(char, x, y) {
+    function drawChar(char, x, y, pixelSize = 4) {
       const fontData = FONTS[char];
       if (!fontData) return;
       
       ctx.fillStyle = '#1a3d1a';
-      const CELL = 4; // Each pixel is 4x4 screen pixels
-      const GAP = 1;  // 1px gap between pixels
       
+      // Draw 5x7 font within the 6x8 character cell
       for (let row = 0; row < 7; row++) {
         for (let col = 0; col < 5; col++) {
           if (fontData[row] & (1 << (4 - col))) {
-            // Draw individual pixels with gaps
-            const pixelX = x + col * CELL + col * GAP;
-            const pixelY = y + row * CELL + row * GAP;
-            ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
+            ctx.fillRect(x + col * pixelSize, y + row * pixelSize, pixelSize, pixelSize);
           }
         }
       }
+      // The 6th column and 8th row are left blank automatically (character spacing)
     }
     
     function render() {
       console.log('Rendering screen...');
       
-      const CELL = 4; // Base pixel size
-      const GAP = 1;  // 1px gap between pixels
+      // TRS-80 specifications: 40x10 characters, each 6x8 pixels
+      const PIXEL_SIZE = 4; // Each TRS-80 pixel is 4x4 screen pixels
+      const CHAR_WIDTH = 6 * PIXEL_SIZE;  // 6 pixels per character = 24px
+      const CHAR_HEIGHT = 8 * PIXEL_SIZE; // 8 pixels per line = 32px
       const BORDER_SIZE = 20;
-      const CHAR_WIDTH = (5 + 1) * CELL; // 5 pixels wide + 1 gap = 24px
-      const CHAR_HEIGHT = (7 + 1) * CELL; // 7 pixels tall + 1 gap = 32px
       
       // Clear with TRS-80 colors
       ctx.fillStyle = '#c8d4b8';
@@ -152,12 +149,10 @@
           const x = BORDER_SIZE + col * CHAR_WIDTH;
           const y = BORDER_SIZE + row * CHAR_HEIGHT;
           
-          // Draw character cell background grid with pixel gaps
+          // Draw 5x7 character background grid (font area only)
           for (let r = 0; r < 7; r++) {
             for (let c = 0; c < 5; c++) {
-              const pixelX = x + c * CELL + c * GAP;
-              const pixelY = y + r * CELL + r * GAP;
-              ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
+              ctx.fillRect(x + c * PIXEL_SIZE, y + r * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
             }
           }
         }
@@ -170,23 +165,21 @@
           if (char && char !== ' ') {
             const x = BORDER_SIZE + col * CHAR_WIDTH;
             const y = BORDER_SIZE + row * CHAR_HEIGHT;
-            drawChar(char, x, y);
+            drawChar(char, x, y, PIXEL_SIZE);
           }
         }
       }
       
-      // Draw cursor (inverse block)
+      // Draw cursor (inverse block covering 5x7 font area)
       const cursorX = BORDER_SIZE + cursorCol * CHAR_WIDTH;
       const cursorY = BORDER_SIZE + cursorRow * CHAR_HEIGHT;
       
       ctx.fillStyle = '#1a3d1a';
       
-      // Draw full character-size cursor block with pixel gaps
+      // Draw 5x7 cursor block (font area only)
       for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 5; c++) {
-          const pixelX = cursorX + c * CELL + c * GAP;
-          const pixelY = cursorY + r * CELL + r * GAP;
-          ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
+          ctx.fillRect(cursorX + c * PIXEL_SIZE, cursorY + r * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
         }
       }
       
@@ -199,9 +192,7 @@
           for (let row = 0; row < 7; row++) {
             for (let col = 0; col < 5; col++) {
               if (fontData[row] & (1 << (4 - col))) {
-                const pixelX = cursorX + col * CELL + col * GAP;
-                const pixelY = cursorY + row * CELL + row * GAP;
-                ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
+                ctx.fillRect(cursorX + col * PIXEL_SIZE, cursorY + row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
               }
             }
           }
@@ -261,14 +252,14 @@
       ctx = canvas.getContext('2d');
       resolutionInfo = document.getElementById('resolution-info');
       
-      // Calculate proper canvas size
-      const CELL = 4;
+      // Calculate exact TRS-80 canvas size: 240x80 text area + borders
+      const PIXEL_SIZE = 4;
       const BORDER_SIZE = 20;
-      const CHAR_WIDTH = (5 + 1) * CELL; // 24px per character
-      const CHAR_HEIGHT = (7 + 1) * CELL; // 32px per line
+      const CHAR_WIDTH = 6 * PIXEL_SIZE;  // 6 pixels per character = 24px
+      const CHAR_HEIGHT = 8 * PIXEL_SIZE; // 8 pixels per line = 32px
       
-      canvas.width = (40 * CHAR_WIDTH) + (BORDER_SIZE * 2); // 40 chars wide
-      canvas.height = (10 * CHAR_HEIGHT) + (BORDER_SIZE * 2); // 10 lines tall
+      canvas.width = (40 * CHAR_WIDTH) + (BORDER_SIZE * 2); // 40 chars * 24px + borders = 1000px
+      canvas.height = (10 * CHAR_HEIGHT) + (BORDER_SIZE * 2); // 10 lines * 32px + borders = 360px
       
       // Update resolution info
       resolutionInfo.textContent = canvas.width + 'x' + canvas.height;
