@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Computer System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="retro-container" tabindex="0">
+    <canvas id="retro-canvas"></canvas>
+    <div id="keyboard-area">
+      <div>
+        <!-- TRS-80 Model 100 On-Screen Keyboard for Kindle/Mobile -->
+        <div id="trs80-keyboard-container" style="display: none; margin-top: 5px;">
+          <p style="font-family: monospace; color: #1a3d1a; font-size: 10px; margin-bottom: 8px; text-align: center;">Tap keys to type • Use arrows to navigate</p>
+          
+          <!-- Function Keys Row (F1-F8) -->
+          <div class="keyboard-row" style="margin-bottom: 5px;">
+            <button class="trs80-key function-key" data-key="F1">F1</button>
+            <button class="trs80-key function-key" data-key="F2">F2</button>
+            <button class="trs80-key function-key" data-key="F3">F3</button>
+            <button class="trs80-key function-key" data-key="F4">F4</button>
+            <button class="trs80-key function-key" data-key="F5">F5</button>
+            <button class="trs80-key function-key" data-key="F6">F6</button>
+            <button class="trs80-key function-key" data-key="F7">F7</button>
+            <button class="trs80-key function-key" data-key="F8">F8</button>
+          </div>
+          
+          <!-- Number Row -->
+          <div class="keyboard-row" style="margin-bottom: 3px;">
+            <button class="trs80-key" data-key="1">1</button>
+            <button class="trs80-key" data-key="2">2</button>
+            <button class="trs80-key" data-key="3">3</button>
+            <button class="trs80-key" data-key="4">4</button>
+            <button class="trs80-key" data-key="5">5</button>
+            <button class="trs80-key" data-key="6">6</button>
+            <button class="trs80-key" data-key="7">7</button>
+            <button class="trs80-key" data-key="8">8</button>
+            <button class="trs80-key" data-key="9">9</button>
+            <button class="trs80-key" data-key="0">0</button>
+            <button class="trs80-key" data-key="-">-</button>
+            <button class="trs80-key" data-key="=">=</button>
+            <button class="trs80-key wide-key" data-key="Backspace">BKSP</button>
+          </div>
+          
+          <!-- QWERTY Top Row -->
+          <div class="keyboard-row" style="margin-bottom: 3px;">
+            <button class="trs80-key" data-key="q">Q</button>
+            <button class="trs80-key" data-key="w">W</button>
+            <button class="trs80-key" data-key="e">E</button>
+            <button class="trs80-key" data-key="r">R</button>
+            <button class="trs80-key" data-key="t">T</button>
+            <button class="trs80-key" data-key="y">Y</button>
+            <button class="trs80-key" data-key="u">U</button>
+            <button class="trs80-key" data-key="i">I</button>
+            <button class="trs80-key" data-key="o">O</button>
+            <button class="trs80-key" data-key="p">P</button>
+            <button class="trs80-key" data-key="[">[</button>
+            <button class="trs80-key" data-key="]">]</button>
+          </div>
+          
+          <!-- QWERTY Middle Row -->
+          <div class="keyboard-row" style="margin-bottom: 3px;">
+            <button class="trs80-key" data-key="a">A</button>
+            <button class="trs80-key" data-key="s">S</button>
+            <button class="trs80-key" data-key="d">D</button>
+            <button class="trs80-key" data-key="f">F</button>
+            <button class="trs80-key" data-key="g">G</button>
+            <button class="trs80-key" data-key="h">H</button>
+            <button class="trs80-key" data-key="j">J</button>
+            <button class="trs80-key" data-key="k">K</button>
+            <button class="trs80-key" data-key="l">L</button>
+            <button class="trs80-key" data-key=";">;</button>
+            <button class="trs80-key" data-key="'">'</button>
+            <button class="trs80-key wide-key" data-key="Enter">ENTER</button>
+          </div>
+          
+          <!-- QWERTY Bottom Row -->
+          <div class="keyboard-row" style="margin-bottom: 3px;">
+            <button class="trs80-key" data-key="z">Z</button>
+            <button class="trs80-key" data-key="x">X</button>
+            <button class="trs80-key" data-key="c">C</button>
+            <button class="trs80-key" data-key="v">V</button>
+            <button class="trs80-key" data-key="b">B</button>
+            <button class="trs80-key" data-key="n">N</button>
+            <button class="trs80-key" data-key="m">M</button>
+            <button class="trs80-key" data-key=",">,</button>
+            <button class="trs80-key" data-key=".">.</button>
+            <button class="trs80-key" data-key="/">/</button>
+          </div>
+          
+          <!-- Space and Control Row -->
+          <div class="keyboard-row" style="margin-bottom: 8px;">
+            <button class="trs80-key space-key" data-key=" ">SPACE</button>
+            <button class="trs80-key command-key" data-key="Escape">ESC</button>
+          </div>
+          
+          <!-- Arrow Keys (Cursor Control) -->
+          <div class="keyboard-row">
+            <div style="display: inline-block; margin-right: 20px;">
+              <button class="trs80-key arrow-key" data-key="ArrowUp">↑</button><br>
+              <button class="trs80-key arrow-key" data-key="ArrowLeft">←</button>
+              <button class="trs80-key arrow-key" data-key="ArrowDown">↓</button>
+              <button class="trs80-key arrow-key" data-key="ArrowRight">→</button>
+            </div>
+          </div>
+        </div>
+        
+        <style>
+          .trs80-key {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+            background: #c8d4b8;
+            border: 2px outset #c8d4b8;
+            color: #1a3d1a;
+            padding: 8px 10px;
+            margin: 2px;
+            min-width: 28px;
+            min-height: 32px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: rgba(26, 61, 26, 0.3);
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-appearance: none;
+            appearance: none;
+            outline: none;
+          }
+          
+          .trs80-key:active {
+            border: 2px inset #c8d4b8;
+            background: #b0c0a0;
+          }
+          
+          .function-key {
+            background: #d0e0c0;
+            border: 2px outset #d0e0c0;
+            font-size: 10px;
+            min-width: 32px;
+            min-height: 28px;
+          }
+          
+          .function-key:active {
+            border: 2px inset #d0e0c0;
+            background: #c0d0b0;
+          }
+          
+          .wide-key {
+            min-width: 60px;
+          }
+          
+          .space-key {
+            min-width: 160px;
+          }
+          
+          .command-key, .arrow-key {
+            background: #d0e0c0;
+            border: 2px outset #d0e0c0;
+            font-weight: bold;
+          }
+          
+          .command-key:active, .arrow-key:active {
+            border: 2px inset #d0e0c0;
+            background: #c0d0b0;
+          }
+          
+          .keyboard-row {
+            text-align: center;
+            white-space: nowrap;
+          }
+        </style>
+        
+        <!-- Desktop info - only shown when keyboard is hidden -->
+        <div id="desktop-info" style="margin-top: 15px;">
+          <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
+          <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
+          <p>Resolution: <span id="resolution-info">Loading...</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- TRS-80 Model 100 System - Modular Architecture -->
+  <script type="module" src="js/trs80-main.js"></script>
+  <script>
+    // System will be initialized by modular components
+    console.log('Index.html loaded - TRS-80 system starting via modules...');
+      ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+      '!': [0x04, 0x04, 0x04, 0x04, 0x00, 0x04, 0x00],
+      '"': [0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00],
+      '#': [0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A],
+      '$': [0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04],
+      '%': [0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03],
+      '&': [0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D],
+      '\'': [0x0C, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00],
+      '(': [0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02],
+      ')': [0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08],
+      '*': [0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00],
+      '+': [0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00],
+      ',': [0x00, 0x00, 0x00, 0x00, 0x0C, 0x04, 0x08],
+      '-': [0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00],
+      '.': [0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C],
+      '/': [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00],
+      '0': [0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E],
+      '1': [0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      '2': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F],
+      '3': [0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E],
+      '4': [0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02],
+      '5': [0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E],
+      '6': [0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E],
+      '7': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08],
+      '8': [0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E],
+      '9': [0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C],
+      ':': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00],
+      ';': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08],
+      '<': [0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02],
+      '=': [0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00],
+      '>': [0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08],
+      '?': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04],
+      '@': [0x0E, 0x11, 0x01, 0x0D, 0x15, 0x15, 0x0E],
+      'A': [0x0E, 0x11, 0x11, 0x11, 0x1F, 0x11, 0x11],
+      'B': [0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E],
+      'C': [0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E],
+      'D': [0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C],
+      'E': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F],
+      'F': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10],
+      'G': [0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F],
+      'H': [0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11],
+      'I': [0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'J': [0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C],
+      'K': [0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11],
+      'L': [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F],
+      'M': [0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11],
+      'N': [0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11],
+      'O': [0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'P': [0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10],
+      'Q': [0x0E, 0x11, 0x11, 0x15, 0x13, 0x11, 0x0F],
+      'R': [0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11],
+      'S': [0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E],
+      'T': [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      'U': [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'V': [0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'W': [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11],
+      'X': [0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11],
+      'Y': [0x11, 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04],
+      'Z': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F],
+      '[': [0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E],
+      '\\': [0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00],
+      ']': [0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E],
+      '^': [0x04, 0x0A, 0x11, 0x00, 0x00, 0x00, 0x00],
+      '_': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F],
+      '`': [0x08, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00],
+      'a': [0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F],
+      'b': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E],
+      'c': [0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E],
+      'd': [0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F],
+      'e': [0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E],
+      'f': [0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08],
+      'g': [0x00, 0x00, 0x0F, 0x11, 0x0F, 0x01, 0x0E],
+      'h': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'i': [0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E],
+      'j': [0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C],
+      'k': [0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12],
+      'l': [0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'm': [0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11],
+      'n': [0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'o': [0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E],
+      'p': [0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10],
+      'q': [0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01],
+      'r': [0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10],
+      's': [0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E],
+      't': [0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06],
+      'u': [0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D],
+      'v': [0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'w': [0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A],
+      'x': [0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11],
+      'y': [0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E],
+      'z': [0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F],
+      '{': [0x02, 0x04, 0x04, 0x08, 0x04, 0x04, 0x02],
+      '|': [0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      '}': [0x08, 0x04, 0x04, 0x02, 0x04, 0x04, 0x08],
+      '~': [0x00, 0x00, 0x00, 0x0C, 0x12, 0x06, 0x00]
+    };
+    
+    // Device detection and canvas sizing
+    function setupDisplay() {
+      console.log('Setting up TRS-80 display...');
+      
+      // Set canvas size and detect device
+      canvas.width = 1000;
+      canvas.height = 360;
+      
+      // Show TRS-80 keyboard for mobile/Kindle devices
+      const keyboardContainer = document.getElementById('trs80-keyboard-container');
+      const desktopInfo = document.getElementById('desktop-info');
+      
+      if (keyboardContainer && desktopInfo) {
+        // Show keyboard for mobile devices (Kindle detection)
+        console.log('User agent:', navigator.userAgent);
+        console.log('Window width:', window.innerWidth);
+        
+        if (/Mobi|Android|iPhone|iPad|Kindle|Silk/i.test(navigator.userAgent) || 
+            window.innerWidth < 800) {
+          console.log('Mobile/Kindle device detected - showing TRS-80 keyboard');
+          keyboardContainer.style.display = 'block';
+          desktopInfo.style.display = 'none'; // Hide desktop info to save space
+          setupTRS80Keyboard();
+        } else {
+          console.log('Desktop device detected - hiding keyboard');
+          keyboardContainer.style.display = 'none';
+          desktopInfo.style.display = 'block'; // Show desktop info
+        }
+      }
+      
+      // Set up desktop keyboard input
+      document.addEventListener('keydown', handleKey);
+      container.focus();
+      
+      // Update resolution display
+      const resolutionInfo = document.getElementById('resolution-info');
+      if (resolutionInfo) {
+        resolutionInfo.textContent = `${window.innerWidth}x${window.innerHeight} (Canvas: ${canvas.width}x${canvas.height})`;
+      }
+      
+      render();
+    }
+    
+    function drawChar(char, x, y, pixelSize, pixelDotSize) {
+      const fontData = FONT_DATA[char];
+      if (!fontData) return;
+      
+      ctx.fillStyle = TEXT_COLOR;
+      
+      for (let row = 0; row < 7; row++) {
+        let rowData = fontData[row];
+        for (let col = 0; col < 5; col++) {
+          if (rowData & (1 << (4 - col))) {
+            const pixelX = x + col * pixelSize;
+            const pixelY = y + row * pixelSize;
+            ctx.fillRect(pixelX, pixelY, pixelDotSize, pixelDotSize);
+          }
+        }
+      }
+    }
+    
+    function addChar(char) {
+      if (char === '\n') {
+        cursorRow++;
+        cursorCol = 0;
+        if (cursorRow >= BUFFER_SIZE) {
+          cursorRow = BUFFER_SIZE - 1;
+        }
+      } else {
+        textBuffer[cursorRow][cursorCol] = char;
+        cursorCol++;
+        if (cursorCol >= 40) {
+          cursorCol = 0;
+          cursorRow++;
+          if (cursorRow >= BUFFER_SIZE) {
+            cursorRow = BUFFER_SIZE - 1;
+          }
+        }
+      }
+      adjustScrollToShowCursor();
+      render();
+    }
+    
+    function setupTRS80Keyboard() {
+      console.log('Setting up TRS-80 on-screen keyboard...');
+      
+      // Get all keyboard buttons
+      const keyButtons = document.querySelectorAll('.trs80-key');
+      
+      keyButtons.forEach(button => {
+        // Function to handle key press
+        function handleKeyPress(keyValue) {
+          console.log('TRS-80 key pressed:', keyValue);
+          
+          // Handle special keys
+          if (keyValue === 'Backspace') {
+            if (cursorCol > 0) {
+              cursorCol--;
+              textBuffer[cursorRow][cursorCol] = ' ';
+            } else if (cursorRow > 0) {
+              cursorRow--;
+              cursorCol = 39;
+              textBuffer[cursorRow][cursorCol] = ' ';
+            }
+            adjustScrollToShowCursor();
+            render();
+          } else if (keyValue === 'Enter') {
+            addChar('\n');
+          } else if (keyValue === 'Escape') {
+            // Clear screen
+            for (let i = 0; i < BUFFER_SIZE; i++) {
+              textBuffer[i] = new Array(40).fill(' ');
+            }
+            cursorRow = 0;
+            cursorCol = 0;
+            scrollOffset = 0;
+            render();
+          } else if (keyValue === 'ArrowUp') {
+            if (cursorRow > 0) {
+              cursorRow--;
+              adjustScrollToShowCursor();
+              render();
+            }
+          } else if (keyValue === 'ArrowDown') {
+            if (cursorRow < BUFFER_SIZE - 1) {
+              cursorRow++;
+              adjustScrollToShowCursor();
+              render();
+            }
+          } else if (keyValue === 'ArrowLeft') {
+            if (cursorCol > 0) {
+              cursorCol--;
+            } else if (cursorRow > 0) {
+              cursorRow--;
+              cursorCol = 39;
+              adjustScrollToShowCursor();
+            }
+            render();
+          } else if (keyValue === 'ArrowRight') {
+            if (cursorCol < 39) {
+              cursorCol++;
+            } else if (cursorRow < BUFFER_SIZE - 1) {
+              cursorRow++;
+              cursorCol = 0;
+              adjustScrollToShowCursor();
+            }
+            render();
+          } else if (keyValue.startsWith('F')) {
+            // Function keys - could add special functionality later
+            console.log('Function key pressed:', keyValue);
+          } else if (keyValue === ' ') {
+            // Space key
+            addChar(' ');
+          } else if (keyValue.length === 1) {
+            // Regular character
+            addChar(keyValue);
+          }
+        }
+        
+        // Handle both click and touch events for maximum compatibility
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const keyValue = this.getAttribute('data-key');
+          handleKeyPress(keyValue);
+        });
+        
+        // Touch event handling for Kindle/mobile
+        let touchHandled = false;
+        
+        button.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          touchHandled = false;
+          this.style.transform = 'scale(0.95)';
+          this.style.backgroundColor = '#b0c0a0';
+        }, { passive: false });
+        
+        button.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          this.style.transform = 'scale(1)';
+          this.style.backgroundColor = '';
+          
+          if (!touchHandled) {
+            touchHandled = true;
+            const keyValue = this.getAttribute('data-key');
+            
+            // Small delay to ensure visual feedback is seen
+            setTimeout(() => {
+              handleKeyPress(keyValue);
+            }, 50);
+          }
+        }, { passive: false });
+        
+        button.addEventListener('touchcancel', function(e) {
+          e.preventDefault();
+          this.style.transform = 'scale(1)';
+          this.style.backgroundColor = '';
+          touchHandled = true;
+        }, { passive: false });
+      });
+    }
+    
+    function adjustScrollToShowCursor() {
+      // If cursor is above visible area, scroll up
+      if (cursorRow < scrollOffset) {
+        scrollOffset = cursorRow;
+      }
+      // If cursor is below visible area, scroll down
+      else if (cursorRow >= scrollOffset + 10) {
+        scrollOffset = cursorRow - 9;
+      }
+      
+      // Keep scroll within bounds
+      scrollOffset = Math.max(0, Math.min(scrollOffset, BUFFER_SIZE - 10));
+    }
+    
+    function handleKey(e) {
+      console.log('Key:', e.key);
+      
+      if (e.key.length === 1) {
+        addChar(e.key);
+      } else if (e.key === 'Enter') {
+        addChar('\n');
+      } else if (e.key === 'Backspace') {
+        if (cursorCol > 0) {
+          cursorCol--;
+          textBuffer[cursorRow][cursorCol] = ' ';
+        } else if (cursorRow > 0) {
+          cursorRow--;
+          cursorCol = 39;
+          textBuffer[cursorRow][cursorCol] = ' ';
+        }
+        adjustScrollToShowCursor();
+        render();
+      } else if (e.key === 'ArrowUp') {
+        if (cursorRow > 0) {
+          cursorRow--;
+          adjustScrollToShowCursor();
+          render();
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (cursorRow < BUFFER_SIZE - 1) {
+          cursorRow++;
+          adjustScrollToShowCursor();
+          render();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (cursorCol > 0) {
+          cursorCol--;
+        } else if (cursorRow > 0) {
+          cursorRow--;
+          cursorCol = 39;
+          adjustScrollToShowCursor();
+        }
+        render();
+      } else if (e.key === 'ArrowRight') {
+        if (cursorCol < 39) {
+          cursorCol++;
+        } else if (cursorRow < BUFFER_SIZE - 1) {
+          cursorRow++;
+          cursorCol = 0;
+          adjustScrollToShowCursor();
+        }
+        render();
+      } else if (e.key === 'Escape') {
+        // Clear screen
+        for (let i = 0; i < BUFFER_SIZE; i++) {
+          textBuffer[i] = new Array(40).fill(' ');
+        }
+        cursorRow = 0;
+        cursorCol = 0;
+        scrollOffset = 0;
+        render();
+      }
+      
+      e.preventDefault();
+    }
+    
+    function render() {
+      console.log('Rendering TRS-80 screen...');
+      
+      // TRS-80 specifications: 40x10 characters, each 6x8 pixels
+      const PIXEL_SIZE = 4; // Each TRS-80 pixel is 4x4 screen pixels
+      const PIXEL_DOT_SIZE = 3; // Each visible pixel dot is 3x3 with 1px gap
+      const CHAR_WIDTH = 6 * PIXEL_SIZE;  // 6 pixels per character = 24px
+      const CHAR_HEIGHT = 8 * PIXEL_SIZE; // 8 pixels per line = 32px
+      const BORDER_SIZE = 20;
+      
+      // Clear with TRS-80 colors
+      ctx.fillStyle = BACKGROUND_COLOR;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw border
+      ctx.fillStyle = TEXT_COLOR;
+      ctx.fillRect(0, 0, canvas.width, BORDER_SIZE); // Top
+      ctx.fillRect(0, canvas.height - BORDER_SIZE, canvas.width, BORDER_SIZE); // Bottom
+      ctx.fillRect(0, 0, BORDER_SIZE, canvas.height); // Left
+      ctx.fillRect(canvas.width - BORDER_SIZE, 0, BORDER_SIZE, canvas.height); // Right
+      
+      // Draw background grid (authentic LCD look)
+      ctx.fillStyle = '#b0c0a0';
+      
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 40; col++) {
+          const x = BORDER_SIZE + col * CHAR_WIDTH;
+          const y = BORDER_SIZE + row * CHAR_HEIGHT;
+          
+          // Draw 5x7 character background grid with pixel gaps
+          for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+              const pixelX = x + c * PIXEL_SIZE;
+              const pixelY = y + r * PIXEL_SIZE;
+              ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+            }
+          }
+        }
+      }
+      
+      // Draw text from buffer with scroll offset
+      for (let screenRow = 0; screenRow < 10; screenRow++) {
+        const bufferRow = screenRow + scrollOffset;
+        if (bufferRow >= 0 && bufferRow < BUFFER_SIZE) {
+          for (let col = 0; col < 40; col++) {
+            const char = textBuffer[bufferRow][col];
+            if (char && char !== ' ') {
+              const x = BORDER_SIZE + col * CHAR_WIDTH;
+              const y = BORDER_SIZE + screenRow * CHAR_HEIGHT;
+              drawChar(char, x, y, PIXEL_SIZE, PIXEL_DOT_SIZE);
+            }
+          }
+        }
+      }
+      
+      // Handle cursor blinking
+      const currentTime = Date.now();
+      if (currentTime - lastBlinkTime > 500) { // Blink every 500ms
+        cursorVisible = !cursorVisible;
+        lastBlinkTime = currentTime;
+      }
+      
+      // Draw cursor (inverse character or block)
+      const screenCursorRow = cursorRow - scrollOffset;
+      
+      // Only draw cursor if it's visible on screen and currently in blink state
+      if (screenCursorRow >= 0 && screenCursorRow < 10 && cursorVisible) {
+        const cursorX = BORDER_SIZE + cursorCol * CHAR_WIDTH;
+        const cursorY = BORDER_SIZE + screenCursorRow * CHAR_HEIGHT;
+        
+        // Get the character at cursor position
+        const charAtCursor = textBuffer[cursorRow] && textBuffer[cursorRow][cursorCol] 
+          ? textBuffer[cursorRow][cursorCol] : ' ';
+        
+        // Draw cursor background (solid block)
+        ctx.fillStyle = TEXT_COLOR;
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 5; c++) {
+            const pixelX = cursorX + c * PIXEL_SIZE;
+            const pixelY = cursorY + r * PIXEL_SIZE;
+            ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+          }
+        }
+        
+        // Draw inverted character on top if there's a character
+        if (charAtCursor !== ' ') {
+          const fontData = FONT_DATA[charAtCursor];
+          if (fontData) {
+            ctx.fillStyle = BACKGROUND_COLOR;
+            
+            for (let row = 0; row < 7; row++) {
+              let rowData = fontData[row];
+              for (let col = 0; col < 5; col++) {
+                if (rowData & (1 << (4 - col))) {
+                  const pixelX = cursorX + col * PIXEL_SIZE;
+                  const pixelY = cursorY + row * PIXEL_SIZE;
+                  ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Animation loop for cursor blinking
+    function animationLoop() {
+      render();
+      requestAnimationFrame(animationLoop);
+    }
+    
+  </script>
+</body>
+</html>
