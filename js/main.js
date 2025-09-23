@@ -8,22 +8,60 @@ class TRS80System {
   }
   
   init() {
-    // Initialize modules in dependency order
-    this.display = new Display().init();
-    this.font = new PixelFont(this.display);
-    this.input = new InputHandler(this.font).init();
-    
-    // Set up event callbacks
-    this.input.onTextChange = () => this.render();
-    this.input.onCursorBlink = () => this.render();
-    
-    // Set up window event listeners
-    this.setupWindowEvents();
-    
-    // Initial render
-    this.render();
-    
-    console.log('TRS-80 Model 100 System Initialized');
+    try {
+      console.log('Starting TRS-80 initialization...');
+      
+      // Check if classes are available
+      if (!window.Display) {
+        throw new Error('Display class not available');
+      }
+      if (!window.PixelFont) {
+        throw new Error('PixelFont class not available');
+      }
+      if (!window.InputHandler) {
+        throw new Error('InputHandler class not available');
+      }
+      
+      // Initialize modules in dependency order
+      console.log('Initializing Display...');
+      this.display = new Display().init();
+      if (!this.display) {
+        throw new Error('Display initialization failed');
+      }
+      
+      console.log('Initializing PixelFont...');
+      this.font = new PixelFont(this.display);
+      if (!this.font) {
+        throw new Error('PixelFont initialization failed');
+      }
+      
+      console.log('Initializing InputHandler...');
+      this.input = new InputHandler(this.font).init();
+      if (!this.input) {
+        throw new Error('InputHandler initialization failed');
+      }
+      
+      // Set up event callbacks
+      console.log('Setting up event callbacks...');
+      this.input.onTextChange = () => this.render();
+      this.input.onCursorBlink = () => this.render();
+      
+      // Set up window event listeners
+      this.setupWindowEvents();
+      
+      // Initial render
+      console.log('Performing initial render...');
+      this.render();
+      
+      console.log('TRS-80 Model 100 System Initialized Successfully!');
+    } catch (error) {
+      console.error('TRS-80 System initialization failed:', error);
+      console.error('Available classes:', {
+        Display: !!window.Display,
+        PixelFont: !!window.PixelFont,
+        InputHandler: !!window.InputHandler
+      });
+    }
   }
   
   setupWindowEvents() {
@@ -102,9 +140,17 @@ let trs80System = null;
 
 // Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
-  trs80System = new TRS80System();
-  trs80System.init();
+  console.log('DOM Content Loaded - starting TRS-80 system...');
   
-  // Make system globally accessible for debugging/expansion
-  window.TRS80 = trs80System;
+  try {
+    trs80System = new TRS80System();
+    trs80System.init();
+    
+    // Make system globally accessible for debugging/expansion
+    window.TRS80 = trs80System;
+    
+    console.log('TRS-80 system ready! Try typing on the keyboard.');
+  } catch (error) {
+    console.error('Failed to start TRS-80 system:', error);
+  }
 });
