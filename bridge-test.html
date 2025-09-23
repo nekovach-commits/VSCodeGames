@@ -46,27 +46,62 @@
     cursorRow = 4;
     cursorCol = 0;
     
-    // Font data (simplified)
+    // Complete TRS-80 Font Data
     const FONTS = {
       'A': [0b01110,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
       'B': [0b11110,0b10001,0b10001,0b11110,0b10001,0b10001,0b11110],
       'C': [0b01110,0b10001,0b10000,0b10000,0b10000,0b10001,0b01110],
       'D': [0b11110,0b10001,0b10001,0b10001,0b10001,0b10001,0b11110],
       'E': [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b11111],
+      'F': [0b11111,0b10000,0b10000,0b11110,0b10000,0b10000,0b10000],
+      'G': [0b01110,0b10001,0b10000,0b10111,0b10001,0b10001,0b01110],
       'H': [0b10001,0b10001,0b10001,0b11111,0b10001,0b10001,0b10001],
       'I': [0b01110,0b00100,0b00100,0b00100,0b00100,0b00100,0b01110],
+      'J': [0b00111,0b00001,0b00001,0b00001,0b10001,0b10001,0b01110],
+      'K': [0b10001,0b10010,0b10100,0b11000,0b10100,0b10010,0b10001],
       'L': [0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b11111],
       'M': [0b10001,0b11011,0b10101,0b10001,0b10001,0b10001,0b10001],
+      'N': [0b10001,0b11001,0b10101,0b10011,0b10001,0b10001,0b10001],
       'O': [0b01110,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
+      'P': [0b11110,0b10001,0b10001,0b11110,0b10000,0b10000,0b10000],
+      'Q': [0b01110,0b10001,0b10001,0b10101,0b10011,0b01110,0b00001],
       'R': [0b11110,0b10001,0b10001,0b11110,0b10100,0b10010,0b10001],
       'S': [0b01110,0b10001,0b10000,0b01110,0b00001,0b10001,0b01110],
       'T': [0b11111,0b00100,0b00100,0b00100,0b00100,0b00100,0b00100],
+      'U': [0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b01110],
+      'V': [0b10001,0b10001,0b10001,0b10001,0b10001,0b01010,0b00100],
+      'W': [0b10001,0b10001,0b10001,0b10001,0b10101,0b11011,0b10001],
+      'X': [0b10001,0b01010,0b00100,0b00100,0b00100,0b01010,0b10001],
       'Y': [0b10001,0b01010,0b00100,0b00100,0b00100,0b00100,0b00100],
+      'Z': [0b11111,0b00001,0b00010,0b00100,0b01000,0b10000,0b11111],
       '0': [0b01110,0b10001,0b10011,0b10101,0b11001,0b10001,0b01110],
       '1': [0b00100,0b01100,0b00100,0b00100,0b00100,0b00100,0b01110],
+      '2': [0b01110,0b10001,0b00001,0b00010,0b00100,0b01000,0b11111],
+      '3': [0b01110,0b10001,0b00001,0b00110,0b00001,0b10001,0b01110],
+      '4': [0b00010,0b00110,0b01010,0b10010,0b11111,0b00010,0b00010],
+      '5': [0b11111,0b10000,0b11110,0b00001,0b00001,0b10001,0b01110],
+      '6': [0b00110,0b01000,0b10000,0b11110,0b10001,0b10001,0b01110],
+      '7': [0b11111,0b00001,0b00010,0b00100,0b01000,0b10000,0b10000],
       '8': [0b01110,0b10001,0b10001,0b01110,0b10001,0b10001,0b01110],
+      '9': [0b01110,0b10001,0b10001,0b01111,0b00001,0b00010,0b01100],
+      ' ': [0,0,0,0,0,0,0],
+      '.': [0,0,0,0,0,0b00100,0b00100],
+      ',': [0,0,0,0,0,0b00100,0b01000],
+      '!': [0b00100,0b00100,0b00100,0b00100,0b00100,0,0b00100],
+      '?': [0b01110,0b10001,0b00010,0b00100,0b00100,0,0b00100],
+      ':': [0,0,0b00100,0,0,0b00100,0],
+      ';': [0,0,0b00100,0,0,0b00100,0b01000],
       '-': [0,0,0,0b11111,0,0,0],
-      ' ': [0,0,0,0,0,0,0]
+      '+': [0,0b00100,0b00100,0b11111,0b00100,0b00100,0],
+      '=': [0,0,0b11111,0,0b11111,0,0],
+      '/': [0b00001,0b00010,0b00100,0b01000,0b10000,0b00000,0],
+      '\\': [0b10000,0b01000,0b00100,0b00010,0b00001,0b00000,0],
+      '(': [0b00010,0b00100,0b01000,0b01000,0b01000,0b00100,0b00010],
+      ')': [0b01000,0b00100,0b00010,0b00010,0b00010,0b00100,0b01000],
+      '[': [0b01110,0b01000,0b01000,0b01000,0b01000,0b01000,0b01110],
+      ']': [0b01110,0b00010,0b00010,0b00010,0b00010,0b00010,0b01110],
+      '"': [0b01010,0b01010,0b01010,0,0,0,0],
+      "'": [0b00100,0b00100,0b00100,0,0,0,0]
     };
     
     function drawChar(char, x, y) {
@@ -75,12 +110,15 @@
       
       ctx.fillStyle = '#1a3d1a';
       const CELL = 4; // Each pixel is 4x4 screen pixels
+      const GAP = 1;  // 1px gap between pixels
       
       for (let row = 0; row < 7; row++) {
         for (let col = 0; col < 5; col++) {
           if (fontData[row] & (1 << (4 - col))) {
-            // Draw pixel blocks with proper spacing
-            ctx.fillRect(x + col * CELL, y + row * CELL, CELL, CELL);
+            // Draw individual pixels with gaps
+            const pixelX = x + col * CELL + col * GAP;
+            const pixelY = y + row * CELL + row * GAP;
+            ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
           }
         }
       }
@@ -90,6 +128,7 @@
       console.log('Rendering screen...');
       
       const CELL = 4; // Base pixel size
+      const GAP = 1;  // 1px gap between pixels
       const BORDER_SIZE = 20;
       const CHAR_WIDTH = (5 + 1) * CELL; // 5 pixels wide + 1 gap = 24px
       const CHAR_HEIGHT = (7 + 1) * CELL; // 7 pixels tall + 1 gap = 32px
@@ -107,15 +146,18 @@
       
       // Draw background grid (authentic LCD look)
       ctx.fillStyle = '#b0c0a0';
+      
       for (let row = 0; row < 10; row++) {
         for (let col = 0; col < 40; col++) {
           const x = BORDER_SIZE + col * CHAR_WIDTH;
           const y = BORDER_SIZE + row * CHAR_HEIGHT;
           
-          // Draw character cell background grid
+          // Draw character cell background grid with pixel gaps
           for (let r = 0; r < 7; r++) {
             for (let c = 0; c < 5; c++) {
-              ctx.fillRect(x + c * CELL, y + r * CELL, CELL, CELL);
+              const pixelX = x + c * CELL + c * GAP;
+              const pixelY = y + r * CELL + r * GAP;
+              ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
             }
           }
         }
@@ -136,12 +178,15 @@
       // Draw cursor (inverse block)
       const cursorX = BORDER_SIZE + cursorCol * CHAR_WIDTH;
       const cursorY = BORDER_SIZE + cursorRow * CHAR_HEIGHT;
+      
       ctx.fillStyle = '#1a3d1a';
       
-      // Draw full character-size cursor block
+      // Draw full character-size cursor block with pixel gaps
       for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 5; c++) {
-          ctx.fillRect(cursorX + c * CELL, cursorY + r * CELL, CELL, CELL);
+          const pixelX = cursorX + c * CELL + c * GAP;
+          const pixelY = cursorY + r * CELL + r * GAP;
+          ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
         }
       }
       
@@ -154,7 +199,9 @@
           for (let row = 0; row < 7; row++) {
             for (let col = 0; col < 5; col++) {
               if (fontData[row] & (1 << (4 - col))) {
-                ctx.fillRect(cursorX + col * CELL, cursorY + row * CELL, CELL, CELL);
+                const pixelX = cursorX + col * CELL + col * GAP;
+                const pixelY = cursorY + row * CELL + row * GAP;
+                ctx.fillRect(pixelX, pixelY, CELL - GAP, CELL - GAP);
               }
             }
           }
