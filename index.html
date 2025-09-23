@@ -26,10 +26,391 @@
       </div>
     </div>
   </div>
-  <!-- TRS-80 Model 100 System Modules -->
-  <script src="js/display.js"></script>
-  <script src="js/font.js"></script>
-  <script src="js/input.js"></script>
-  <script src="js/main.js"></script>
+  <!-- TRS-80 Model 100 System Implementation -->
+  <script>
+    console.log('TRS-80 Model 100 system starting...');
+    
+    // Core TRS-80 Model 100 System Variables
+    const canvas = document.getElementById('retro-canvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('retro-container');
+    
+    // TRS-80 Model 100 Specifications
+    const SCREEN_WIDTH = 40;
+    const SCREEN_HEIGHT = 10;
+    const BUFFER_SIZE = 1000; // Scrollable text buffer
+    const BACKGROUND_COLOR = '#c8d4b8';
+    const TEXT_COLOR = '#1a3d1a';
+    
+    // Display state
+    let cursorRow = 0;
+    let cursorCol = 0;
+    let scrollOffset = 0;
+    let textBuffer = [];
+    
+    // Initialize text buffer
+    for (let i = 0; i < BUFFER_SIZE; i++) {
+      textBuffer[i] = new Array(40).fill(' ');
+    }
+    
+    // TRS-80 Model 100 5x7 Font Data
+    const FONT_DATA = {
+      ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+      '!': [0x04, 0x04, 0x04, 0x04, 0x00, 0x04, 0x00],
+      '"': [0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00],
+      '#': [0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A],
+      '$': [0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04],
+      '%': [0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03],
+      '&': [0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D],
+      '\'': [0x0C, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00],
+      '(': [0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02],
+      ')': [0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08],
+      '*': [0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00],
+      '+': [0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00],
+      ',': [0x00, 0x00, 0x00, 0x00, 0x0C, 0x04, 0x08],
+      '-': [0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00],
+      '.': [0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C],
+      '/': [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00],
+      '0': [0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E],
+      '1': [0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      '2': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F],
+      '3': [0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E],
+      '4': [0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02],
+      '5': [0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E],
+      '6': [0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E],
+      '7': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08],
+      '8': [0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E],
+      '9': [0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C],
+      ':': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00],
+      ';': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08],
+      '<': [0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02],
+      '=': [0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00],
+      '>': [0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08],
+      '?': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04],
+      '@': [0x0E, 0x11, 0x01, 0x0D, 0x15, 0x15, 0x0E],
+      'A': [0x0E, 0x11, 0x11, 0x11, 0x1F, 0x11, 0x11],
+      'B': [0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E],
+      'C': [0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E],
+      'D': [0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C],
+      'E': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F],
+      'F': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10],
+      'G': [0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F],
+      'H': [0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11],
+      'I': [0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'J': [0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C],
+      'K': [0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11],
+      'L': [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F],
+      'M': [0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11],
+      'N': [0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11],
+      'O': [0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'P': [0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10],
+      'Q': [0x0E, 0x11, 0x11, 0x15, 0x13, 0x11, 0x0F],
+      'R': [0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11],
+      'S': [0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E],
+      'T': [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      'U': [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'V': [0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'W': [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11],
+      'X': [0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11],
+      'Y': [0x11, 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04],
+      'Z': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F],
+      '[': [0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E],
+      '\\': [0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00],
+      ']': [0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E],
+      '^': [0x04, 0x0A, 0x11, 0x00, 0x00, 0x00, 0x00],
+      '_': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F],
+      '`': [0x08, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00],
+      'a': [0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F],
+      'b': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E],
+      'c': [0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E],
+      'd': [0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F],
+      'e': [0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E],
+      'f': [0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08],
+      'g': [0x00, 0x00, 0x0F, 0x11, 0x0F, 0x01, 0x0E],
+      'h': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'i': [0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E],
+      'j': [0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C],
+      'k': [0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12],
+      'l': [0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'm': [0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11],
+      'n': [0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'o': [0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E],
+      'p': [0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10],
+      'q': [0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01],
+      'r': [0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10],
+      's': [0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E],
+      't': [0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06],
+      'u': [0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D],
+      'v': [0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'w': [0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A],
+      'x': [0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11],
+      'y': [0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E],
+      'z': [0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F],
+      '{': [0x02, 0x04, 0x04, 0x08, 0x04, 0x04, 0x02],
+      '|': [0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      '}': [0x08, 0x04, 0x04, 0x02, 0x04, 0x04, 0x08],
+      '~': [0x00, 0x00, 0x00, 0x0C, 0x12, 0x06, 0x00]
+    };
+    
+    // Device detection and canvas sizing
+    function setupDisplay() {
+      console.log('Setting up TRS-80 display...');
+      
+      // Set canvas size and detect device
+      canvas.width = 1000;
+      canvas.height = 360;
+      
+      // Show Kindle input field for mobile/Kindle devices
+      const kindleContainer = document.getElementById('kindle-input-container');
+      const kindleInput = document.getElementById('kindle-input');
+      
+      if (kindleContainer && kindleInput) {
+        // Show input field for mobile devices (Kindle detection)
+        if (/Mobi|Android|iPhone|iPad|Kindle|Silk/i.test(navigator.userAgent) || 
+            window.innerWidth < 800) {
+          kindleContainer.style.display = 'block';
+          
+          // Set up Kindle keyboard input
+          kindleInput.addEventListener('input', function(e) {
+            const text = e.target.value;
+            if (text.length > 0) {
+              // Add the last character typed
+              const lastChar = text[text.length - 1];
+              addChar(lastChar);
+              e.target.value = ''; // Clear input for next character
+            }
+          });
+          
+          kindleInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              addChar('\n');
+              e.preventDefault();
+            } else if (e.key === 'Backspace') {
+              if (cursorCol > 0) {
+                cursorCol--;
+                textBuffer[cursorRow][cursorCol] = ' ';
+              } else if (cursorRow > 0) {
+                cursorRow--;
+                cursorCol = 39;
+                textBuffer[cursorRow][cursorCol] = ' ';
+              }
+              adjustScrollToShowCursor();
+              render();
+              e.preventDefault();
+            }
+          });
+        }
+      }
+      
+      // Set up desktop keyboard input
+      document.addEventListener('keydown', handleKey);
+      container.focus();
+      
+      // Update resolution display
+      const resolutionInfo = document.getElementById('resolution-info');
+      if (resolutionInfo) {
+        resolutionInfo.textContent = `${window.innerWidth}x${window.innerHeight} (Canvas: ${canvas.width}x${canvas.height})`;
+      }
+      
+      render();
+    }
+    
+    function drawChar(char, x, y, pixelSize, pixelDotSize) {
+      const fontData = FONT_DATA[char];
+      if (!fontData) return;
+      
+      ctx.fillStyle = TEXT_COLOR;
+      
+      for (let row = 0; row < 7; row++) {
+        let rowData = fontData[row];
+        for (let col = 0; col < 5; col++) {
+          if (rowData & (1 << (4 - col))) {
+            const pixelX = x + col * pixelSize;
+            const pixelY = y + row * pixelSize;
+            ctx.fillRect(pixelX, pixelY, pixelDotSize, pixelDotSize);
+          }
+        }
+      }
+    }
+    
+    function addChar(char) {
+      if (char === '\n') {
+        cursorRow++;
+        cursorCol = 0;
+        if (cursorRow >= BUFFER_SIZE) {
+          cursorRow = BUFFER_SIZE - 1;
+        }
+      } else {
+        textBuffer[cursorRow][cursorCol] = char;
+        cursorCol++;
+        if (cursorCol >= 40) {
+          cursorCol = 0;
+          cursorRow++;
+          if (cursorRow >= BUFFER_SIZE) {
+            cursorRow = BUFFER_SIZE - 1;
+          }
+        }
+      }
+      adjustScrollToShowCursor();
+      render();
+    }
+    
+    function adjustScrollToShowCursor() {
+      // If cursor is above visible area, scroll up
+      if (cursorRow < scrollOffset) {
+        scrollOffset = cursorRow;
+      }
+      // If cursor is below visible area, scroll down
+      else if (cursorRow >= scrollOffset + 10) {
+        scrollOffset = cursorRow - 9;
+      }
+      
+      // Keep scroll within bounds
+      scrollOffset = Math.max(0, Math.min(scrollOffset, BUFFER_SIZE - 10));
+    }
+    
+    function handleKey(e) {
+      console.log('Key:', e.key);
+      
+      if (e.key.length === 1) {
+        addChar(e.key);
+      } else if (e.key === 'Enter') {
+        addChar('\n');
+      } else if (e.key === 'Backspace') {
+        if (cursorCol > 0) {
+          cursorCol--;
+          textBuffer[cursorRow][cursorCol] = ' ';
+        } else if (cursorRow > 0) {
+          cursorRow--;
+          cursorCol = 39;
+          textBuffer[cursorRow][cursorCol] = ' ';
+        }
+        adjustScrollToShowCursor();
+        render();
+      } else if (e.key === 'ArrowUp') {
+        if (cursorRow > 0) {
+          cursorRow--;
+          adjustScrollToShowCursor();
+          render();
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (cursorRow < BUFFER_SIZE - 1) {
+          cursorRow++;
+          adjustScrollToShowCursor();
+          render();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (cursorCol > 0) {
+          cursorCol--;
+        } else if (cursorRow > 0) {
+          cursorRow--;
+          cursorCol = 39;
+          adjustScrollToShowCursor();
+        }
+        render();
+      } else if (e.key === 'ArrowRight') {
+        if (cursorCol < 39) {
+          cursorCol++;
+        } else if (cursorRow < BUFFER_SIZE - 1) {
+          cursorRow++;
+          cursorCol = 0;
+          adjustScrollToShowCursor();
+        }
+        render();
+      } else if (e.key === 'Escape') {
+        // Clear screen
+        for (let i = 0; i < BUFFER_SIZE; i++) {
+          textBuffer[i] = new Array(40).fill(' ');
+        }
+        cursorRow = 0;
+        cursorCol = 0;
+        scrollOffset = 0;
+        render();
+      }
+      
+      e.preventDefault();
+    }
+    
+    function render() {
+      console.log('Rendering TRS-80 screen...');
+      
+      // TRS-80 specifications: 40x10 characters, each 6x8 pixels
+      const PIXEL_SIZE = 4; // Each TRS-80 pixel is 4x4 screen pixels
+      const PIXEL_DOT_SIZE = 3; // Each visible pixel dot is 3x3 with 1px gap
+      const CHAR_WIDTH = 6 * PIXEL_SIZE;  // 6 pixels per character = 24px
+      const CHAR_HEIGHT = 8 * PIXEL_SIZE; // 8 pixels per line = 32px
+      const BORDER_SIZE = 20;
+      
+      // Clear with TRS-80 colors
+      ctx.fillStyle = BACKGROUND_COLOR;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw border
+      ctx.fillStyle = TEXT_COLOR;
+      ctx.fillRect(0, 0, canvas.width, BORDER_SIZE); // Top
+      ctx.fillRect(0, canvas.height - BORDER_SIZE, canvas.width, BORDER_SIZE); // Bottom
+      ctx.fillRect(0, 0, BORDER_SIZE, canvas.height); // Left
+      ctx.fillRect(canvas.width - BORDER_SIZE, 0, BORDER_SIZE, canvas.height); // Right
+      
+      // Draw background grid (authentic LCD look)
+      ctx.fillStyle = '#b0c0a0';
+      
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 40; col++) {
+          const x = BORDER_SIZE + col * CHAR_WIDTH;
+          const y = BORDER_SIZE + row * CHAR_HEIGHT;
+          
+          // Draw 5x7 character background grid with pixel gaps
+          for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+              const pixelX = x + c * PIXEL_SIZE;
+              const pixelY = y + r * PIXEL_SIZE;
+              ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+            }
+          }
+        }
+      }
+      
+      // Draw text from buffer with scroll offset
+      for (let screenRow = 0; screenRow < 10; screenRow++) {
+        const bufferRow = screenRow + scrollOffset;
+        if (bufferRow >= 0 && bufferRow < BUFFER_SIZE) {
+          for (let col = 0; col < 40; col++) {
+            const char = textBuffer[bufferRow][col];
+            if (char && char !== ' ') {
+              const x = BORDER_SIZE + col * CHAR_WIDTH;
+              const y = BORDER_SIZE + screenRow * CHAR_HEIGHT;
+              drawChar(char, x, y, PIXEL_SIZE, PIXEL_DOT_SIZE);
+            }
+          }
+        }
+      }
+      
+      // Draw cursor (inverse block covering 5x7 font area)
+      const screenCursorRow = cursorRow - scrollOffset;
+      
+      // Only draw cursor if it's visible on screen
+      if (screenCursorRow >= 0 && screenCursorRow < 10) {
+        const cursorX = BORDER_SIZE + cursorCol * CHAR_WIDTH;
+        const cursorY = BORDER_SIZE + screenCursorRow * CHAR_HEIGHT;
+        
+        ctx.fillStyle = TEXT_COLOR;
+        
+        // Draw 5x7 cursor block with pixel gaps
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 5; c++) {
+            const pixelX = cursorX + c * PIXEL_SIZE;
+            const pixelY = cursorY + r * PIXEL_SIZE;
+            ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+          }
+        }
+      }
+    }
+    
+    // Initialize system when page loads
+    document.addEventListener('DOMContentLoaded', setupDisplay);
+    
+    console.log('TRS-80 Model 100 system loaded');
+  </script>
 </body>
 </html>
