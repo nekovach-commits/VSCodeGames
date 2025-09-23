@@ -34,6 +34,12 @@ class InputHandler {
     const container = document.getElementById('retro-container');
     const kindleInput = document.getElementById('kindle-input');
     
+    // Ensure container exists before proceeding
+    if (!container) {
+      console.error('retro-container not found');
+      return;
+    }
+    
     // Focus the container so it can receive keyboard events
     container.focus();
     
@@ -386,42 +392,57 @@ class InputHandler {
   }
   
   detectMobileDevice() {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Kindle/i.test(navigator.userAgent);
-    const isKindle = /Kindle/i.test(navigator.userAgent) || /Silk/i.test(navigator.userAgent);
-    const kindleInput = document.getElementById('kindle-input');
-    const kindleContainer = document.getElementById('kindle-input-container');
-    
-    if (isMobile && kindleInput && kindleContainer) {
-      // Show the entire input container on mobile/Kindle devices
-      kindleContainer.style.display = 'block';
-      console.log('Mobile/Kindle device detected - input field shown');
+    try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Kindle/i.test(navigator.userAgent);
+      const isKindle = /Kindle/i.test(navigator.userAgent) || /Silk/i.test(navigator.userAgent);
+      const kindleInput = document.getElementById('kindle-input');
+      const kindleContainer = document.getElementById('kindle-input-container');
       
-      // Update placeholder text based on device
-      if (isKindle) {
-        kindleInput.placeholder = "Touch here to activate Kindle keyboard";
-      } else {
-        kindleInput.placeholder = "Touch here to open on-screen keyboard";
-      }
+      console.log('Device detection:', { isMobile, isKindle, hasInput: !!kindleInput, hasContainer: !!kindleContainer });
       
-      // Less aggressive auto-focus to prevent screen blanking
-      if (isKindle) {
-        // On Kindle, wait longer before trying to focus to prevent screen issues
-        setTimeout(() => {
-          console.log('Attempting Kindle keyboard activation...');
-          kindleInput.focus();
-        }, 2000);
+      if (isMobile && kindleInput && kindleContainer) {
+        // Show the entire input container on mobile/Kindle devices
+        kindleContainer.style.display = 'block';
+        console.log('Mobile/Kindle device detected - input field shown');
+        
+        // Update placeholder text based on device
+        if (isKindle) {
+          kindleInput.placeholder = "Touch here to activate Kindle keyboard";
+        } else {
+          kindleInput.placeholder = "Touch here to open on-screen keyboard";
+        }
+        
+        // Less aggressive auto-focus to prevent screen blanking
+        if (isKindle) {
+          // On Kindle, wait longer before trying to focus to prevent screen issues
+          setTimeout(() => {
+            console.log('Attempting Kindle keyboard activation...');
+            if (kindleInput) {
+              kindleInput.focus();
+            }
+          }, 2000);
+        } else {
+          // On other mobile devices, try earlier
+          setTimeout(() => {
+            if (kindleInput) {
+              kindleInput.focus();
+            }
+          }, 500);
+        }
       } else {
-        // On other mobile devices, try earlier
-        setTimeout(() => {
-          kindleInput.focus();
-        }, 500);
+        // On desktop, ensure the input container stays hidden
+        if (kindleContainer) {
+          kindleContainer.style.display = 'none';
+        }
+        console.log('Desktop device detected - input field hidden');
       }
-    } else {
-      // On desktop, ensure the input container stays hidden
+    } catch (error) {
+      console.error('Error in detectMobileDevice:', error);
+      // Ensure container is hidden on any error
+      const kindleContainer = document.getElementById('kindle-input-container');
       if (kindleContainer) {
         kindleContainer.style.display = 'none';
       }
-      console.log('Desktop device detected - input field hidden');
     }
   }
   

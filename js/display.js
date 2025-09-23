@@ -29,7 +29,18 @@ class Display {
   
   init() {
     this.canvas = document.getElementById('retro-canvas');
+    if (!this.canvas) {
+      console.error('Canvas element retro-canvas not found');
+      return this;
+    }
+    
     this.ctx = this.canvas.getContext('2d');
+    if (!this.ctx) {
+      console.error('Could not get 2D context from canvas');
+      return this;
+    }
+    
+    console.log('Display initialized successfully');
     this.setupCanvas();
     return this;
   }
