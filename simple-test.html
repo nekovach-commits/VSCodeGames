@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple TRS-80 Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="retro-container" tabindex="0">
+    <canvas id="retro-canvas"></canvas>
+    <div id="keyboard-area">
+      <div>
+        <p>TRS-80 MODEL 100 - PORTABLE COMPUTER</p>
+        <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete</p>
+        <p>Resolution: <span id="resolution-info">Loading...</span></p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    console.log('Starting simple test...');
+    
+    // Simple canvas test first
+    window.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('retro-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = 640;
+      canvas.height = 200;
+      
+      // Draw background
+      ctx.fillStyle = '#c8d4b8';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw some test content
+      ctx.fillStyle = '#1a3d1a';
+      ctx.font = '16px monospace';
+      ctx.fillText('TRS-80 TEST - If you see this, canvas works!', 20, 50);
+      
+      // Draw some squares
+      for (let i = 0; i < 10; i++) {
+        ctx.fillRect(20 + i * 25, 80, 20, 20);
+      }
+      
+      console.log('Simple canvas test completed');
+      
+      // Update resolution info
+      const resInfo = document.getElementById('resolution-info');
+      if (resInfo) {
+        resInfo.textContent = `${canvas.width}x${canvas.height}`;
+      }
+    });
+  </script>
+</body>
+</html>

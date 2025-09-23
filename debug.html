@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Test</title>
+  <style>
+    body {
+      background: #c8d4b8;
+      margin: 0;
+      padding: 20px;
+      font-family: monospace;
+    }
+    #debug-container {
+      border: 2px solid #1a3d1a;
+      padding: 20px;
+      max-width: 800px;
+    }
+    canvas {
+      border: 1px solid red;
+      background: yellow;
+    }
+  </style>
+</head>
+<body>
+  <div id="debug-container">
+    <h1>Debug Test - TRS-80 Display</h1>
+    <p>Canvas should appear below with yellow background and red border:</p>
+    <canvas id="retro-canvas" width="400" height="200"></canvas>
+    <p>If you see a yellow rectangle above, the canvas is working.</p>
+    
+    <script>
+      console.log('Debug script starting...');
+      
+      // Test basic canvas functionality
+      const canvas = document.getElementById('retro-canvas');
+      if (canvas) {
+        console.log('Canvas found:', canvas);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          console.log('Context obtained:', ctx);
+          
+          // Draw a simple test
+          ctx.fillStyle = '#1a3d1a';
+          ctx.fillRect(10, 10, 50, 50);
+          ctx.fillStyle = 'white';
+          ctx.font = '16px monospace';
+          ctx.fillText('TEST', 20, 35);
+          console.log('Test drawing completed');
+        } else {
+          console.error('Could not get canvas context');
+        }
+      } else {
+        console.error('Canvas not found');
+      }
+      
+      // Test the main modules
+      console.log('Testing main application...');
+      setTimeout(() => {
+        if (window.Display) {
+          console.log('Display class available');
+          const display = new Display();
+          console.log('Display instance created');
+        } else {
+          console.log('Display class not available');
+        }
+      }, 1000);
+      
+    </script>
+    
+    <!-- Load the actual modules to test them -->
+    <script src="js/display.js"></script>
+    <script src="js/font.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/main.js"></script>
+  </div>
+</body>
+</html>

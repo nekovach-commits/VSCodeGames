@@ -56,11 +56,15 @@ class Display {
   setupCanvas() {
     const { width, height, pixelRatio } = this.getScreenDimensions();
     
+    console.log('Setting up canvas with screen dimensions:', { width, height, pixelRatio });
+    
     // Calculate responsive scaling for different devices
     const baseCharWidth = (5 + 1) * this.CELL; // 6 cells per character  
     const baseLineHeight = (7 + 1) * this.CELL; // 8 cells per line
     const baseWidth = (this.CHARS_WIDE * baseCharWidth) + (this.BORDER_SIZE * 2);
     const baseHeight = (this.LINES_TALL * baseLineHeight) + (this.BORDER_SIZE * 2);
+    
+    console.log('Calculated base dimensions:', { baseWidth, baseHeight, baseCharWidth, baseLineHeight });
     
     // Calculate scale factors separately for width and height
     const availableWidth = width * 0.9; // Use 90% of screen width
@@ -91,9 +95,11 @@ class Display {
     scaleFactorX = Math.round(scaleFactorX);
     scaleFactorY = Math.round(scaleFactorY);
     
-    // Set dimensions
-    this.LOGICAL_WIDTH = baseWidth;
-    this.LOGICAL_HEIGHT = baseHeight;
+    // Set dimensions with safety checks
+    this.LOGICAL_WIDTH = Math.max(baseWidth, 320); // Minimum 320px wide
+    this.LOGICAL_HEIGHT = Math.max(baseHeight, 200); // Minimum 200px tall
+    
+    console.log('Setting logical dimensions:', { LOGICAL_WIDTH: this.LOGICAL_WIDTH, LOGICAL_HEIGHT: this.LOGICAL_HEIGHT });
     
     // Configure canvas with separate X and Y scaling
     this.canvas.width = this.LOGICAL_WIDTH;
@@ -101,13 +107,16 @@ class Display {
     this.canvas.style.width = (this.LOGICAL_WIDTH * scaleFactorX) + 'px';
     this.canvas.style.height = (this.LOGICAL_HEIGHT * scaleFactorY) + 'px';
     
-    console.log(`Display setup: ${width}x${height}, pixelRatio: ${pixelRatio}, scaleX: ${scaleFactorX}, scaleY: ${scaleFactorY}`);
+    console.log(`Display setup complete: screen=${width}x${height}, logical=${this.LOGICAL_WIDTH}x${this.LOGICAL_HEIGHT}, styled=${this.LOGICAL_WIDTH * scaleFactorX}x${this.LOGICAL_HEIGHT * scaleFactorY}, scaleX=${scaleFactorX}, scaleY=${scaleFactorY}`);
     
     // Disable image smoothing for crisp scaling
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.webkitImageSmoothingEnabled = false;
     this.ctx.mozImageSmoothingEnabled = false;
     this.ctx.msImageSmoothingEnabled = false;
+    
+    // Force an initial clear to ensure canvas is working
+    this.clearScreen();
   }
   
   clearScreen() {

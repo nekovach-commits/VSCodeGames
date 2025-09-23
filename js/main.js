@@ -38,6 +38,8 @@ class TRS80System {
   }
   
   render() {
+    console.log('Rendering TRS-80 display...');
+    
     // Clear screen and draw border
     this.display.clearScreen();
     this.display.drawBorder();
@@ -53,6 +55,8 @@ class TRS80System {
     if (this.input.isCursorVisible()) {
       this.font.drawCursorAtScreenPosition(this.input.cursorRow, this.input.cursorCol, startPos.x, startPos.y, this.input.textLines, this.input.scrollOffset);
     }
+    
+    console.log('Render complete');
   }
   
   // Public API methods for future expansion
