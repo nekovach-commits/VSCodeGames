@@ -157,7 +157,7 @@ export class TRS80Display {
    * Render the complete TRS-80 display
    */
   render() {
-    const { PIXEL_SIZE, PIXEL_DOT_SIZE, CHAR_WIDTH, CHAR_HEIGHT, BORDER_SIZE } = TRS80_CONFIG;
+    const { PIXEL_SIZE, CHAR_WIDTH, CHAR_HEIGHT, BORDER_SIZE } = TRS80_CONFIG;
     
     // Handle cursor blinking
     const currentTime = Date.now();
@@ -166,20 +166,18 @@ export class TRS80Display {
       this.lastBlinkTime = currentTime;
     }
     
-    // Clear with TRS-80 colors
+    // Clear canvas with white background
     this.ctx.fillStyle = TRS80_CONFIG.BACKGROUND_COLOR;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    // Draw border
+    // Draw black border frame
     this.ctx.fillStyle = TRS80_CONFIG.TEXT_COLOR;
     this.ctx.fillRect(0, 0, this.canvas.width, BORDER_SIZE); // Top
-    this.ctx.fillRect(0, this.canvas.height - BORDER_SIZE, this.canvas.width, BORDER_SIZE); // Bottom
+    this.ctx.fillRect(0, this.canvas.height - BORDER_SIZE, this.canvas.width, BORDER_SIZE); // Bottom  
     this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
     this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
-    // No background grid - clean white background for characters only
-    
-    // Draw text from buffer with scroll offset
+    // Render visible text from buffer
     for (let screenRow = 0; screenRow < TRS80_CONFIG.SCREEN_HEIGHT; screenRow++) {
       const bufferRow = screenRow + this.scrollOffset;
       if (bufferRow >= 0 && bufferRow < TRS80_CONFIG.BUFFER_SIZE) {
@@ -188,28 +186,20 @@ export class TRS80Display {
           if (char && char !== ' ') {
             const x = BORDER_SIZE + col * CHAR_WIDTH;
             const y = BORDER_SIZE + screenRow * CHAR_HEIGHT;
-            drawChar(this.ctx, char, x, y, PIXEL_SIZE, PIXEL_SIZE, TRS80_CONFIG.TEXT_COLOR);
+            drawChar(this.ctx, char, x, y, PIXEL_SIZE, TRS80_CONFIG.TEXT_COLOR);
           }
         }
       }
     }
     
-    // Draw cursor (inverse character or block)
+    // Render blinking cursor when visible on screen
     const screenCursorRow = this.cursorRow - this.scrollOffset;
-    
-    // Only draw cursor if it's visible on screen and currently in blink state
     if (screenCursorRow >= 0 && screenCursorRow < TRS80_CONFIG.SCREEN_HEIGHT && this.cursorVisible) {
       const cursorX = BORDER_SIZE + this.cursorCol * CHAR_WIDTH;
       const cursorY = BORDER_SIZE + screenCursorRow * CHAR_HEIGHT;
       
-      // Get the character at cursor position
-      const charAtCursor = this.textBuffer[this.cursorRow] && this.textBuffer[this.cursorRow][this.cursorCol] 
-        ? this.textBuffer[this.cursorRow][this.cursorCol] : ' ';
-      
-      // Draw cursor background (solid 6×8 pixel block)
+      // Draw solid 6×8 cursor block
       this.ctx.fillStyle = TRS80_CONFIG.TEXT_COLOR;
-      
-      // Draw 6×8 cursor block using solid 4×4 pixels (no gaps)
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 6; c++) {
           const pixelX = cursorX + c * PIXEL_SIZE;
@@ -218,9 +208,10 @@ export class TRS80Display {
         }
       }
       
-      // Draw inverted character on top if there's a character
-      if (charAtCursor !== ' ') {
-        drawChar(this.ctx, charAtCursor, cursorX, cursorY, PIXEL_SIZE, PIXEL_SIZE, TRS80_CONFIG.BACKGROUND_COLOR);
+      // Invert character if present at cursor position
+      const charAtCursor = this.textBuffer[this.cursorRow]?.[this.cursorCol];
+      if (charAtCursor && charAtCursor !== ' ') {
+        drawChar(this.ctx, charAtCursor, cursorX, cursorY, PIXEL_SIZE, TRS80_CONFIG.BACKGROUND_COLOR);
       }
     }
   }

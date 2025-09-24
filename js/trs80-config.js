@@ -1,36 +1,36 @@
 /**
  * TRS-80 Model 100 Configuration and Constants
  * Contains all hardware specifications and system constants
+ * @fileoverview Central configuration for TRS-80 Model 100 emulator
  */
 
 // TRS-80 Model 100 Hardware Specifications
 export const TRS80_CONFIG = {
-  // Display specifications
-  SCREEN_WIDTH: 40,        // 40 characters wide
-  SCREEN_HEIGHT: 10,       // 10 lines visible (8 lines on original, but we use 10)
-  BUFFER_SIZE: 1000,       // Scrollable text buffer size
+  // === DISPLAY GRID SPECIFICATIONS ===
+  SCREEN_WIDTH: 40,          // Characters per row
+  SCREEN_HEIGHT: 10,         // Visible rows (extended from original 8)
+  BUFFER_SIZE: 1000,         // Total scrollable buffer rows
   
-  // Display rendering
-  PIXEL_SIZE: 4,           // Each display pixel is 4x4 screen pixels
-  PIXEL_DOT_SIZE: 3,       // Each visible pixel dot is 3x3 with 1px white border
-  CHAR_WIDTH: 6 * 4,       // 6 pixels per character = 24px
-  CHAR_HEIGHT: 8 * 4,      // 8 pixels per line = 32px
-  BORDER_SIZE: 20,         // Border around display
+  // === PIXEL RENDERING SPECIFICATIONS ===
+  PIXEL_SIZE: 4,             // Screen pixels per font pixel (4×4)
+  CHAR_WIDTH: 6 * 4,         // Character cell width (24px)
+  CHAR_HEIGHT: 8 * 4,        // Character cell height (32px)
   
-  // Display colors (Black and white with grey pixels)
+  // === DISPLAY LAYOUT SPECIFICATIONS ===
+  BORDER_SIZE: 20,           // Screen border width in pixels
+  CANVAS_WIDTH: 1000,        // Total canvas width
+  CANVAS_HEIGHT: 360,        // Total canvas height
+  
+  // === COLOR SCHEME ===
   BACKGROUND_COLOR: '#ffffff',  // White background
-  TEXT_COLOR: '#000000',        // Black text
-  GRID_COLOR: '#cccccc',        // Light grey for inactive pixels
+  TEXT_COLOR: '#000000',        // Black text and cursor
+  INACTIVE_COLOR: '#cccccc',    // Light grey for UI elements
   
-  // Canvas dimensions
-  CANVAS_WIDTH: 1000,
-  CANVAS_HEIGHT: 360,
-  
-  // Cursor settings
-  CURSOR_BLINK_RATE: 500   // Milliseconds between blinks
+  // === CURSOR BEHAVIOR ===
+  CURSOR_BLINK_RATE: 500        // Blink interval in milliseconds
 };
 
-// Device detection patterns
+// Device detection configuration for responsive keyboard
 export const DEVICE_PATTERNS = {
   MOBILE_REGEX: /Mobi|Android|iPhone|iPad|Kindle|Silk/i,
   MOBILE_WIDTH_THRESHOLD: 800

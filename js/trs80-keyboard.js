@@ -26,35 +26,7 @@ export class TRS80Keyboard {
    * @param {KeyboardEvent} e - Keyboard event
    */
   handlePhysicalKey(e) {
-    console.log('Physical key:', e.key);
-    
-    if (e.key.length === 1) {
-      this.display.addChar(e.key);
-    } else if (e.key === 'Enter') {
-      this.display.addChar('\n');
-    } else if (e.key === 'Backspace') {
-      this.display.removeChar();
-    } else if (e.key === 'Tab') {
-      // Add 4 spaces for tab
-      this.display.addChar('    ');
-    } else if (e.key === 'ArrowUp') {
-      this.display.moveCursorUp();
-    } else if (e.key === 'ArrowDown') {
-      this.display.moveCursorDown();
-    } else if (e.key === 'ArrowLeft') {
-      this.display.moveCursorLeft();
-    } else if (e.key === 'ArrowRight') {
-      this.display.moveCursorRight();
-    } else if (e.key === 'Escape') {
-      this.display.clearScreen();
-    } else if (e.key === 'CapsLock') {
-      // Toggle caps lock state (visual feedback could be added later)
-      console.log('Caps Lock toggled');
-    } else if (e.key === 'Shift' || e.key === 'Control') {
-      // Modifier keys - handled by browser for symbol input
-      console.log('Modifier key:', e.key);
-    }
-    
+    this.processKeyInput(e.key);
     this.display.render();
     e.preventDefault();
   }
@@ -98,49 +70,58 @@ export class TRS80Keyboard {
   initializeOnScreenKeyboard() {
     console.log('Setting up TRS-80 on-screen keyboard...');
     
-    // Get all keyboard buttons
     const keyButtons = document.querySelectorAll('.trs80-key');
     
     keyButtons.forEach(button => {
-      // Handle both click and touch events for maximum compatibility
+      // Handle click events  
       button.addEventListener('click', (e) => this.handleOnScreenKey(e, button));
       
-      // Touch event handling for Kindle/mobile
+      // Enhanced touch handling for mobile devices
       let touchHandled = false;
       
       button.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        e.stopPropagation();
         touchHandled = false;
-        button.style.transform = 'scale(0.95)';
-        button.style.backgroundColor = '#b0c0a0';
+        this.addButtonPressedEffect(button);
       }, { passive: false });
       
       button.addEventListener('touchend', (e) => {
         e.preventDefault();
-        e.stopPropagation();
-        
-        button.style.transform = 'scale(1)';
-        button.style.backgroundColor = '';
+        this.removeButtonPressedEffect(button);
         
         if (!touchHandled) {
           touchHandled = true;
-          const keyValue = button.getAttribute('data-key');
-          
-          // Small delay to ensure visual feedback is seen
           setTimeout(() => {
-            this.processKeyInput(keyValue);
+            this.processKeyInput(button.getAttribute('data-key'));
+            this.display.render();
           }, 50);
         }
       }, { passive: false });
       
       button.addEventListener('touchcancel', (e) => {
         e.preventDefault();
-        button.style.transform = 'scale(1)';
-        button.style.backgroundColor = '';
+        this.removeButtonPressedEffect(button);
         touchHandled = true;
       }, { passive: false });
     });
+  }
+  
+  /**
+   * Add visual feedback for button press
+   * @param {HTMLElement} button - Button element
+   */
+  addButtonPressedEffect(button) {
+    button.style.transform = 'scale(0.95)';
+    button.style.backgroundColor = '#b0c0a0';
+  }
+  
+  /**
+   * Remove visual feedback for button press  
+   * @param {HTMLElement} button - Button element
+   */
+  removeButtonPressedEffect(button) {
+    button.style.transform = 'scale(1)';
+    button.style.backgroundColor = '';
   }
   
   /**
@@ -150,9 +131,8 @@ export class TRS80Keyboard {
    */
   handleOnScreenKey(e, button) {
     e.preventDefault();
-    e.stopPropagation();
-    const keyValue = button.getAttribute('data-key');
-    this.processKeyInput(keyValue);
+    this.processKeyInput(button.getAttribute('data-key'));
+    this.display.render();
   }
   
   /**
@@ -160,47 +140,42 @@ export class TRS80Keyboard {
    * @param {string} keyValue - Key value to process
    */
   processKeyInput(keyValue) {
-    console.log('TRS-80 key processed:', keyValue);
-    
-    // Handle special keys
-    if (keyValue === 'Backspace') {
-      this.display.removeChar();
-    } else if (keyValue === 'Enter') {
-      this.display.addChar('\n');
-    } else if (keyValue === 'Tab') {
-      // Add 4 spaces for tab
-      this.display.addChar('    ');
-    } else if (keyValue === 'Escape') {
-      this.display.clearScreen();
-    } else if (keyValue === 'ArrowUp') {
-      this.display.moveCursorUp();
-    } else if (keyValue === 'ArrowDown') {
-      this.display.moveCursorDown();
-    } else if (keyValue === 'ArrowLeft') {
-      this.display.moveCursorLeft();
-    } else if (keyValue === 'ArrowRight') {
-      this.display.moveCursorRight();
-    } else if (keyValue === 'CapsLock') {
-      // Toggle caps lock state
-      console.log('Caps Lock toggled');
-      // Visual feedback could be added later
-    } else if (keyValue === 'Shift') {
-      console.log('Shift key pressed - use for symbols');
-      // Shift functionality handled by modifier state
-    } else if (keyValue === 'Control') {
-      console.log('Control key pressed');
-      // Control key functionality could be added later
-    } else if (keyValue.startsWith('F')) {
-      // Function keys - could add special functionality later
-      console.log('Function key pressed:', keyValue);
-    } else if (keyValue === ' ') {
-      // Space key
-      this.display.addChar(' ');
-    } else if (keyValue.length === 1) {
-      // Regular character
-      this.display.addChar(keyValue);
+    // Handle special navigation and editing keys
+    switch (keyValue) {
+      case 'Backspace':
+        this.display.removeChar();
+        break;
+      case 'Enter':
+        this.display.addChar('\n');
+        break;
+      case 'Tab':
+        this.display.addChar('    '); // 4 spaces for tab
+        break;
+      case 'Escape':
+        this.display.clearScreen();
+        break;
+      case 'ArrowUp':
+        this.display.moveCursorUp();
+        break;
+      case 'ArrowDown':
+        this.display.moveCursorDown();
+        break;
+      case 'ArrowLeft':
+        this.display.moveCursorLeft();
+        break;
+      case 'ArrowRight':
+        this.display.moveCursorRight();
+        break;
+      case ' ':
+        this.display.addChar(' ');
+        break;
+      default:
+        // Handle printable characters and ignore modifier keys
+        if (keyValue.length === 1) {
+          this.display.addChar(keyValue);
+        }
+        // Ignore modifier keys (Shift, Control, CapsLock, function keys)
+        break;
     }
-    
-    this.display.render();
   }
 }
