@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRS-80 Model 100 - Kindle Native</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #00ff00;
+      font-family: monospace;
+      overflow-x: hidden;
+      user-select: none;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .status {
+      color: #0f0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      text-align: center;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .resolution-info {
+      color: #ff0;
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-align: center;
+      background: rgba(0,0,0,0.8);
+      padding: 8px;
+      border-radius: 5px;
+    }
+
+    .screen-container {
+      background: #222;
+      padding: 15px;
+      border: 3px solid #666;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 100%;
+    }
+
+    #retro-canvas {
+      display: block;
+      background: #000;
+      border: 2px solid #333;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .input-area {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 20px;
+    }
+
+    #hidden-input {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      background: rgba(0, 50, 0, 0.9);
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      border-radius: 5px;
+      font-family: monospace;
+      outline: none;
+    }
+
+    #hidden-input:focus {
+      background: rgba(0, 80, 0, 0.9);
+      border-color: #00ff88;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+
+    .instructions {
+      color: #888;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      padding: 10px;
+      background: rgba(0,0,0,0.8);
+      border-radius: 5px;
+    }
+
+    /* Portrait Kindle ColorSoft optimizations */
+    @media screen and (orientation: portrait) and (max-width: 1300px) {
+      .container {
+        padding: 10px;
+      }
+      
+      #retro-canvas {
+        width: 100%;
+        max-width: 1200px;
+        height: auto;
+      }
+      
+      .status, .resolution-info {
+        font-size: 18px;
+      }
+      
+      #hidden-input {
+        font-size: 18px;
+        padding: 20px;
+      }
+      
+      .instructions {
+        font-size: 16px;
+      }
+    }
+
+    /* Specific Kindle ColorSoft 1264x1680 optimizations */
+    @media screen and (width: 1264px) and (height: 1680px) {
+      .container {
+        padding: 15px;
+      }
+      
+      #retro-canvas {
+        width: 1200px;
+        height: 450px;
+      }
+      
+      .status, .resolution-info {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="status" id="status">
+      TRS-80 Model 100 Emulator - Initializing...
+    </div>
+    
+    <div class="resolution-info" id="resolution">
+      Detecting screen resolution...
+    </div>
+    
+    <div class="screen-container">
+      <canvas id="retro-canvas" width="1200" height="450"></canvas>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="hidden-input" placeholder="Tap here to activate Kindle keyboard and start typing..." autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="instructions">
+      <strong>Kindle Native Mode:</strong><br>
+      Tap the input field above to open your Kindle's keyboard.<br>
+      Type normally - characters will appear on the TRS-80 screen.<br>
+      Press Enter for new line, Backspace to delete.
+    </div>
+  </div>
+
+  <script>
+    // Display resolution immediately
+    function showResolution() {
+      const width = window.screen.width || window.innerWidth;
+      const height = window.screen.height || window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      const actualWidth = width * dpr;
+      const actualHeight = height * dpr;
+      
+      document.getElementById('resolution').innerHTML = `
+        Screen: ${width}×${height} | DPR: ${dpr}<br>
+        Actual: ${actualWidth}×${actualHeight} | Viewport: ${window.innerWidth}×${window.innerHeight}
+      `;
+      
+      console.log('Resolution Details:', {
+        screen: `${width}×${height}`,
+        devicePixelRatio: dpr,
+        actual: `${actualWidth}×${actualHeight}`,
+        viewport: `${window.innerWidth}×${window.innerHeight}`,
+        userAgent: navigator.userAgent
+      });
+    }
+
+    // Show resolution immediately
+    showResolution();
+
+    // TRS-80 Model 100 5x7 Font Data
+    const FONT_DATA = {
+      ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+      '!': [0x04, 0x04, 0x04, 0x04, 0x00, 0x04, 0x00],
+      '"': [0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00],
+      '#': [0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A],
+      '$': [0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04],
+      '%': [0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03],
+      '&': [0x0C, 0x12, 0x14, 0x08, 0x15, 0x12, 0x0D],
+      '\'': [0x0C, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00],
+      '(': [0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02],
+      ')': [0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08],
+      '*': [0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00],
+      '+': [0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00],
+      ',': [0x00, 0x00, 0x00, 0x00, 0x0C, 0x04, 0x08],
+      '-': [0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00],
+      '.': [0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C],
+      '/': [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00],
+      '0': [0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E],
+      '1': [0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      '2': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F],
+      '3': [0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E],
+      '4': [0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02],
+      '5': [0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E],
+      '6': [0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E],
+      '7': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08],
+      '8': [0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E],
+      '9': [0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C],
+      ':': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00],
+      ';': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08],
+      '<': [0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02],
+      '=': [0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00],
+      '>': [0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08],
+      '?': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04],
+      '@': [0x0E, 0x11, 0x01, 0x0D, 0x15, 0x15, 0x0E],
+      'A': [0x0E, 0x11, 0x11, 0x11, 0x1F, 0x11, 0x11],
+      'B': [0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E],
+      'C': [0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E],
+      'D': [0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C],
+      'E': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F],
+      'F': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10],
+      'G': [0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F],
+      'H': [0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11],
+      'I': [0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'J': [0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C],
+      'K': [0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11],
+      'L': [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F],
+      'M': [0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11],
+      'N': [0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11],
+      'O': [0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'P': [0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10],
+      'Q': [0x0E, 0x11, 0x11, 0x15, 0x13, 0x11, 0x0F],
+      'R': [0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11],
+      'S': [0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E],
+      'T': [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      'U': [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+      'V': [0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'W': [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11],
+      'X': [0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11],
+      'Y': [0x11, 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04],
+      'Z': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F],
+      '[': [0x0E, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0E],
+      '\\': [0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00],
+      ']': [0x0E, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0E],
+      '^': [0x04, 0x0A, 0x11, 0x00, 0x00, 0x00, 0x00],
+      '_': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F],
+      '`': [0x08, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00],
+      'a': [0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F],
+      'b': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E],
+      'c': [0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E],
+      'd': [0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F],
+      'e': [0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E],
+      'f': [0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08],
+      'g': [0x00, 0x00, 0x0F, 0x11, 0x0F, 0x01, 0x0E],
+      'h': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'i': [0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E],
+      'j': [0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C],
+      'k': [0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12],
+      'l': [0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+      'm': [0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11],
+      'n': [0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11],
+      'o': [0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E],
+      'p': [0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10],
+      'q': [0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01],
+      'r': [0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10],
+      's': [0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E],
+      't': [0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06],
+      'u': [0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D],
+      'v': [0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04],
+      'w': [0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A],
+      'x': [0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11],
+      'y': [0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E],
+      'z': [0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F],
+      '{': [0x02, 0x04, 0x04, 0x08, 0x04, 0x04, 0x02],
+      '|': [0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+      '}': [0x08, 0x04, 0x04, 0x02, 0x04, 0x04, 0x08],
+      '~': [0x00, 0x00, 0x00, 0x0C, 0x12, 0x06, 0x00]
+    };
+
+    // TRS-80 Model 100 Configuration
+    const TRS80_CONFIG = {
+      SCREEN_WIDTH: 40,
+      SCREEN_HEIGHT: 10,
+      BUFFER_SIZE: 100,
+      FONT_WIDTH: 5,
+      FONT_HEIGHT: 7,
+      PIXEL_SIZE: 5,  // Increased for better Kindle visibility
+      CHAR_SPACING: 3,
+      LINE_SPACING: 5,
+      CANVAS_WIDTH: 1200,  // Optimized for Kindle portrait
+      CANVAS_HEIGHT: 450
+    };
+
+    // Draw character using pixel-perfect 5x7 font
+    function drawChar(ctx, char, x, y, pixelSize, color) {
+      const fontData = FONT_DATA[char];
+      if (!fontData) return;
+      
+      ctx.fillStyle = color;
+      
+      for (let row = 0; row < 7; row++) {
+        const rowData = fontData[row];
+        for (let col = 0; col < 5; col++) {
+          if (rowData & (1 << (4 - col))) {
+            const pixelX = x + col * pixelSize;
+            const pixelY = y + row * pixelSize;
+            ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
+          }
+        }
+      }
+    }
+
+    // TRS-80 Model 100 Display System
+    class TRS80Display {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        
+        // Set canvas dimensions
+        this.canvas.width = TRS80_CONFIG.CANVAS_WIDTH;
+        this.canvas.height = TRS80_CONFIG.CANVAS_HEIGHT;
+        
+        // Display state
+        this.cursorRow = 0;
+        this.cursorCol = 0;
+        this.scrollOffset = 0;
+        this.textBuffer = [];
+        this.cursorVisible = true;
+        this.lastBlinkTime = Date.now();
+        
+        // Initialize text buffer
+        this.initializeBuffer();
+        
+        // Style the canvas
+        this.canvas.style.backgroundColor = '#000';
+        this.canvas.style.border = '2px solid #333';
+        this.canvas.style.imageRendering = 'pixelated';
+        this.canvas.style.imageRendering = 'crisp-edges';
+        
+        this.render();
+        this.startCursorBlink();
+        
+        console.log('TRS-80 Display initialized for Kindle native keyboard');
+      }
+      
+      initializeBuffer() {
+        for (let i = 0; i < TRS80_CONFIG.BUFFER_SIZE; i++) {
+          this.textBuffer[i] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
+        }
+      }
+      
+      addChar(char) {
+        if (char === '\n' || char === 'Enter') {
+          this.cursorRow++;
+          this.cursorCol = 0;
+          if (this.cursorRow >= TRS80_CONFIG.BUFFER_SIZE) {
+            this.cursorRow = TRS80_CONFIG.BUFFER_SIZE - 1;
+            this.scrollUp();
+          }
+        } else if (char === '\b' || char === 'Backspace') {
+          if (this.cursorCol > 0) {
+            this.cursorCol--;
+            this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
+          } else if (this.cursorRow > 0) {
+            this.cursorRow--;
+            this.cursorCol = TRS80_CONFIG.SCREEN_WIDTH - 1;
+            this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
+          }
+        } else if (char === 'Escape') {
+          this.clear();
+        } else if (char && char.length === 1 && char >= ' ' && char <= '~') {
+          // Regular printable character
+          this.textBuffer[this.cursorRow][this.cursorCol] = char;
+          this.cursorCol++;
+          if (this.cursorCol >= TRS80_CONFIG.SCREEN_WIDTH) {
+            this.cursorCol = 0;
+            this.cursorRow++;
+            if (this.cursorRow >= TRS80_CONFIG.BUFFER_SIZE) {
+              this.cursorRow = TRS80_CONFIG.BUFFER_SIZE - 1;
+              this.scrollUp();
+            }
+          }
+        }
+        this.render();
+      }
+      
+      scrollUp() {
+        for (let i = 0; i < TRS80_CONFIG.BUFFER_SIZE - 1; i++) {
+          this.textBuffer[i] = [...this.textBuffer[i + 1]];
+        }
+        this.textBuffer[TRS80_CONFIG.BUFFER_SIZE - 1] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
+      }
+      
+      render() {
+        // Clear screen with black background
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const charWidth = TRS80_CONFIG.FONT_WIDTH * TRS80_CONFIG.PIXEL_SIZE + TRS80_CONFIG.CHAR_SPACING;
+        const lineHeight = TRS80_CONFIG.FONT_HEIGHT * TRS80_CONFIG.PIXEL_SIZE + TRS80_CONFIG.LINE_SPACING;
+        
+        // Calculate visible area
+        const startRow = Math.max(0, this.scrollOffset);
+        const endRow = Math.min(TRS80_CONFIG.BUFFER_SIZE, startRow + TRS80_CONFIG.SCREEN_HEIGHT);
+        
+        // Render visible characters using pixel-perfect font
+        for (let bufferRow = startRow; bufferRow < endRow; bufferRow++) {
+          const screenRow = bufferRow - startRow;
+          const y = screenRow * lineHeight + 15;
+          
+          for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
+            const char = this.textBuffer[bufferRow][col];
+            if (char && char !== ' ') {
+              const x = col * charWidth + 15;
+              drawChar(this.ctx, char, x, y, TRS80_CONFIG.PIXEL_SIZE, '#00ff00');
+            }
+          }
+        }
+        
+        // Draw cursor
+        if (this.cursorVisible) {
+          const cursorScreenRow = this.cursorRow - this.scrollOffset;
+          if (cursorScreenRow >= 0 && cursorScreenRow < TRS80_CONFIG.SCREEN_HEIGHT) {
+            const cursorX = this.cursorCol * charWidth + 15;
+            const cursorY = cursorScreenRow * lineHeight + 15 + (TRS80_CONFIG.FONT_HEIGHT * TRS80_CONFIG.PIXEL_SIZE);
+            
+            this.ctx.fillStyle = '#00ff00';
+            this.ctx.fillRect(cursorX, cursorY, charWidth - TRS80_CONFIG.CHAR_SPACING, 3);
+          }
+        }
+      }
+      
+      startCursorBlink() {
+        setInterval(() => {
+          this.cursorVisible = !this.cursorVisible;
+          this.render();
+        }, 500);
+      }
+      
+      clear() {
+        this.cursorRow = 0;
+        this.cursorCol = 0;
+        this.scrollOffset = 0;
+        this.initializeBuffer();
+        this.render();
+      }
+    }
+
+    // Initialize system
+    console.log('🔄 Initializing TRS-80 Model 100 - Kindle Native Version');
+    
+    const canvas = document.getElementById('retro-canvas');
+    const trs80 = new TRS80Display(canvas);
+    const hiddenInput = document.getElementById('hidden-input');
+    
+    // Update status
+    document.getElementById('status').textContent = 'TRS-80 Model 100 Ready - Native Keyboard Mode';
+    
+    // Handle input from Kindle native keyboard
+    let lastInputValue = '';
+    
+    hiddenInput.addEventListener('input', function(e) {
+      const currentValue = e.target.value;
+      
+      if (currentValue.length > lastInputValue.length) {
+        // Character was added
+        const newChar = currentValue[currentValue.length - 1];
+        console.log('Native keyboard input:', newChar);
+        trs80.addChar(newChar);
+      } else if (currentValue.length < lastInputValue.length) {
+        // Character was deleted
+        console.log('Native keyboard backspace');
+        trs80.addChar('\b');
+      }
+      
+      lastInputValue = currentValue;
+    });
+    
+    // Handle Enter key
+    hiddenInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        console.log('Native keyboard Enter');
+        trs80.addChar('\n');
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        console.log('Native keyboard Escape - clearing screen');
+        trs80.clear();
+        hiddenInput.value = '';
+        lastInputValue = '';
+        e.preventDefault();
+      }
+    });
+    
+    // Auto-focus the input to encourage keyboard use
+    setTimeout(() => {
+      hiddenInput.focus();
+    }, 1000);
+    
+    // Keep input focused when canvas is tapped
+    canvas.addEventListener('click', () => {
+      hiddenInput.focus();
+    });
+    
+    // Add welcome message
+    setTimeout(() => {
+      const welcomeMessage = 'TRS-80 MODEL 100 READY (KINDLE NATIVE)';
+      for (let i = 0; i < welcomeMessage.length; i++) {
+        trs80.addChar(welcomeMessage[i]);
+      }
+      trs80.addChar('\n');
+      trs80.addChar('\n');
+      trs80.addChar('Tap input field below to start typing...');
+      trs80.addChar('\n');
+      trs80.addChar('>');
+    }, 500);
+    
+    // Update resolution info periodically
+    setInterval(showResolution, 5000);
+    
+    console.log('✅ TRS-80 Model 100 Kindle Native initialized successfully');
+  </script>
+</body>
+</html>
