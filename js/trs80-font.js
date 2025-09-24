@@ -104,28 +104,30 @@ export const FONT_DATA = {
 
 /**
  * Draw a character at the specified screen position
+ * New system: 3×3 grey squares with 1px white borders = 4×4 pixels
  * @param {CanvasRenderingContext2D} ctx - Canvas context
  * @param {string} char - Character to draw
  * @param {number} x - X position in pixels
  * @param {number} y - Y position in pixels
- * @param {number} pixelSize - Size of each font pixel
- * @param {number} pixelDotSize - Size of each visible dot
+ * @param {number} pixelSize - Size of each font pixel (4px)
+ * @param {number} pixelDotSize - Size of each visible dot (3px)
  * @param {string} color - Color to draw the character
  */
 export function drawChar(ctx, char, x, y, pixelSize, pixelDotSize, color) {
   const fontData = FONT_DATA[char];
   if (!fontData) return;
   
-  ctx.fillStyle = color;
-  
   for (let row = 0; row < 7; row++) {
     let rowData = fontData[row];
     for (let col = 0; col < 5; col++) {
       if (rowData & (1 << (4 - col))) {
+        // Active pixel: solid black 4×4 block (no gaps)
         const pixelX = x + col * pixelSize;
         const pixelY = y + row * pixelSize;
-        ctx.fillRect(pixelX, pixelY, pixelDotSize, pixelDotSize);
+        ctx.fillStyle = color;
+        ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
       }
+      // Note: Inactive pixels are not drawn - they remain white background
     }
   }
 }

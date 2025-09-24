@@ -177,24 +177,7 @@ export class TRS80Display {
     this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
     this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
-    // Draw background grid (authentic LCD look)
-    this.ctx.fillStyle = TRS80_CONFIG.GRID_COLOR;
-    
-    for (let row = 0; row < TRS80_CONFIG.SCREEN_HEIGHT; row++) {
-      for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
-        const x = BORDER_SIZE + col * CHAR_WIDTH;
-        const y = BORDER_SIZE + row * CHAR_HEIGHT;
-        
-        // Draw 5x7 character background grid with pixel gaps
-        for (let r = 0; r < 7; r++) {
-          for (let c = 0; c < 5; c++) {
-            const pixelX = x + c * PIXEL_SIZE;
-            const pixelY = y + r * PIXEL_SIZE;
-            this.ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
-          }
-        }
-      }
-    }
+    // No background grid - clean white background for characters only
     
     // Draw text from buffer with scroll offset
     for (let screenRow = 0; screenRow < TRS80_CONFIG.SCREEN_HEIGHT; screenRow++) {
@@ -205,7 +188,7 @@ export class TRS80Display {
           if (char && char !== ' ') {
             const x = BORDER_SIZE + col * CHAR_WIDTH;
             const y = BORDER_SIZE + screenRow * CHAR_HEIGHT;
-            drawChar(this.ctx, char, x, y, PIXEL_SIZE, PIXEL_DOT_SIZE, TRS80_CONFIG.TEXT_COLOR);
+            drawChar(this.ctx, char, x, y, PIXEL_SIZE, PIXEL_SIZE, TRS80_CONFIG.TEXT_COLOR);
           }
         }
       }
@@ -223,19 +206,21 @@ export class TRS80Display {
       const charAtCursor = this.textBuffer[this.cursorRow] && this.textBuffer[this.cursorRow][this.cursorCol] 
         ? this.textBuffer[this.cursorRow][this.cursorCol] : ' ';
       
-      // Draw cursor background (solid block)
+      // Draw cursor background (solid 6×8 pixel block)
       this.ctx.fillStyle = TRS80_CONFIG.TEXT_COLOR;
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 5; c++) {
+      
+      // Draw 6×8 cursor block using solid 4×4 pixels (no gaps)
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 6; c++) {
           const pixelX = cursorX + c * PIXEL_SIZE;
           const pixelY = cursorY + r * PIXEL_SIZE;
-          this.ctx.fillRect(pixelX, pixelY, PIXEL_DOT_SIZE, PIXEL_DOT_SIZE);
+          this.ctx.fillRect(pixelX, pixelY, PIXEL_SIZE, PIXEL_SIZE);
         }
       }
       
       // Draw inverted character on top if there's a character
       if (charAtCursor !== ' ') {
-        drawChar(this.ctx, charAtCursor, cursorX, cursorY, PIXEL_SIZE, PIXEL_DOT_SIZE, TRS80_CONFIG.BACKGROUND_COLOR);
+        drawChar(this.ctx, charAtCursor, cursorX, cursorY, PIXEL_SIZE, PIXEL_SIZE, TRS80_CONFIG.BACKGROUND_COLOR);
       }
     }
   }

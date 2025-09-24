@@ -11,16 +11,16 @@ export const TRS80_CONFIG = {
   BUFFER_SIZE: 1000,       // Scrollable text buffer size
   
   // Display rendering
-  PIXEL_SIZE: 4,           // Each TRS-80 pixel is 4x4 screen pixels
-  PIXEL_DOT_SIZE: 3,       // Each visible pixel dot is 3x3 with 1px gap
+  PIXEL_SIZE: 4,           // Each display pixel is 4x4 screen pixels
+  PIXEL_DOT_SIZE: 3,       // Each visible pixel dot is 3x3 with 1px white border
   CHAR_WIDTH: 6 * 4,       // 6 pixels per character = 24px
   CHAR_HEIGHT: 8 * 4,      // 8 pixels per line = 32px
   BORDER_SIZE: 20,         // Border around display
   
-  // Display colors (authentic TRS-80 LCD)
-  BACKGROUND_COLOR: '#c8d4b8',  // Light green LCD background
-  TEXT_COLOR: '#1a3d1a',        // Dark green text
-  GRID_COLOR: '#b0c0a0',        // Slightly darker grid for LCD effect
+  // Display colors (Black and white with grey pixels)
+  BACKGROUND_COLOR: '#ffffff',  // White background
+  TEXT_COLOR: '#000000',        // Black text
+  GRID_COLOR: '#cccccc',        // Light grey for inactive pixels
   
   // Canvas dimensions
   CANVAS_WIDTH: 1000,
