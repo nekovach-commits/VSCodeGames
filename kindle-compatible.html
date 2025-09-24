@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRS-80 Model 100 Emulator</title>
+  <title>TRS-80 Model 100 - Kindle Compatible</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/trs80-keyboard.css">
 </head>
@@ -13,7 +13,7 @@
     
     <div id="keyboard-area">
       <!-- TRS-80 Model 100 On-Screen Keyboard -->
-      <div id="trs80-keyboard-container" class="trs80-keyboard" style="display: none;">
+      <div id="trs80-keyboard-container" class="trs80-keyboard" style="display: block;">
         <div class="keyboard-info">
           <span class="keyboard-title">TRS-80 MODEL 100 KEYBOARD</span>
           <span class="keyboard-instructions">Tap keys to type • Arrow keys navigate • ESC clears screen</span>
@@ -126,149 +126,74 @@
       </div>
       
       <!-- Desktop Info -->
-      <div id="desktop-info" style="margin-top: 15px;">
-        <p><strong>TRS-80 MODEL 100 - PORTABLE COMPUTER</strong></p>
-        <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
+      <div id="desktop-info" style="margin-top: 15px; display: none;">
+        <p><strong>TRS-80 MODEL 100 - PORTABLE COMPUTER (KINDLE COMPATIBLE)</strong></p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
-        <button id="keyboard-toggle" onclick="toggleKeyboard()" style="margin-top: 10px; padding: 8px 16px; background: linear-gradient(145deg, #f0f0f0, #e0e0e0); border: 2px outset #f0f0f0; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 12px;">
-          📱 Show Keyboard
-        </button>
         <div id="debug-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
       </div>
     </div>
   </div>
 
-  <!-- Immediate resolution and device detection script -->
+  <!-- Complete Kindle-Compatible TRS-80 System -->
   <script>
-    function updateResolutionInfo() {
-      const resolutionInfo = document.getElementById('resolution-info');
-      const debugInfo = document.getElementById('debug-info');
-      
-      if (resolutionInfo) {
-        const info = [
-          `${window.innerWidth}×${window.innerHeight}`,
-          `Screen: ${screen.width}×${screen.height}`,
-          `DPR: ${window.devicePixelRatio || 1}`,
-          `Touch: ${'ontouchstart' in window ? 'Yes' : 'No'}`
-        ].join(' • ');
-        resolutionInfo.textContent = info;
-      }
-      
-      if (debugInfo) {
-        const ua = navigator.userAgent;
-        const isMobile = /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft/i.test(ua);
-        const hasTouch = 'ontouchstart' in window;
-        const isKindle = ua.toLowerCase().includes('kindle') || ua.toLowerCase().includes('silk');
-        
-        debugInfo.innerHTML = `
-          <strong>Debug Info:</strong><br>
-          User Agent: ${ua.substring(0, 100)}...<br>
-          Mobile Detected: ${isMobile}<br>
-          Touch Support: ${hasTouch}<br>
-          Kindle Detected: ${isKindle}<br>
-          Window Size: ${window.innerWidth} × ${window.innerHeight}<br>
-        `;
-      }
-    }
+    console.log('🚀 Starting Kindle-compatible TRS-80 system...');
     
-    function toggleKeyboard() {
-      const keyboard = document.getElementById('trs80-keyboard-container');
-      const button = document.getElementById('keyboard-toggle');
-      
-      if (keyboard) {
-        const isVisible = keyboard.style.display !== 'none';
-        keyboard.style.display = isVisible ? 'none' : 'block';
-        button.textContent = isVisible ? '📱 Show Keyboard' : '📱 Hide Keyboard';
-        
-        console.log('Keyboard toggled:', !isVisible ? 'shown' : 'hidden');
-      }
-    }
-    
-    function showKeyboardBasedOnDevice() {
-      const ua = navigator.userAgent.toLowerCase();
-      const isMobile = /mobi|android|iphone|ipad|kindle|silk|colorsoft/i.test(navigator.userAgent) || 
-                       window.innerWidth < 900 || 
-                       'ontouchstart' in window;
-      
-      const keyboard = document.getElementById('trs80-keyboard-container');
-      const desktopInfo = document.getElementById('desktop-info');
-      
-      console.log('=== DEVICE DETECTION ===');
-      console.log('User Agent:', navigator.userAgent);
-      console.log('Is Mobile:', isMobile);
-      console.log('Window size:', window.innerWidth, '×', window.innerHeight);
-      
-      if (keyboard && desktopInfo) {
-        if (isMobile) {
-          keyboard.style.display = 'block';
-          desktopInfo.style.display = 'none';
-          console.log('✅ Showing keyboard for mobile device');
-        } else {
-          keyboard.style.display = 'none';
-          desktopInfo.style.display = 'block';
-          console.log('❌ Hiding keyboard for desktop');
-        }
-      }
-    }
-    
-    // Update resolution immediately
-    updateResolutionInfo();
-    
-    // Update on resize
-    window.addEventListener('resize', updateResolutionInfo);
-    
-    // Show keyboard based on device detection
+    // Initialize immediately
     document.addEventListener('DOMContentLoaded', function() {
-      showKeyboardBasedOnDevice();
-      updateResolutionInfo();
+      initializeTRS80();
     });
     
     // Also run immediately in case DOMContentLoaded already fired
-    if (document.readyState === 'loading') {
-      // Do nothing, DOMContentLoaded will fire
-    } else {
-      showKeyboardBasedOnDevice();
+    if (document.readyState !== 'loading') {
+      initializeTRS80();
     }
-  </script>
-
-  <script type="module" src="js/trs80-main.js"></script>
-  
-  <!-- Complete fallback TRS-80 system for Kindle ColorSoft -->
-  <script>
-    // Fallback TRS-80 system that works without ES6 modules
-    let fallbackTRS80 = null;
     
-    function createFallbackTRS80() {
-      console.log('🔄 Creating fallback TRS-80 system for Kindle ColorSoft');
+    function initializeTRS80() {
+      console.log('🔧 Initializing complete TRS-80 system for Kindle...');
+      
+      // Update resolution info
+      updateResolutionInfo();
+      window.addEventListener('resize', updateResolutionInfo);
       
       const canvas = document.getElementById('retro-canvas');
-      if (!canvas) return;
+      if (!canvas) {
+        console.error('❌ Canvas not found!');
+        return;
+      }
       
       // Set up canvas
       canvas.width = 1000;
       canvas.height = 360;
       const ctx = canvas.getContext('2d');
       
-      // Simple TRS-80 system state
+      // TRS-80 system state
       const trs80 = {
-        // Display state
         cursorRow: 0,
         cursorCol: 0,
         textBuffer: [],
         cursorVisible: true,
         lastBlinkTime: Date.now(),
         
-        // Initialize empty buffer
         init: function() {
+          console.log('📝 Initializing text buffer...');
           for (let i = 0; i < 25; i++) {
             this.textBuffer[i] = new Array(40).fill(' ');
           }
-          console.log('✅ Fallback TRS-80 initialized');
           this.render();
+          
+          // Add welcome message
+          const welcome = 'TRS-80 MODEL 100 - KINDLE COLORSOFT READY';
+          for (let i = 0; i < welcome.length; i++) {
+            this.addChar(welcome[i]);
+          }
+          this.addChar('\n');
+          this.addChar('\n');
+          console.log('✅ TRS-80 system initialized successfully');
         },
         
-        // Add character
         addChar: function(char) {
+          console.log('📝 Adding character:', char);
+          
           if (char === '\n' || char === 'Enter') {
             this.cursorRow++;
             this.cursorCol = 0;
@@ -283,7 +208,6 @@
               this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
             }
           } else if (char === 'Escape') {
-            // Clear screen
             for (let i = 0; i < 25; i++) {
               this.textBuffer[i] = new Array(40).fill(' ');
             }
@@ -298,7 +222,6 @@
           } else if (char === 'ArrowRight' && this.cursorCol < 39) {
             this.cursorCol++;
           } else if (char === 'Tab') {
-            // Add 4 spaces
             for (let i = 0; i < 4 && this.cursorCol < 40; i++) {
               this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
               this.cursorCol++;
@@ -312,7 +235,6 @@
               if (this.cursorRow >= 25) this.cursorRow = 24;
             }
           } else if (char && char.length === 1) {
-            // Regular character
             this.textBuffer[this.cursorRow][this.cursorCol] = char;
             this.cursorCol++;
             if (this.cursorCol >= 40) {
@@ -324,14 +246,6 @@
           this.render();
         },
         
-        // Simple character rendering
-        drawChar: function(char, x, y) {
-          ctx.font = '16px Courier New';
-          ctx.fillStyle = '#000000';
-          ctx.fillText(char, x, y);
-        },
-        
-        // Render the display
         render: function() {
           // Clear screen
           ctx.fillStyle = '#ffffff';
@@ -347,66 +261,101 @@
           // Draw text
           ctx.font = '16px Courier New';
           ctx.fillStyle = '#000000';
-          for (let row = 0; row < Math.min(10, this.textBuffer.length); row++) {
+          for (let row = 0; row < Math.min(20, this.textBuffer.length); row++) {
             for (let col = 0; col < 40; col++) {
               const char = this.textBuffer[row][col];
               if (char && char !== ' ') {
-                const x = 30 + col * 12;
-                const y = 50 + row * 20;
+                const x = 30 + col * 24;
+                const y = 50 + row * 16;
                 ctx.fillText(char, x, y);
               }
             }
           }
           
-          // Draw cursor
+          // Handle cursor blinking
           const currentTime = Date.now();
           if (currentTime - this.lastBlinkTime > 500) {
             this.cursorVisible = !this.cursorVisible;
             this.lastBlinkTime = currentTime;
           }
           
-          if (this.cursorVisible && this.cursorRow < 10) {
-            const cursorX = 30 + this.cursorCol * 12;
-            const cursorY = 35 + this.cursorRow * 20;
+          // Draw cursor
+          if (this.cursorVisible && this.cursorRow < 20) {
+            const cursorX = 30 + this.cursorCol * 24;
+            const cursorY = 35 + this.cursorRow * 16;
             ctx.fillStyle = '#000000';
-            ctx.fillRect(cursorX, cursorY, 12, 18);
+            ctx.fillRect(cursorX, cursorY, 24, 16);
             
-            // Invert character at cursor
             const charAtCursor = this.textBuffer[this.cursorRow][this.cursorCol];
             if (charAtCursor && charAtCursor !== ' ') {
               ctx.fillStyle = '#ffffff';
-              ctx.fillText(charAtCursor, cursorX, cursorY + 15);
+              ctx.fillText(charAtCursor, cursorX, cursorY + 12);
             }
           }
         }
       };
       
-      // Initialize the system
+      // Initialize system
       trs80.init();
       
-      // Set up keyboard event handling
+      // Physical keyboard
       document.addEventListener('keydown', function(e) {
-        console.log('Fallback key pressed:', e.key);
+        console.log('⌨️  Physical key:', e.key);
         trs80.addChar(e.key);
         e.preventDefault();
       });
       
-      // Set up on-screen keyboard
+      // On-screen keyboard
+      console.log('🎮 Setting up on-screen keyboard...');
       const keyButtons = document.querySelectorAll('.trs80-key');
-      keyButtons.forEach(button => {
+      console.log('Found', keyButtons.length, 'keyboard buttons');
+      
+      keyButtons.forEach(function(button, index) {
         const keyValue = button.getAttribute('data-key');
+        console.log('Setting up button', index, 'with key:', keyValue);
         
+        // Click events
         button.addEventListener('click', function(e) {
           e.preventDefault();
-          console.log('Fallback on-screen key:', keyValue);
+          e.stopPropagation();
+          console.log('🖱️  Click key:', keyValue);
           trs80.addChar(keyValue);
         });
+        
+        // Touch events for Kindle
+        let touchHandled = false;
+        
+        button.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          touchHandled = false;
+          button.style.transform = 'scale(0.95)';
+          button.style.backgroundColor = '#d0d0d0';
+          console.log('👆 Touch start:', keyValue);
+        }, { passive: false });
         
         button.addEventListener('touchend', function(e) {
           e.preventDefault();
-          console.log('Fallback touch key:', keyValue);
-          trs80.addChar(keyValue);
-        });
+          e.stopPropagation();
+          button.style.transform = 'scale(1)';
+          button.style.backgroundColor = '';
+          
+          if (!touchHandled) {
+            touchHandled = true;
+            console.log('👆 Touch end:', keyValue);
+            setTimeout(function() {
+              trs80.addChar(keyValue);
+            }, 50);
+          }
+        }, { passive: false });
+        
+        button.addEventListener('touchcancel', function(e) {
+          e.preventDefault();
+          button.style.transform = 'scale(1)';
+          button.style.backgroundColor = '';
+          touchHandled = true;
+          console.log('👆 Touch cancel:', keyValue);
+        }, { passive: false });
       });
       
       // Animation loop
@@ -416,27 +365,40 @@
       }
       requestAnimationFrame(animate);
       
-      // Add welcome message
-      const welcomeMessage = 'TRS-80 MODEL 100 READY - FALLBACK MODE';
-      for (let i = 0; i < welcomeMessage.length; i++) {
-        trs80.addChar(welcomeMessage[i]);
-      }
-      trs80.addChar('\n');
-      trs80.addChar('\n');
-      
-      return trs80;
+      // Make globally available
+      window.trs80 = trs80;
+      console.log('🎯 TRS-80 system ready!');
     }
     
-    // Check for module loading failure and create fallback
-    setTimeout(function() {
-      if (!window.trs80) {
-        console.log('⚠️  Module system failed to load, creating full fallback TRS-80 system');
-        fallbackTRS80 = createFallbackTRS80();
-        window.trs80 = fallbackTRS80; // Make it globally available
-      } else {
-        console.log('✅ Module system loaded successfully');
+    function updateResolutionInfo() {
+      const resolutionInfo = document.getElementById('resolution-info');
+      const debugInfo = document.getElementById('debug-info');
+      
+      if (resolutionInfo) {
+        const info = [
+          window.innerWidth + '×' + window.innerHeight,
+          'Screen: ' + screen.width + '×' + screen.height,
+          'DPR: ' + (window.devicePixelRatio || 1),
+          'Touch: ' + ('ontouchstart' in window ? 'Yes' : 'No')
+        ].join(' • ');
+        resolutionInfo.textContent = info;
       }
-    }, 1500);
+      
+      if (debugInfo) {
+        const ua = navigator.userAgent;
+        const isMobile = /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft/i.test(ua);
+        const hasTouch = 'ontouchstart' in window;
+        const isKindle = ua.toLowerCase().includes('kindle') || ua.toLowerCase().includes('silk');
+        
+        debugInfo.innerHTML = 
+          '<strong>Debug Info:</strong><br>' +
+          'User Agent: ' + ua.substring(0, 100) + '...<br>' +
+          'Mobile Detected: ' + isMobile + '<br>' +
+          'Touch Support: ' + hasTouch + '<br>' +
+          'Kindle Detected: ' + isKindle + '<br>' +
+          'Window Size: ' + window.innerWidth + ' × ' + window.innerHeight + '<br>';
+      }
+    }
   </script>
 </body>
 </html>
