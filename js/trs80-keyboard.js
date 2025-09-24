@@ -39,16 +39,25 @@ export class TRS80Keyboard {
     const desktopInfo = document.getElementById('desktop-info');
     
     if (keyboardContainer && desktopInfo) {
+      // Enhanced debugging for Kindle ColorSoft compatibility
+      console.log('=== DEVICE DETECTION DEBUG ===');
       console.log('User agent:', navigator.userAgent);
       console.log('Window width:', window.innerWidth);
+      console.log('Window height:', window.innerHeight);
+      console.log('Screen width:', screen.width);
+      console.log('Screen height:', screen.height);
+      console.log('Device pixel ratio:', window.devicePixelRatio);
+      console.log('Touch support:', 'ontouchstart' in window);
+      console.log('Mobile regex test:', DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent));
+      console.log('Width threshold test:', window.innerWidth < DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD);
       
       if (this.isMobileDevice()) {
-        console.log('Mobile/Kindle device detected - showing TRS-80 keyboard');
+        console.log('✅ Mobile/Kindle device detected - showing TRS-80 keyboard');
         keyboardContainer.style.display = 'block';
         desktopInfo.style.display = 'none'; // Hide desktop info to save space
         this.initializeOnScreenKeyboard();
       } else {
-        console.log('Desktop device detected - hiding keyboard');
+        console.log('❌ Desktop device detected - hiding keyboard');
         keyboardContainer.style.display = 'none';
         desktopInfo.style.display = 'block'; // Show desktop info
       }
@@ -56,12 +65,36 @@ export class TRS80Keyboard {
   }
   
   /**
-   * Check if current device is mobile/tablet
+   * Check if current device is mobile/tablet with enhanced Kindle detection
    * @returns {boolean} True if mobile device
    */
   isMobileDevice() {
-    return DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent) || 
-           window.innerWidth < DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD;
+    // Check user agent first
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileUA = DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent);
+    
+    // Check screen width
+    const isNarrowScreen = window.innerWidth < DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD;
+    
+    // Check for touch capability
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Special Kindle ColorSoft detection
+    const isKindleColorSoft = userAgent.includes('colorsoft') || 
+                             userAgent.includes('kindle') ||
+                             userAgent.includes('silk');
+    
+    // Combine all detection methods
+    const isMobile = isMobileUA || isNarrowScreen || (hasTouch && isKindleColorSoft);
+    
+    console.log('📱 Mobile Detection Results:');
+    console.log('  User Agent Mobile:', isMobileUA);
+    console.log('  Narrow Screen:', isNarrowScreen);
+    console.log('  Has Touch:', hasTouch);
+    console.log('  Kindle ColorSoft:', isKindleColorSoft);
+    console.log('  Final Result:', isMobile);
+    
+    return isMobile;
   }
   
   /**

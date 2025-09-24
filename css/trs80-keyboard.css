@@ -215,6 +215,52 @@
   .space-key { min-width: 30vw; }
 }
 
+/* Kindle ColorSoft specific optimizations */
+@media (max-width: 1080px) and (orientation: landscape) {
+  .trs80-keyboard { 
+    width: 96vw; 
+    max-width: 1000px;
+    padding: 1vw;
+    margin: 0.5vh auto 0;
+  }
+  .keyboard-info { margin-bottom: 1vh; }
+  .trs80-key { 
+    min-width: 5.5vw; 
+    min-height: 4.5vw; 
+    font-size: 2vw;
+    padding: 0.8vw 1vw;
+  }
+  .function-key { 
+    min-width: 5vw; 
+    font-size: 1.8vw; 
+  }
+  .arrow-key { 
+    min-width: 4.5vw; 
+    min-height: 4.5vw; 
+  }
+}
+
+/* Kindle ColorSoft portrait mode */
+@media (max-width: 800px) and (orientation: portrait) {
+  .trs80-keyboard { 
+    width: 98vw; 
+    padding: 2.5vw;
+    margin: 1vh auto 0;
+  }
+  .trs80-key { 
+    min-width: 8.5vw; 
+    min-height: 7vw; 
+    font-size: 2.8vw; 
+  }
+  .function-key { 
+    min-width: 7.5vw; 
+    font-size: 2.2vw; 
+  }
+  .space-key { 
+    min-width: 32vw; 
+  }
+}
+
 @media (min-width: 1200px) {
   .trs80-keyboard { max-width: 1000px; }
   .trs80-key { min-width: 42px; min-height: 36px; font-size: 13px; }

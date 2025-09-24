@@ -32,6 +32,7 @@ export const TRS80_CONFIG = {
 
 // Device detection configuration for responsive keyboard
 export const DEVICE_PATTERNS = {
-  MOBILE_REGEX: /Mobi|Android|iPhone|iPad|Kindle|Silk/i,
-  MOBILE_WIDTH_THRESHOLD: 800
+  // Enhanced regex to catch more Kindle variations and ColorSoft specifically
+  MOBILE_REGEX: /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft|KFOT|KFTT|KFJWI|KFJWA|KFSOWI|KFTHWI|KFTHWA|KFAPWI|KFAPWA/i,
+  MOBILE_WIDTH_THRESHOLD: 900  // Increased from 800 to catch more tablet-sized devices
 };

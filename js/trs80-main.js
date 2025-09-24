@@ -40,20 +40,73 @@ export class TRS80System {
     // Focus container for keyboard input
     this.container.focus();
     
-    // Update resolution display
+    // Update resolution display with enhanced information
     this.updateResolutionInfo();
+    
+    // Set up manual keyboard toggle
+    this.setupKeyboardToggle();
+    
+    // Update resolution on window resize
+    window.addEventListener('resize', () => {
+      this.updateResolutionInfo();
+    });
     
     // Initial render
     this.display.render();
   }
   
   /**
-   * Update resolution information display
+   * Update resolution information display with detailed debugging info
    */
   updateResolutionInfo() {
     const resolutionInfo = document.getElementById('resolution-info');
     if (resolutionInfo) {
-      resolutionInfo.textContent = `${window.innerWidth}x${window.innerHeight} (Canvas: ${this.canvas.width}x${this.canvas.height})`;
+      const info = [
+        `${window.innerWidth}×${window.innerHeight}`,
+        `Screen: ${screen.width}×${screen.height}`,
+        `DPR: ${window.devicePixelRatio || 1}`,
+        `Touch: ${'ontouchstart' in window ? 'Yes' : 'No'}`,
+        `UA: ${navigator.userAgent.includes('Kindle') ? 'Kindle' : navigator.userAgent.includes('ColorSoft') ? 'ColorSoft' : 'Other'}`
+      ].join(' • ');
+      resolutionInfo.textContent = info;
+    }
+  }
+  
+  /**
+   * Set up manual keyboard toggle for problematic devices
+   */
+  setupKeyboardToggle() {
+    const desktopInfo = document.getElementById('desktop-info');
+    if (desktopInfo) {
+      const toggleButton = document.createElement('button');
+      toggleButton.textContent = '📱 Toggle On-Screen Keyboard';
+      toggleButton.style.cssText = `
+        margin-top: 10px; 
+        padding: 8px 16px; 
+        background: linear-gradient(145deg, #f0f0f0, #e0e0e0); 
+        border: 2px outset #f0f0f0; 
+        border-radius: 4px; 
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+      `;
+      
+      toggleButton.addEventListener('click', () => {
+        const keyboardContainer = document.getElementById('trs80-keyboard-container');
+        if (keyboardContainer) {
+          const isVisible = keyboardContainer.style.display !== 'none';
+          keyboardContainer.style.display = isVisible ? 'none' : 'block';
+          console.log(`Keyboard manually ${isVisible ? 'hidden' : 'shown'}`);
+          
+          // Initialize keyboard if showing for first time
+          if (!isVisible && !this.keyboard.keyboardInitialized) {
+            this.keyboard.initializeOnScreenKeyboard();
+            this.keyboard.keyboardInitialized = true;
+          }
+        }
+      });
+      
+      desktopInfo.appendChild(toggleButton);
     }
   }
   
