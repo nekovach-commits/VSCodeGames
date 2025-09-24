@@ -34,5 +34,32 @@ export const TRS80_CONFIG = {
 export const DEVICE_PATTERNS = {
   // Enhanced regex to catch more Kindle variations and ColorSoft specifically
   MOBILE_REGEX: /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft|KFOT|KFTT|KFJWI|KFJWA|KFSOWI|KFTHWI|KFTHWA|KFAPWI|KFAPWA/i,
-  MOBILE_WIDTH_THRESHOLD: 900  // Increased from 800 to catch more tablet-sized devices
+  MOBILE_WIDTH_THRESHOLD: 900,  // Increased from 800 to catch more tablet-sized devices
+  
+  // Specific Kindle ColorSoft detection
+  KINDLE_COLORSOFT_WIDTH: 1264,
+  KINDLE_COLORSOFT_HEIGHT: 1680
 };
+
+// Enhanced device detection function
+export function detectKindleColorSoft() {
+  const ua = navigator.userAgent;
+  const width = window.screen.width || window.innerWidth;
+  const height = window.screen.height || window.innerHeight;
+  
+  // Check for Kindle ColorSoft specifically
+  const isKindleColorSoft = (width === DEVICE_PATTERNS.KINDLE_COLORSOFT_WIDTH && 
+                            height === DEVICE_PATTERNS.KINDLE_COLORSOFT_HEIGHT) ||
+                           /Kindle.*ColorSoft/i.test(ua);
+  
+  const isKindle = /Kindle|Silk/i.test(ua) || isKindleColorSoft;
+  
+  console.log('Kindle Detection:', {
+    userAgent: ua,
+    screenSize: `${width}×${height}`,
+    isKindleColorSoft,
+    isKindle
+  });
+  
+  return { isKindle, isKindleColorSoft, width, height };
+}
