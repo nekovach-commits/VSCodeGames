@@ -17,8 +17,8 @@ body {
 #retro-canvas {
   display: block;
   margin: 20px auto;
-  background: #c8d4b8;
-  border: 3px solid #1a3d1a;
+  background: #ffffff; /* White background for TRS-80 screen */
+  border: 3px solid #000000; /* Black border like real TRS-80 */
   box-sizing: border-box;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
@@ -26,7 +26,6 @@ body {
   image-rendering: -webkit-crisp-edges;
   image-rendering: -webkit-optimize-contrast;
   -ms-interpolation-mode: nearest-neighbor;
-  box-shadow: inset 1px 1px 3px rgba(26, 61, 26, 0.3);
   
   /* Natural responsive scaling - works on any device */
   max-width: 95vw;
@@ -44,4 +43,18 @@ body {
   background: #9da88d;
   border-top: 2px solid #1a3d1a;
   color: #1a3d1a;
+}
+
+/* Kindle ColorSoft specific size fix */
+@media screen and (max-width: 650px) and (max-height: 850px) {
+  #retro-canvas {
+    max-width: 98vw;
+    max-height: 70vh;
+    margin: 10px auto;
+  }
+  
+  #keyboard-area {
+    font-size: 1em;
+    padding: 10px;
+  }
 }
