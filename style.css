@@ -27,8 +27,12 @@ body {
   image-rendering: -webkit-optimize-contrast;
   -ms-interpolation-mode: nearest-neighbor;
   box-shadow: inset 1px 1px 3px rgba(26, 61, 26, 0.3);
+  
+  /* Natural responsive scaling - works on any device */
   max-width: 95vw;
-  max-height: 80vh;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
 }
 
 #keyboard-area {
