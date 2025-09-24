@@ -130,10 +130,141 @@
         <p><strong>TRS-80 MODEL 100 - PORTABLE COMPUTER</strong></p>
         <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
+        <button id="keyboard-toggle" onclick="toggleKeyboard()" style="margin-top: 10px; padding: 8px 16px; background: linear-gradient(145deg, #f0f0f0, #e0e0e0); border: 2px outset #f0f0f0; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 12px;">
+          📱 Show Keyboard
+        </button>
+        <div id="debug-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
       </div>
     </div>
   </div>
 
+  <!-- Immediate resolution and device detection script -->
+  <script>
+    function updateResolutionInfo() {
+      const resolutionInfo = document.getElementById('resolution-info');
+      const debugInfo = document.getElementById('debug-info');
+      
+      if (resolutionInfo) {
+        const info = [
+          `${window.innerWidth}×${window.innerHeight}`,
+          `Screen: ${screen.width}×${screen.height}`,
+          `DPR: ${window.devicePixelRatio || 1}`,
+          `Touch: ${'ontouchstart' in window ? 'Yes' : 'No'}`
+        ].join(' • ');
+        resolutionInfo.textContent = info;
+      }
+      
+      if (debugInfo) {
+        const ua = navigator.userAgent;
+        const isMobile = /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft/i.test(ua);
+        const hasTouch = 'ontouchstart' in window;
+        const isKindle = ua.toLowerCase().includes('kindle') || ua.toLowerCase().includes('silk');
+        
+        debugInfo.innerHTML = `
+          <strong>Debug Info:</strong><br>
+          User Agent: ${ua.substring(0, 100)}...<br>
+          Mobile Detected: ${isMobile}<br>
+          Touch Support: ${hasTouch}<br>
+          Kindle Detected: ${isKindle}<br>
+          Window Size: ${window.innerWidth} × ${window.innerHeight}<br>
+        `;
+      }
+    }
+    
+    function toggleKeyboard() {
+      const keyboard = document.getElementById('trs80-keyboard-container');
+      const button = document.getElementById('keyboard-toggle');
+      
+      if (keyboard) {
+        const isVisible = keyboard.style.display !== 'none';
+        keyboard.style.display = isVisible ? 'none' : 'block';
+        button.textContent = isVisible ? '📱 Show Keyboard' : '📱 Hide Keyboard';
+        
+        console.log('Keyboard toggled:', !isVisible ? 'shown' : 'hidden');
+      }
+    }
+    
+    function showKeyboardBasedOnDevice() {
+      const ua = navigator.userAgent.toLowerCase();
+      const isMobile = /mobi|android|iphone|ipad|kindle|silk|colorsoft/i.test(navigator.userAgent) || 
+                       window.innerWidth < 900 || 
+                       'ontouchstart' in window;
+      
+      const keyboard = document.getElementById('trs80-keyboard-container');
+      const desktopInfo = document.getElementById('desktop-info');
+      
+      console.log('=== DEVICE DETECTION ===');
+      console.log('User Agent:', navigator.userAgent);
+      console.log('Is Mobile:', isMobile);
+      console.log('Window size:', window.innerWidth, '×', window.innerHeight);
+      
+      if (keyboard && desktopInfo) {
+        if (isMobile) {
+          keyboard.style.display = 'block';
+          desktopInfo.style.display = 'none';
+          console.log('✅ Showing keyboard for mobile device');
+        } else {
+          keyboard.style.display = 'none';
+          desktopInfo.style.display = 'block';
+          console.log('❌ Hiding keyboard for desktop');
+        }
+      }
+    }
+    
+    // Update resolution immediately
+    updateResolutionInfo();
+    
+    // Update on resize
+    window.addEventListener('resize', updateResolutionInfo);
+    
+    // Show keyboard based on device detection
+    document.addEventListener('DOMContentLoaded', function() {
+      showKeyboardBasedOnDevice();
+      updateResolutionInfo();
+    });
+    
+    // Also run immediately in case DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      // Do nothing, DOMContentLoaded will fire
+    } else {
+      showKeyboardBasedOnDevice();
+    }
+  </script>
+
   <script type="module" src="js/trs80-main.js"></script>
+  
+  <!-- Fallback script if modules don't load -->
+  <script>
+    // Simple fallback TRS-80 system if modules fail to load
+    setTimeout(function() {
+      if (!window.trs80) {
+        console.log('⚠️  Module system failed to load, using fallback');
+        
+        // Basic canvas setup
+        const canvas = document.getElementById('retro-canvas');
+        if (canvas) {
+          canvas.width = 1000;
+          canvas.height = 360;
+          const ctx = canvas.getContext('2d');
+          
+          // Draw basic screen
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, canvas.width, 20);
+          ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+          ctx.fillRect(0, 0, 20, canvas.height);
+          ctx.fillRect(canvas.width - 20, 0, 20, canvas.height);
+          
+          // Add welcome message
+          ctx.fillStyle = '#000000';
+          ctx.font = '16px Courier New';
+          ctx.fillText('TRS-80 Model 100 Ready', 50, 200);
+          ctx.fillText('Module loading failed - using fallback', 50, 230);
+          ctx.fillText('Use manual keyboard toggle button below', 50, 260);
+        }
+      }
+    }, 2000);
+  </script>
 </body>
 </html>
