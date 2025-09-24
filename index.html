@@ -190,29 +190,18 @@
     }
     
     function showKeyboardBasedOnDevice() {
-      const ua = navigator.userAgent.toLowerCase();
-      const isMobile = /mobi|android|iphone|ipad|kindle|silk|colorsoft/i.test(navigator.userAgent) || 
-                       window.innerWidth < 900 || 
-                       'ontouchstart' in window;
-      
+      // DISABLED: Always keep keyboard hidden for clean desktop-like experience
       const keyboard = document.getElementById('trs80-keyboard-container');
       const desktopInfo = document.getElementById('desktop-info');
       
-      console.log('=== DEVICE DETECTION ===');
-      console.log('User Agent:', navigator.userAgent);
-      console.log('Is Mobile:', isMobile);
-      console.log('Window size:', window.innerWidth, '×', window.innerHeight);
+      console.log('=== DEVICE DETECTION DISABLED ===');
+      console.log('Keeping desktop layout for all devices');
       
       if (keyboard && desktopInfo) {
-        if (isMobile) {
-          keyboard.style.display = 'block';
-          desktopInfo.style.display = 'none';
-          console.log('✅ Showing keyboard for mobile device');
-        } else {
-          keyboard.style.display = 'none';
-          desktopInfo.style.display = 'block';
-          console.log('❌ Hiding keyboard for desktop');
-        }
+        // Always use desktop layout - clean and simple
+        keyboard.style.display = 'none';
+        desktopInfo.style.display = 'block';
+        console.log('✅ Using desktop layout for all devices');
       }
     }
     
@@ -483,9 +472,17 @@
         
         // Pixel-perfect rendering using 5x7 bitmap font
         render: function() {
-          // Clear screen with black background
-          ctx.fillStyle = '#000';
+          // Clear screen with WHITE background (same as modular system)
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Draw black border frame (same as modular system)
+          ctx.fillStyle = '#000000';
+          const borderSize = 20;
+          ctx.fillRect(0, 0, canvas.width, borderSize); // Top
+          ctx.fillRect(0, canvas.height - borderSize, canvas.width, borderSize); // Bottom
+          ctx.fillRect(0, 0, borderSize, canvas.height); // Left
+          ctx.fillRect(canvas.width - borderSize, 0, borderSize, canvas.height); // Right
           
           const charWidth = TRS80_CONFIG.FONT_WIDTH * TRS80_CONFIG.PIXEL_SIZE + TRS80_CONFIG.CHAR_SPACING;
           const lineHeight = TRS80_CONFIG.FONT_HEIGHT * TRS80_CONFIG.PIXEL_SIZE + TRS80_CONFIG.LINE_SPACING;
@@ -497,13 +494,13 @@
           // Render visible characters using pixel-perfect font
           for (let bufferRow = startRow; bufferRow < endRow; bufferRow++) {
             const screenRow = bufferRow - startRow;
-            const y = screenRow * lineHeight + 10;
+            const y = screenRow * lineHeight + 30; // Move down past border
             
             for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
               const char = this.textBuffer[bufferRow][col];
               if (char && char !== ' ') {
-                const x = col * charWidth + 10;
-                drawChar(ctx, char, x, y, TRS80_CONFIG.PIXEL_SIZE, '#00ff00');
+                const x = col * charWidth + 30; // Move right past border
+                drawChar(ctx, char, x, y, TRS80_CONFIG.PIXEL_SIZE, '#000000'); // Black text on white
               }
             }
           }
@@ -512,11 +509,18 @@
           if (this.cursorVisible) {
             const cursorScreenRow = this.cursorRow - this.scrollOffset;
             if (cursorScreenRow >= 0 && cursorScreenRow < TRS80_CONFIG.SCREEN_HEIGHT) {
-              const cursorX = this.cursorCol * charWidth + 10;
-              const cursorY = cursorScreenRow * lineHeight + 10 + (TRS80_CONFIG.FONT_HEIGHT * TRS80_CONFIG.PIXEL_SIZE);
+              const cursorX = this.cursorCol * charWidth + 30;
+              const cursorY = cursorScreenRow * lineHeight + 30;
               
-              ctx.fillStyle = '#00ff00';
-              ctx.fillRect(cursorX, cursorY, charWidth - TRS80_CONFIG.CHAR_SPACING, 2);
+              // Draw solid black cursor block (6x8 pixels like modular system)
+              ctx.fillStyle = '#000000';
+              for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 6; c++) {
+                  const pixelX = cursorX + c * TRS80_CONFIG.PIXEL_SIZE;
+                  const pixelY = cursorY + r * TRS80_CONFIG.PIXEL_SIZE;
+                  ctx.fillRect(pixelX, pixelY, TRS80_CONFIG.PIXEL_SIZE, TRS80_CONFIG.PIXEL_SIZE);
+                }
+              }
             }
           }
         },
@@ -609,8 +613,8 @@
       }
       requestAnimationFrame(animate);
       
-      // Add welcome message
-      const welcomeMessage = 'TRS-80 MODEL 100 READY - FALLBACK MODE';
+      // Add welcome message (same as desktop version)
+      const welcomeMessage = 'TRS-80 MODEL 100 READY';
       for (let i = 0; i < welcomeMessage.length; i++) {
         trs80.addChar(welcomeMessage[i]);
       }
