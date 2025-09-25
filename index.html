@@ -79,6 +79,12 @@
           }
         }
         
+        // Clear the input field to prevent duplicate display
+        setTimeout(() => {
+          e.target.value = '';
+          inputBuffer = '';
+        }, 50);
+        
         inputBuffer = newValue;
       });
       
@@ -280,50 +286,180 @@
         this.pixelSize = 2; // For Kindle
         this.charWidth = 12; // 6 * 2
         this.charHeight = 16; // 8 * 2
+        this.rows = [];
+        this.currentRow = 0;
+        this.currentCol = 0;
+        
+        // Initialize with empty rows
+        for (let i = 0; i < 10; i++) {
+          this.rows[i] = '';
+        }
         
         console.log('✓ Simple TRS-80 initialized');
         this.render();
+        
+        // Start animation loop for blinking cursor
+        setInterval(() => {
+          this.render();
+        }, 500);
       }
       
       addChar(char) {
-        if (char === '\n') {
-          this.text += '\n';
+        if (char === '\n' || char === 'Enter') {
+          this.currentRow++;
+          this.currentCol = 0;
+          if (this.currentRow >= 10) {
+            // Scroll up
+            this.rows.shift();
+            this.rows.push('');
+            this.currentRow = 9;
+          }
         } else if (char === 'Backspace') {
-          this.text = this.text.slice(0, -1);
-        } else {
-          this.text += char;
+          if (this.currentCol > 0) {
+            this.currentCol--;
+            this.rows[this.currentRow] = this.rows[this.currentRow].slice(0, -1);
+          } else if (this.currentRow > 0) {
+            this.currentRow--;
+            this.currentCol = this.rows[this.currentRow].length;
+            this.rows[this.currentRow] = this.rows[this.currentRow].slice(0, -1);
+          }
+        } else if (char.length === 1) {
+          // Regular character
+          if (!this.rows[this.currentRow]) this.rows[this.currentRow] = '';
+          this.rows[this.currentRow] += char;
+          this.currentCol++;
+          if (this.currentCol >= 40) {
+            this.currentRow++;
+            this.currentCol = 0;
+            if (this.currentRow >= 10) {
+              this.rows.shift();
+              this.rows.push('');
+              this.currentRow = 9;
+            }
+          }
         }
         this.render();
       }
       
       render() {
-        // Clear canvas
+        // Clear canvas with white background
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw border
+        // Draw black border
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(1, 1, this.canvas.width-2, this.canvas.height-2);
+        
+        // Draw pixel-style text
         this.ctx.fillStyle = '#000000';
-        this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw text
-        this.ctx.fillStyle = '#000000';
-        this.ctx.font = '16px "Courier New", monospace';
-        
-        const lines = this.text.split('\n');
-        const startX = 20;
-        const startY = 30;
-        const lineHeight = 20;
-        
-        lines.forEach((line, index) => {
-          this.ctx.fillText(line, startX, startY + (index * lineHeight));
-        });
+        for (let row = 0; row < 10; row++) {
+          const line = this.rows[row] || '';
+          for (let col = 0; col < line.length; col++) {
+            const char = line[col];
+            this.drawPixelChar(char, col, row);
+          }
+        }
         
         // Draw cursor
-        const lastLine = lines[lines.length - 1] || '';
-        const cursorX = startX + (lastLine.length * 10);
-        const cursorY = startY + ((lines.length - 1) * lineHeight);
+        this.drawCursor(this.currentCol, this.currentRow);
+      }
+      
+      drawPixelChar(char, col, row) {
+        const x = 10 + (col * this.charWidth);
+        const y = 10 + (row * this.charHeight);
         
-        this.ctx.fillRect(cursorX, cursorY - 15, 2, 16);
+        // Simple pixel patterns for common characters
+        const patterns = {
+          'A': [
+            '  ██  ',
+            ' ████ ',
+            '██  ██',
+            '██████',
+            '██  ██',
+            '██  ██',
+            '      ',
+            '      '
+          ],
+          'E': [
+            '██████',
+            '██    ',
+            '██    ',
+            '████  ',
+            '██    ',
+            '██████',
+            '      ',
+            '      '
+          ],
+          'H': [
+            '██  ██',
+            '██  ██',
+            '██████',
+            '██████',
+            '██  ██',
+            '██  ██',
+            '      ',
+            '      '
+          ],
+          'L': [
+            '██    ',
+            '██    ',
+            '██    ',
+            '██    ',
+            '██    ',
+            '██████',
+            '      ',
+            '      '
+          ],
+          'O': [
+            ' ████ ',
+            '██  ██',
+            '██  ██',
+            '██  ██',
+            '██  ██',
+            ' ████ ',
+            '      ',
+            '      '
+          ],
+          ' ': [
+            '      ',
+            '      ',
+            '      ',
+            '      ',
+            '      ',
+            '      ',
+            '      ',
+            '      '
+          ]
+        };
+        
+        const pattern = patterns[char.toUpperCase()] || patterns[' '];
+        
+        for (let r = 0; r < 8; r++) {
+          const patternRow = pattern[r] || '      ';
+          for (let c = 0; c < 6; c++) {
+            if (patternRow[c] === '█') {
+              this.ctx.fillRect(
+                x + (c * this.pixelSize),
+                y + (r * this.pixelSize),
+                this.pixelSize,
+                this.pixelSize
+              );
+            }
+          }
+        }
+      }
+      
+      drawCursor(col, row) {
+        const x = 10 + (col * this.charWidth);
+        const y = 10 + (row * this.charHeight);
+        
+        // Blinking cursor
+        if (Math.floor(Date.now() / 500) % 2) {
+          this.ctx.fillStyle = '#000000';
+          this.ctx.fillRect(x, y, this.charWidth, this.charHeight);
+        }
       }
     }
     
