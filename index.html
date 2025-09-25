@@ -18,7 +18,12 @@
         <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
         <div id="debug-info" style="margin-top: 10px; font-size: 10px; color: #666; font-family: monospace;">
-          Canvas Debug: Loading...
+          <div>Screen Resolution: <span id="screen-res">Loading...</span></div>
+          <div>Canvas Size: <span id="canvas-size">Loading...</span></div>
+          <div>Device Type: <span id="device-type">Loading...</span></div>
+          <div>Scale Factor: <span id="scale-factor">Loading...</span></div>
+          <div>Max-Width: <span id="max-width">Loading...</span></div>
+          <div>Max-Height: <span id="max-height">Loading...</span></div>
         </div>
       </div>
     </div>
@@ -27,7 +32,6 @@
   <script>
     function updateResolutionInfo() {
       const resolutionInfo = document.getElementById('resolution-info');
-      const debugInfo = document.getElementById('debug-info');
       
       if (resolutionInfo) {
         const info = [
@@ -39,20 +43,51 @@
         resolutionInfo.textContent = info;
       }
       
-      if (debugInfo) {
-        const canvas = document.getElementById('retro-canvas');
-        if (canvas) {
-          const computedStyle = window.getComputedStyle(canvas);
-          const info = [
-            `Canvas Size: ${canvas.width}×${canvas.height}`,
-            `Display Size: ${canvas.offsetWidth}×${canvas.offsetHeight}`,
-            `Background: ${computedStyle.backgroundColor}`,
-            `Border: ${computedStyle.borderColor}`,
-            `Max-Width: ${computedStyle.maxWidth}`,
-            `Max-Height: ${computedStyle.maxHeight}`
-          ].join(' | ');
-          debugInfo.textContent = info;
+      // Update individual debug fields
+      const canvas = document.getElementById('retro-canvas');
+      if (canvas) {
+        const computedStyle = window.getComputedStyle(canvas);
+        
+        // Screen Resolution
+        const screenRes = document.getElementById('screen-res');
+        if (screenRes) screenRes.textContent = `${screen.width}×${screen.height}`;
+        
+        // Canvas Size
+        const canvasSize = document.getElementById('canvas-size');
+        if (canvasSize) canvasSize.textContent = `${canvas.width}×${canvas.height}`;
+        
+        // Device Type Detection
+        const deviceType = document.getElementById('device-type');
+        if (deviceType) {
+          let type = 'Unknown';
+          const width = screen.width;
+          const height = screen.height;
+          if (width === 636 && height === 848) {
+            type = 'Kindle ColorSoft';
+          } else if (width <= 768) {
+            type = 'Mobile';
+          } else if (width <= 1024) {
+            type = 'Tablet';
+          } else {
+            type = 'Desktop';
+          }
+          deviceType.textContent = type;
         }
+        
+        // Scale Factor
+        const scaleFactor = document.getElementById('scale-factor');
+        if (scaleFactor) {
+          const dpr = window.devicePixelRatio || 1;
+          const scaleX = canvas.offsetWidth / canvas.width;
+          const scaleY = canvas.offsetHeight / canvas.height;
+          scaleFactor.textContent = `DPR:${dpr} Display:${scaleX.toFixed(2)}×${scaleY.toFixed(2)}`;
+        }
+        
+        // Max Width/Height
+        const maxWidth = document.getElementById('max-width');
+        const maxHeight = document.getElementById('max-height');
+        if (maxWidth) maxWidth.textContent = computedStyle.maxWidth;
+        if (maxHeight) maxHeight.textContent = computedStyle.maxHeight;
       }
     }
     
