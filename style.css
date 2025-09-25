@@ -17,8 +17,8 @@ body {
 #retro-canvas {
   display: block;
   margin: 20px auto;
-  background: #ffffff; /* White background for TRS-80 screen */
-  border: 3px solid #000000; /* Black border like real TRS-80 */
+  background: #ffffff !important; /* Force white background for TRS-80 screen */
+  border: 3px solid #000000 !important; /* Force black border like real TRS-80 */
   box-sizing: border-box;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;

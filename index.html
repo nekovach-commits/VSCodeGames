@@ -16,6 +16,9 @@
         <p><strong>TRS-80 MODEL 100 - PORTABLE COMPUTER</strong></p>
         <p>Type anything • ENTER: new line • ESC: clear • BACKSPACE: delete • Arrow keys: navigate</p>
         <p>Resolution: <span id="resolution-info">Loading...</span></p>
+        <div id="debug-info" style="margin-top: 10px; font-size: 10px; color: #666; font-family: monospace;">
+          Canvas Debug: Loading...
+        </div>
       </div>
     </div>
   </div>
@@ -23,6 +26,8 @@
   <script>
     function updateResolutionInfo() {
       const resolutionInfo = document.getElementById('resolution-info');
+      const debugInfo = document.getElementById('debug-info');
+      
       if (resolutionInfo) {
         const info = [
           `${window.innerWidth}×${window.innerHeight}`,
@@ -32,11 +37,30 @@
         ].join(' • ');
         resolutionInfo.textContent = info;
       }
+      
+      if (debugInfo) {
+        const canvas = document.getElementById('retro-canvas');
+        if (canvas) {
+          const computedStyle = window.getComputedStyle(canvas);
+          const info = [
+            `Canvas Size: ${canvas.width}×${canvas.height}`,
+            `Display Size: ${canvas.offsetWidth}×${canvas.offsetHeight}`,
+            `Background: ${computedStyle.backgroundColor}`,
+            `Border: ${computedStyle.borderColor}`,
+            `Max-Width: ${computedStyle.maxWidth}`,
+            `Max-Height: ${computedStyle.maxHeight}`
+          ].join(' | ');
+          debugInfo.textContent = info;
+        }
+      }
     }
     
     // Update resolution immediately and on resize
     updateResolutionInfo();
     window.addEventListener('resize', updateResolutionInfo);
+    
+    // Also update after a short delay to catch canvas initialization
+    setTimeout(updateResolutionInfo, 2000);
   </script>
 
   <script type="module" src="js/trs80-main.js"></script>
