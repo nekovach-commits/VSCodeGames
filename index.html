@@ -15,8 +15,14 @@
     <input type="text" id="kindle-input" placeholder="Tap here to open Kindle keyboard and type..." 
            style="width: 100%; max-width: 500px; padding: 10px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 16px; border: 2px solid #000; border-radius: 3px;">
     
+    <!-- Test Button -->
+    <button id="test-button" style="padding: 10px; margin: 5px; font-family: 'Courier New', monospace; background: #f0f0f0; border: 2px solid #000; border-radius: 3px;">
+      🧪 Test TRS-80 (Click to add "HELLO")
+    </button>
+    
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
-      💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen
+      💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen<br>
+      <span id="status-msg" style="color: #006600;">System Status: Loading...</span>
     </div>
     
     <script>
@@ -44,29 +50,104 @@
       
       // Kindle Input Handler
       const kindleInput = document.getElementById('kindle-input');
+      let inputBuffer = '';
+      
       kindleInput.addEventListener('input', function(e) {
-        const text = e.target.value;
-        const lastChar = text.slice(-1);
-        if (lastChar && window.trs80) {
-          console.log('Kindle input:', lastChar);
-          window.trs80.keyboard.processKeyInput(lastChar);
-          window.trs80.display.render();
+        const newValue = e.target.value;
+        console.log('Input changed:', newValue);
+        
+        // Find what was added (handle typing and pasting)
+        if (newValue.length > inputBuffer.length) {
+          const addedText = newValue.slice(inputBuffer.length);
+          console.log('Added text:', addedText);
+          
+          // Add each character to TRS-80
+          for (let char of addedText) {
+            if (window.trs80 && window.trs80.keyboard) {
+              console.log('Sending to TRS-80:', char);
+              window.trs80.keyboard.processKeyInput(char);
+            } else {
+              console.log('TRS-80 not ready, queuing:', char);
+              // Queue for when system is ready
+              window.pendingInput = window.pendingInput || [];
+              window.pendingInput.push(char);
+            }
+          }
+          
+          if (window.trs80 && window.trs80.display) {
+            window.trs80.display.render();
+          }
         }
+        
+        inputBuffer = newValue;
       });
       
       kindleInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' && window.trs80) {
-          console.log('Kindle backspace');
-          window.trs80.keyboard.processKeyInput('Backspace');
-          window.trs80.display.render();
-          e.preventDefault();
-        } else if (e.key === 'Enter' && window.trs80) {
-          console.log('Kindle enter');
-          window.trs80.keyboard.processKeyInput('Enter');
-          window.trs80.display.render();
-          e.target.value = ''; // Clear input
+        console.log('Key pressed:', e.key);
+        
+        if (e.key === 'Backspace') {
+          console.log('Processing backspace');
+          if (window.trs80 && window.trs80.keyboard) {
+            window.trs80.keyboard.processKeyInput('Backspace');
+            window.trs80.display.render();
+          }
+          // Update our buffer
+          inputBuffer = e.target.value.slice(0, -1);
+          
+        } else if (e.key === 'Enter') {
+          console.log('Processing enter');
+          if (window.trs80 && window.trs80.keyboard) {
+            window.trs80.keyboard.processKeyInput('Enter');
+            window.trs80.display.render();
+          }
+          // Clear input and buffer
+          e.target.value = '';
+          inputBuffer = '';
           e.preventDefault();
         }
+      });
+      
+      // Test Button
+      const testButton = document.getElementById('test-button');
+      testButton.addEventListener('click', function() {
+        console.log('Test button clicked');
+        if (window.trs80 && window.trs80.keyboard && window.trs80.display) {
+          console.log('✓ TRS-80 system is ready, adding HELLO');
+          'HELLO'.split('').forEach(char => {
+            window.trs80.keyboard.processKeyInput(char);
+          });
+          window.trs80.display.render();
+          document.getElementById('status-msg').textContent = 'System Status: ✓ Working!';
+          document.getElementById('status-msg').style.color = '#006600';
+        } else {
+          console.log('✗ TRS-80 system not ready');
+          document.getElementById('status-msg').textContent = 'System Status: ✗ Not Ready';
+          document.getElementById('status-msg').style.color = '#cc0000';
+        }
+      });
+      
+      // Process any queued input when TRS-80 system is ready
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          if (window.trs80 && window.trs80.keyboard && window.trs80.display) {
+            console.log('✓ TRS-80 system loaded successfully');
+            document.getElementById('status-msg').textContent = 'System Status: ✓ Ready for input';
+            document.getElementById('status-msg').style.color = '#006600';
+            
+            if (window.pendingInput && window.pendingInput.length > 0) {
+              console.log('Processing queued input:', window.pendingInput);
+              for (let char of window.pendingInput) {
+                window.trs80.keyboard.processKeyInput(char);
+              }
+              window.trs80.display.render();
+              window.pendingInput = [];
+            }
+          } else {
+            console.log('✗ TRS-80 system failed to load');
+            document.getElementById('status-msg').textContent = 'System Status: ✗ Load Failed';
+            document.getElementById('status-msg').style.color = '#cc0000';
+          }
+        }, 2000); // Wait 2 seconds for modules to load
       });
     </script>
     
