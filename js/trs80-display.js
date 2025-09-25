@@ -12,46 +12,55 @@ export class TRS80Display {
     this.ctx = canvas.getContext('2d');
     
     // Debug: Log initial canvas size
-    console.log(`Initial canvas size: ${this.canvas.width}×${this.canvas.height}`);
+    console.log(`Module init - canvas size: ${this.canvas.width}×${this.canvas.height}`);
     
-    // Detect device and set optimal canvas size
-    const screenWidth = window.screen.width;
-    const screenHeight = window.screen.height;
-    console.log(`Screen detection: ${screenWidth}×${screenHeight}`);
-    
-    let pixelSize = 4; // Default desktop
-    if (screenWidth === 636 && screenHeight === 848) {
-      pixelSize = 2; // Kindle ColorSoft
-      console.log('✓ Kindle ColorSoft detected - using 2x2 pixel scaling');
-    } else if (screenWidth <= 768) {
-      pixelSize = 2; // Mobile
-      console.log('✓ Mobile device detected - using 2x2 pixel scaling');
+    // Check if canvas was already sized by inline script
+    if (this.canvas.width === 300 && this.canvas.height === 150) {
+      console.log('Canvas still at default size, applying module sizing...');
+      
+      // Detect device and set optimal canvas size
+      const screenWidth = window.screen.width;
+      const screenHeight = window.screen.height;
+      console.log(`Module detection: ${screenWidth}×${screenHeight}`);
+      
+      let pixelSize = 4; // Default desktop
+      if (screenWidth === 636 && screenHeight === 848) {
+        pixelSize = 2; // Kindle ColorSoft
+        console.log('✓ MODULE: Kindle ColorSoft detected - using 2x2 pixel scaling');
+      } else if (screenWidth <= 768) {
+        pixelSize = 2; // Mobile
+        console.log('✓ MODULE: Mobile device detected - using 2x2 pixel scaling');
+      } else {
+        console.log('✓ MODULE: Desktop detected - using 4x4 pixel scaling');
+      }
+      
+      // Calculate canvas dimensions: 40 chars × 10 rows
+      const canvasWidth = (40 * 6 * pixelSize) + 20; // 40 chars, 6px wide, + border
+      const canvasHeight = (10 * 8 * pixelSize) + 20; // 10 rows, 8px tall, + border
+      
+      console.log(`MODULE: Calculated dimensions: ${canvasWidth}×${canvasHeight} with ${pixelSize}x${pixelSize} pixels`);
+      
+      // Set canvas dimensions explicitly
+      this.canvas.width = canvasWidth;
+      this.canvas.height = canvasHeight;
+      
+      console.log(`✓ MODULE: Canvas set to: ${this.canvas.width}×${this.canvas.height}`);
     } else {
-      console.log('✓ Desktop detected - using 4x4 pixel scaling');
+      console.log('✓ Canvas already sized by inline script:', this.canvas.width + '×' + this.canvas.height);
     }
     
-    // Calculate canvas dimensions: 40 chars × 10 rows
-    const canvasWidth = (40 * 6 * pixelSize) + 20; // 40 chars, 6px wide, + border
-    const canvasHeight = (10 * 8 * pixelSize) + 20; // 10 rows, 8px tall, + border
-    
-    console.log(`Calculated dimensions: ${canvasWidth}×${canvasHeight} with ${pixelSize}x${pixelSize} pixels`);
-    
-    // Set canvas dimensions explicitly
-    this.canvas.width = canvasWidth;
-    this.canvas.height = canvasHeight;
-    
-    console.log(`✓ Canvas set to: ${this.canvas.width}×${this.canvas.height}`);
-    
-    // Store pixel size for rendering
-    this.pixelSize = pixelSize;
-    this.charWidth = 6 * pixelSize;
-    this.charHeight = 8 * pixelSize;
+    // Determine pixel size from canvas dimensions
+    const actualWidth = this.canvas.width - 20; // Subtract border
+    const charPixelWidth = actualWidth / 40 / 6; // 40 chars, 6 pixels wide
+    this.pixelSize = Math.round(charPixelWidth);
+    this.charWidth = 6 * this.pixelSize;
+    this.charHeight = 8 * this.pixelSize;
     
     // Make canvas focusable for touch devices
     this.canvas.setAttribute('tabindex', '0');
     this.canvas.style.outline = 'none';
     
-    console.log(`Character size: ${this.charWidth}×${this.charHeight} pixels`);
+    console.log(`✓ Using pixel size: ${this.pixelSize}×${this.pixelSize}, char size: ${this.charWidth}×${this.charHeight}`);
     
     // Display state
     this.cursorRow = 0;

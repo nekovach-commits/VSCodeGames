@@ -11,9 +11,64 @@
   <div id="retro-container" tabindex="0" style="background: #ffffff !important;">
     <canvas id="retro-canvas" style="background: #ffffff !important; border: 3px solid #000000 !important; cursor: text;"></canvas>
     
+    <!-- Kindle Keyboard Input -->
+    <input type="text" id="kindle-input" placeholder="Tap here to open Kindle keyboard and type..." 
+           style="width: 100%; max-width: 500px; padding: 10px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 16px; border: 2px solid #000; border-radius: 3px;">
+    
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
-      💡 <strong>Kindle/Touch Users:</strong> Tap the screen above to open keyboard
+      💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen
     </div>
+    
+    <script>
+      // Immediate canvas sizing - runs before modules load
+      const canvas = document.getElementById('retro-canvas');
+      const screenW = window.screen.width;
+      const screenH = window.screen.height;
+      console.log('Immediate sizing - Screen:', screenW + '×' + screenH);
+      
+      let pixelSize = 4; // Default
+      if (screenW === 636 && screenH === 848) {
+        pixelSize = 2; // Kindle ColorSoft
+        console.log('✓ IMMEDIATE: Kindle ColorSoft detected');
+      } else if (screenW <= 768) {
+        pixelSize = 2; // Mobile
+        console.log('✓ IMMEDIATE: Mobile detected');
+      }
+      
+      const width = (40 * 6 * pixelSize) + 20;
+      const height = (10 * 8 * pixelSize) + 20;
+      
+      canvas.width = width;
+      canvas.height = height;
+      console.log('✓ IMMEDIATE: Canvas set to', width + '×' + height);
+      
+      // Kindle Input Handler
+      const kindleInput = document.getElementById('kindle-input');
+      kindleInput.addEventListener('input', function(e) {
+        const text = e.target.value;
+        const lastChar = text.slice(-1);
+        if (lastChar && window.trs80) {
+          console.log('Kindle input:', lastChar);
+          window.trs80.keyboard.processKeyInput(lastChar);
+          window.trs80.display.render();
+        }
+      });
+      
+      kindleInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && window.trs80) {
+          console.log('Kindle backspace');
+          window.trs80.keyboard.processKeyInput('Backspace');
+          window.trs80.display.render();
+          e.preventDefault();
+        } else if (e.key === 'Enter' && window.trs80) {
+          console.log('Kindle enter');
+          window.trs80.keyboard.processKeyInput('Enter');
+          window.trs80.display.render();
+          e.target.value = ''; // Clear input
+          e.preventDefault();
+        }
+      });
+    </script>
     
     <div id="keyboard-area" style="background: #ffffff !important; color: #000000 !important;">
       <!-- Desktop Info -->
