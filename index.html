@@ -17,7 +17,7 @@
     
     <!-- Test Button -->
     <button id="test-button" style="padding: 10px; margin: 5px; font-family: 'Courier New', monospace; background: #f0f0f0; border: 2px solid #000; border-radius: 3px;">
-      🧪 Test TRS-80 (Click to add "HELLO")
+      🧪 Test TRS-80 (40 chars: "1234567890123456789012345678901234567890")
     </button>
     
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
@@ -118,12 +118,12 @@
       testButton.addEventListener('click', function() {
         console.log('Test button clicked');
         if (window.trs80 && window.trs80.keyboard && window.trs80.display) {
-          console.log('✓ TRS-80 system is ready, adding HELLO');
-          'HELLO'.split('').forEach(char => {
+          console.log('✓ TRS-80 system is ready, adding 40-character test line');
+          '1234567890123456789012345678901234567890'.split('').forEach(char => {
             window.trs80.keyboard.processKeyInput(char);
           });
           window.trs80.display.render();
-          document.getElementById('status-msg').textContent = 'System Status: ✓ Working!';
+          document.getElementById('status-msg').textContent = 'System Status: ✓ Working! Check spacing on 40-char line';
           document.getElementById('status-msg').style.color = '#006600';
         } else {
           console.log('✗ TRS-80 system not ready');
@@ -404,6 +404,9 @@
         }
         
         console.log('✓ Simple TRS-80 initialized');
+        console.log(`Canvas: ${this.canvas.width}×${this.canvas.height}`);
+        console.log(`Character cell: ${this.charWidth}×${this.charHeight} pixels`);
+        console.log(`40 chars × ${this.charWidth} = ${40 * this.charWidth} pixels + 20 border = ${40 * this.charWidth + 20} total`);
         this.render();
         
         // Start animation loop for blinking cursor
@@ -475,21 +478,33 @@
       }
       
       drawPixelChar(char, col, row) {
-        const x = 10 + (col * this.charWidth);
-        const y = 10 + (row * this.charHeight);
+        const borderSize = 10;
+        const x = borderSize + (col * this.charWidth);
+        const y = borderSize + (row * this.charHeight);
         
         // Use original TRS-80 5×7 bitmap font data
         drawChar(this.ctx, char, x, y, this.pixelSize, '#000000');
       }
       
       drawCursor(col, row) {
-        const x = 10 + (col * this.charWidth);
-        const y = 10 + (row * this.charHeight);
+        const borderSize = 10;
+        const x = borderSize + (col * this.charWidth);
+        const y = borderSize + (row * this.charHeight);
         
-        // Blinking cursor
+        // Blinking cursor - only show every other blink cycle
         if (Math.floor(Date.now() / 500) % 2) {
           this.ctx.fillStyle = '#000000';
-          this.ctx.fillRect(x, y, this.charWidth, this.charHeight);
+          // Draw cursor as a solid block in the 5×7 area (not the full cell)
+          for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 5; c++) {
+              this.ctx.fillRect(
+                x + (c * this.pixelSize),
+                y + (r * this.pixelSize),
+                this.pixelSize,
+                this.pixelSize
+              );
+            }
+          }
         }
       }
     }
