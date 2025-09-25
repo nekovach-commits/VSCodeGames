@@ -265,5 +265,92 @@
   </script>
 
   <script type="module" src="js/trs80-main.js"></script>
+  
+  <!-- Fallback non-module TRS-80 system for Kindle compatibility -->
+  <script>
+    console.log('Loading fallback TRS-80 system...');
+    
+    // Simple TRS-80 Display System
+    class SimpleTRS80 {
+      constructor() {
+        this.canvas = document.getElementById('retro-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.text = '';
+        this.cursorPos = 0;
+        this.pixelSize = 2; // For Kindle
+        this.charWidth = 12; // 6 * 2
+        this.charHeight = 16; // 8 * 2
+        
+        console.log('✓ Simple TRS-80 initialized');
+        this.render();
+      }
+      
+      addChar(char) {
+        if (char === '\n') {
+          this.text += '\n';
+        } else if (char === 'Backspace') {
+          this.text = this.text.slice(0, -1);
+        } else {
+          this.text += char;
+        }
+        this.render();
+      }
+      
+      render() {
+        // Clear canvas
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw border
+        this.ctx.fillStyle = '#000000';
+        this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw text
+        this.ctx.fillStyle = '#000000';
+        this.ctx.font = '16px "Courier New", monospace';
+        
+        const lines = this.text.split('\n');
+        const startX = 20;
+        const startY = 30;
+        const lineHeight = 20;
+        
+        lines.forEach((line, index) => {
+          this.ctx.fillText(line, startX, startY + (index * lineHeight));
+        });
+        
+        // Draw cursor
+        const lastLine = lines[lines.length - 1] || '';
+        const cursorX = startX + (lastLine.length * 10);
+        const cursorY = startY + ((lines.length - 1) * lineHeight);
+        
+        this.ctx.fillRect(cursorX, cursorY - 15, 2, 16);
+      }
+    }
+    
+    // Initialize fallback system if modules fail
+    setTimeout(function() {
+      if (!window.trs80) {
+        console.log('⚠ ES6 modules failed, using fallback system');
+        window.simpleTRS80 = new SimpleTRS80();
+        document.getElementById('status-msg').textContent = 'System Status: ✓ Fallback Ready';
+        document.getElementById('status-msg').style.color = '#ff8800';
+        
+        // Update input handlers to use simple system
+        window.trs80 = {
+          keyboard: {
+            processKeyInput: function(char) {
+              console.log('Fallback processing:', char);
+              window.simpleTRS80.addChar(char);
+            }
+          },
+          display: {
+            render: function() {
+              window.simpleTRS80.render();
+            }
+          }
+        };
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
