@@ -40,6 +40,9 @@ export class TRS80System {
     // Focus container for keyboard input
     this.container.focus();
     
+    // Add touch input support for Kindle/mobile
+    this.setupTouchInput();
+    
     // Update resolution display with enhanced information
     this.updateResolutionInfo();
     
@@ -108,6 +111,62 @@ export class TRS80System {
       
       desktopInfo.appendChild(toggleButton);
     }
+  }
+  
+  /**
+   * Set up touch input support for mobile/Kindle devices
+   */
+  setupTouchInput() {
+    // Create invisible input field to capture keyboard input
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.id = 'hidden-input';
+    hiddenInput.style.cssText = `
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    `;
+    document.body.appendChild(hiddenInput);
+    
+    // Focus hidden input when canvas is tapped
+    this.canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      hiddenInput.focus();
+      console.log('Canvas tapped - focusing hidden input for keyboard');
+    });
+    
+    this.canvas.addEventListener('click', (e) => {
+      hiddenInput.focus();
+      console.log('Canvas clicked - focusing hidden input for keyboard');
+    });
+    
+    // Capture input from hidden field
+    hiddenInput.addEventListener('input', (e) => {
+      const char = e.target.value.slice(-1); // Get last character
+      if (char) {
+        console.log('Touch input received:', char);
+        this.keyboard.processKeyInput(char);
+        this.display.render();
+      }
+      // Clear the input to allow continuous typing
+      setTimeout(() => { e.target.value = ''; }, 50);
+    });
+    
+    // Handle special keys
+    hiddenInput.addEventListener('keydown', (e) => {
+      console.log('Key event on hidden input:', e.key);
+      if (e.key === 'Backspace' || e.key === 'Enter' || e.key === 'Escape') {
+        this.keyboard.processKeyInput(e.key);
+        this.display.render();
+        e.preventDefault();
+      }
+    });
+    
+    console.log('✓ Touch input system initialized');
   }
   
   /**
