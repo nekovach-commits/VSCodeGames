@@ -4,6 +4,27 @@
  * @fileoverview Central configuration for TRS-80 Model 100 emulator
  */
 
+// Detect device and set optimal pixel scaling
+function getOptimalPixelSize() {
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  
+  // Kindle ColorSoft (636×848) - use 2×2 pixel scaling
+  if (screenWidth === 636 && screenHeight === 848) {
+    return 2;
+  }
+  
+  // Mobile devices - use 2×2 or 3×3
+  if (screenWidth <= 768) {
+    return 2;
+  }
+  
+  // Desktop/larger screens - use 4×4 (original)
+  return 4;
+}
+
+const OPTIMAL_PIXEL_SIZE = getOptimalPixelSize();
+
 // TRS-80 Model 100 Hardware Specifications
 export const TRS80_CONFIG = {
   // === DISPLAY GRID SPECIFICATIONS ===
@@ -12,14 +33,14 @@ export const TRS80_CONFIG = {
   BUFFER_SIZE: 1000,         // Total scrollable buffer rows
   
   // === PIXEL RENDERING SPECIFICATIONS ===
-  PIXEL_SIZE: 4,             // Screen pixels per font pixel (4×4)
-  CHAR_WIDTH: 6 * 4,         // Character cell width (24px)
-  CHAR_HEIGHT: 8 * 4,        // Character cell height (32px)
+  PIXEL_SIZE: OPTIMAL_PIXEL_SIZE,                    // Screen pixels per font pixel (adaptive)
+  CHAR_WIDTH: 6 * OPTIMAL_PIXEL_SIZE,                // Character cell width
+  CHAR_HEIGHT: 8 * OPTIMAL_PIXEL_SIZE,               // Character cell height
   
   // === DISPLAY LAYOUT SPECIFICATIONS ===
-  BORDER_SIZE: 20,           // Screen border width in pixels
-  CANVAS_WIDTH: 1000,        // Total canvas width
-  CANVAS_HEIGHT: 360,        // Total canvas height
+  BORDER_SIZE: 10,                                   // Reduced border for smaller screens
+  CANVAS_WIDTH: (40 * 6 * OPTIMAL_PIXEL_SIZE) + 20, // 40 chars × 6 pixels × scale + borders
+  CANVAS_HEIGHT: (10 * 8 * OPTIMAL_PIXEL_SIZE) + 20, // 10 rows × 8 pixels × scale + borders
   
   // === COLOR SCHEME ===
   BACKGROUND_COLOR: '#ffffff',  // White background

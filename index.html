@@ -20,10 +20,10 @@
         <div id="debug-info" style="margin-top: 10px; font-size: 10px; color: #666; font-family: monospace;">
           <div>Screen Resolution: <span id="screen-res">Loading...</span></div>
           <div>Canvas Size: <span id="canvas-size">Loading...</span></div>
+          <div>Expected Size: <span id="expected-size">Loading...</span></div>
           <div>Device Type: <span id="device-type">Loading...</span></div>
           <div>Scale Factor: <span id="scale-factor">Loading...</span></div>
-          <div>Max-Width: <span id="max-width">Loading...</span></div>
-          <div>Max-Height: <span id="max-height">Loading...</span></div>
+          <div>Pixel Scale: <span id="pixel-scale">Loading...</span></div>
         </div>
       </div>
     </div>
@@ -56,6 +56,20 @@
         const canvasSize = document.getElementById('canvas-size');
         if (canvasSize) canvasSize.textContent = `${canvas.width}×${canvas.height}`;
         
+        // Expected Size (for Kindle: 40×6×2 + 20 = 500×180)
+        const expectedSize = document.getElementById('expected-size');
+        if (expectedSize) {
+          const width = screen.width;
+          const height = screen.height;
+          let pixelScale = 4; // Default
+          if (width === 636 && height === 848) pixelScale = 2; // Kindle
+          else if (width <= 768) pixelScale = 2; // Mobile
+          
+          const expectedW = (40 * 6 * pixelScale) + 20;
+          const expectedH = (10 * 8 * pixelScale) + 20;
+          expectedSize.textContent = `${expectedW}×${expectedH}`;
+        }
+        
         // Device Type Detection
         const deviceType = document.getElementById('device-type');
         if (deviceType) {
@@ -83,7 +97,18 @@
           scaleFactor.textContent = `DPR:${dpr} Display:${scaleX.toFixed(2)}×${scaleY.toFixed(2)}`;
         }
         
-        // Max Width/Height
+        // Pixel Scale
+        const pixelScaleEl = document.getElementById('pixel-scale');
+        if (pixelScaleEl) {
+          const width = screen.width;
+          const height = screen.height;
+          let pixelScale = 4;
+          if (width === 636 && height === 848) pixelScale = 2;
+          else if (width <= 768) pixelScale = 2;
+          pixelScaleEl.textContent = `${pixelScale}×${pixelScale}`;
+        }
+        
+        // Max Width/Height - remove these
         const maxWidth = document.getElementById('max-width');
         const maxHeight = document.getElementById('max-height');
         if (maxWidth) maxWidth.textContent = computedStyle.maxWidth;
