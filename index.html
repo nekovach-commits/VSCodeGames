@@ -15,11 +15,6 @@
     <input type="text" id="kindle-input" placeholder="Tap here to open Kindle keyboard and type..." 
            style="width: 100%; max-width: 500px; padding: 10px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 16px; border: 2px solid #000; border-radius: 3px;">
     
-    <!-- Test Button -->
-    <button id="test-button" style="padding: 10px; margin: 5px; font-family: 'Courier New', monospace; background: #f0f0f0; border: 2px solid #000; border-radius: 3px;">
-      🧪 Test TRS-80 (40 chars: "1234567890123456789012345678901234567890")
-    </button>
-    
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
       💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen<br>
       <span id="status-msg" style="color: #006600;">System Status: Loading...</span>
@@ -110,25 +105,6 @@
           e.target.value = '';
           inputBuffer = '';
           e.preventDefault();
-        }
-      });
-      
-      // Test Button
-      const testButton = document.getElementById('test-button');
-      testButton.addEventListener('click', function() {
-        console.log('Test button clicked');
-        if (window.trs80 && window.trs80.keyboard && window.trs80.display) {
-          console.log('✓ TRS-80 system is ready, adding 40-character test line');
-          '1234567890123456789012345678901234567890'.split('').forEach(char => {
-            window.trs80.keyboard.processKeyInput(char);
-          });
-          window.trs80.display.render();
-          document.getElementById('status-msg').textContent = 'System Status: ✓ Working! Check spacing on 40-char line';
-          document.getElementById('status-msg').style.color = '#006600';
-        } else {
-          console.log('✗ TRS-80 system not ready');
-          document.getElementById('status-msg').textContent = 'System Status: ✗ Not Ready';
-          document.getElementById('status-msg').style.color = '#cc0000';
         }
       });
       
