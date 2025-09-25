@@ -11,9 +11,33 @@ export class TRS80Display {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     
-    // Set canvas dimensions
-    this.canvas.width = TRS80_CONFIG.CANVAS_WIDTH;
-    this.canvas.height = TRS80_CONFIG.CANVAS_HEIGHT;
+    // Detect device and set optimal canvas size
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    
+    let pixelSize = 4; // Default desktop
+    if (screenWidth === 636 && screenHeight === 848) {
+      pixelSize = 2; // Kindle ColorSoft
+      console.log('Kindle ColorSoft detected - using 2x2 pixel scaling');
+    } else if (screenWidth <= 768) {
+      pixelSize = 2; // Mobile
+      console.log('Mobile device detected - using 2x2 pixel scaling');
+    }
+    
+    // Calculate canvas dimensions: 40 chars × 10 rows
+    const canvasWidth = (40 * 6 * pixelSize) + 20; // 40 chars, 6px wide, + border
+    const canvasHeight = (10 * 8 * pixelSize) + 20; // 10 rows, 8px tall, + border
+    
+    // Set canvas dimensions explicitly
+    this.canvas.width = canvasWidth;
+    this.canvas.height = canvasHeight;
+    
+    // Store pixel size for rendering
+    this.pixelSize = pixelSize;
+    this.charWidth = 6 * pixelSize;
+    this.charHeight = 8 * pixelSize;
+    
+    console.log(`Canvas set to: ${canvasWidth}×${canvasHeight} (${pixelSize}×${pixelSize} pixels)`);
     
     // Display state
     this.cursorRow = 0;
@@ -157,7 +181,8 @@ export class TRS80Display {
    * Render the complete TRS-80 display
    */
   render() {
-    const { PIXEL_SIZE, CHAR_WIDTH, CHAR_HEIGHT, BORDER_SIZE } = TRS80_CONFIG;
+    // Use dynamic sizing instead of config constants
+    const BORDER_SIZE = 10;
     
     // Handle cursor blinking
     const currentTime = Date.now();
@@ -184,9 +209,9 @@ export class TRS80Display {
         for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
           const char = this.textBuffer[bufferRow][col];
           if (char && char !== ' ') {
-            const x = BORDER_SIZE + col * CHAR_WIDTH;
-            const y = BORDER_SIZE + screenRow * CHAR_HEIGHT;
-            drawChar(this.ctx, char, x, y, PIXEL_SIZE, TRS80_CONFIG.TEXT_COLOR);
+            const x = BORDER_SIZE + col * this.charWidth;  // Use dynamic char width
+            const y = BORDER_SIZE + screenRow * this.charHeight;  // Use dynamic char height
+            drawChar(this.ctx, char, x, y, this.pixelSize, TRS80_CONFIG.TEXT_COLOR);  // Use dynamic pixel size
           }
         }
       }
@@ -195,23 +220,23 @@ export class TRS80Display {
     // Render blinking cursor when visible on screen
     const screenCursorRow = this.cursorRow - this.scrollOffset;
     if (screenCursorRow >= 0 && screenCursorRow < TRS80_CONFIG.SCREEN_HEIGHT && this.cursorVisible) {
-      const cursorX = BORDER_SIZE + this.cursorCol * CHAR_WIDTH;
-      const cursorY = BORDER_SIZE + screenCursorRow * CHAR_HEIGHT;
+      const cursorX = BORDER_SIZE + this.cursorCol * this.charWidth;  // Use dynamic char width
+      const cursorY = BORDER_SIZE + screenCursorRow * this.charHeight;  // Use dynamic char height
       
       // Draw solid 6×8 cursor block
       this.ctx.fillStyle = TRS80_CONFIG.TEXT_COLOR;
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 6; c++) {
-          const pixelX = cursorX + c * PIXEL_SIZE;
-          const pixelY = cursorY + r * PIXEL_SIZE;
-          this.ctx.fillRect(pixelX, pixelY, PIXEL_SIZE, PIXEL_SIZE);
+          const pixelX = cursorX + c * this.pixelSize;  // Use dynamic pixel size
+          const pixelY = cursorY + r * this.pixelSize;  // Use dynamic pixel size
+          this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);  // Use dynamic pixel size
         }
       }
       
       // Invert character if present at cursor position
       const charAtCursor = this.textBuffer[this.cursorRow]?.[this.cursorCol];
       if (charAtCursor && charAtCursor !== ' ') {
-        drawChar(this.ctx, charAtCursor, cursorX, cursorY, PIXEL_SIZE, TRS80_CONFIG.BACKGROUND_COLOR);
+        drawChar(this.ctx, charAtCursor, cursorX, cursorY, this.pixelSize, TRS80_CONFIG.BACKGROUND_COLOR);  // Use dynamic pixel size
       }
     }
   }
