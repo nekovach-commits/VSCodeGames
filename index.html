@@ -40,7 +40,7 @@
       }
       
       const width = (40 * 6 * pixelSize) + 20;
-      const height = (10 * 8 * pixelSize) + 20;
+      const height = (20 * 8 * pixelSize) + 20;
       
       canvas.width = width;
       canvas.height = height;
@@ -191,7 +191,7 @@
           else if (width <= 768) pixelScale = 2; // Mobile
           
           const expectedW = (40 * 6 * pixelScale) + 20;
-          const expectedH = (10 * 8 * pixelScale) + 20;
+          const expectedH = (20 * 8 * pixelScale) + 20;
           expectedSize.textContent = `${expectedW}×${expectedH}`;
         }
         
@@ -393,7 +393,7 @@
         this.currentCol = 0;
         
         // Initialize with empty rows - 40 chars wide to match TRS-80
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 20; i++) {
           this.rows[i] = '';
         }
         
@@ -413,11 +413,11 @@
         if (char === '\n' || char === 'Enter') {
           this.currentRow++;
           this.currentCol = 0;
-          if (this.currentRow >= 10) {
+          if (this.currentRow >= 20) {
             // Scroll up
             this.rows.shift();
             this.rows.push('');
-            this.currentRow = 9;
+            this.currentRow = 19;
           }
         } else if (char === 'Backspace') {
           if (this.currentCol > 0) {
@@ -436,10 +436,10 @@
           if (this.currentCol >= 40) {
             this.currentRow++;
             this.currentCol = 0;
-            if (this.currentRow >= 10) {
+            if (this.currentRow >= 20) {
               this.rows.shift();
               this.rows.push('');
-              this.currentRow = 9;
+              this.currentRow = 19;
             }
           }
         }
@@ -459,7 +459,7 @@
         // Draw pixel-style text
         this.ctx.fillStyle = '#000000';
         
-        for (let row = 0; row < 10; row++) {
+        for (let row = 0; row < 20; row++) {
           const line = this.rows[row] || '';
           for (let col = 0; col < line.length; col++) {
             const char = line[col];

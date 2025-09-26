@@ -34,7 +34,7 @@ const OPTIMAL_PIXEL_SIZE = getOptimalPixelSize();
 export const TRS80_CONFIG = {
   // === DISPLAY GRID SPECIFICATIONS ===
   SCREEN_WIDTH: 40,          // Characters per row
-  SCREEN_HEIGHT: 10,         // Visible rows (extended from original 8)
+  SCREEN_HEIGHT: 20,         // Visible rows (extended from original 10)
   BUFFER_SIZE: 1000,         // Total scrollable buffer rows
   
   // === PIXEL RENDERING SPECIFICATIONS ===
@@ -45,7 +45,7 @@ export const TRS80_CONFIG = {
   // === DISPLAY LAYOUT SPECIFICATIONS ===
   BORDER_SIZE: 10,                                   // Reduced border for smaller screens
   CANVAS_WIDTH: (40 * 6 * OPTIMAL_PIXEL_SIZE) + 20, // 40 chars × 6 pixels × scale + borders
-  CANVAS_HEIGHT: (10 * 8 * OPTIMAL_PIXEL_SIZE) + 20, // 10 rows × 8 pixels × scale + borders
+  CANVAS_HEIGHT: (20 * 8 * OPTIMAL_PIXEL_SIZE) + 20, // 20 rows × 8 pixels × scale + borders
   
   // === COLOR SCHEME ===
   BACKGROUND_COLOR: '#ffffff',  // White background
