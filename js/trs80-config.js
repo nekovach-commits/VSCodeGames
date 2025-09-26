@@ -42,6 +42,31 @@ export const TRS80_CONFIG = {
   TEXT_COLOR: '#000000',        // Black text and cursor
   INACTIVE_COLOR: '#cccccc',    // Light grey for UI elements
   
+  // === COMMODORE 64 COLOR PALETTE ===
+  // Authentic C64 colors based on original hardware specifications
+  C64_COLORS: {
+    0: { name: 'BLACK',       hex: '#000000', rgb: [0,   0,   0  ] },
+    1: { name: 'WHITE',       hex: '#FFFFFF', rgb: [255, 255, 255] },
+    2: { name: 'RED',         hex: '#68372B', rgb: [104, 55,  43 ] },
+    3: { name: 'CYAN',        hex: '#70A4B2', rgb: [112, 164, 178] },
+    4: { name: 'PURPLE',      hex: '#6F3D86', rgb: [111, 61,  134] },
+    5: { name: 'GREEN',       hex: '#588D43', rgb: [88,  141, 67 ] },
+    6: { name: 'BLUE',        hex: '#352879', rgb: [53,  40,  121] },
+    7: { name: 'YELLOW',      hex: '#B8C76F', rgb: [184, 199, 111] },
+    8: { name: 'ORANGE',      hex: '#6F4F25', rgb: [111, 79,  37 ] },
+    9: { name: 'BROWN',       hex: '#433900', rgb: [67,  57,  0  ] },
+    10: { name: 'LIGHT RED',   hex: '#9A6759', rgb: [154, 103, 89 ] },
+    11: { name: 'DARK GREY',   hex: '#444444', rgb: [68,  68,  68 ] },
+    12: { name: 'GREY',        hex: '#6C6C6C', rgb: [108, 108, 108] },
+    13: { name: 'LIGHT GREEN', hex: '#9AD284', rgb: [154, 210, 132] },
+    14: { name: 'LIGHT BLUE',  hex: '#6C5EB5', rgb: [108, 94,  181] },
+    15: { name: 'LIGHT GREY',  hex: '#959595', rgb: [149, 149, 149] }
+  },
+  
+  // Default C64-style colors
+  DEFAULT_TEXT_COLOR: 14,      // Light Blue (C64 startup color)
+  DEFAULT_BACKGROUND_COLOR: 0, // Black
+  
   // === CURSOR BEHAVIOR ===
   CURSOR_BLINK_RATE: 500        // Blink interval in milliseconds
 };

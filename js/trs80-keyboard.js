@@ -202,6 +202,48 @@ export class TRS80Keyboard {
       case ' ':
         this.display.addChar(' ');
         break;
+        
+      // === C64-STYLE COLOR COMMANDS ===
+      // Function keys for text colors (F1-F8)
+      case 'F1':
+        this.display.setTextColor(0); // Black
+        break;
+      case 'F2':
+        this.display.setTextColor(1); // White  
+        break;
+      case 'F3':
+        this.display.setTextColor(2); // Red
+        break;
+      case 'F4':
+        this.display.setTextColor(3); // Cyan
+        break;
+      case 'F5':
+        this.display.setTextColor(4); // Purple
+        break;
+      case 'F6':
+        this.display.setTextColor(5); // Green
+        break;
+      case 'F7':
+        this.display.setTextColor(6); // Blue
+        break;
+      case 'F8':
+        this.display.setTextColor(7); // Yellow
+        break;
+        
+      // Alt+Function keys for background colors (Alt+F1-F8)
+      case 'F9':
+        this.display.setBackgroundColor(0); // Black background
+        break;
+      case 'F10':
+        this.display.setBackgroundColor(1); // White background
+        break;
+      case 'F11':
+        this.display.setBackgroundColor(2); // Red background  
+        break;
+      case 'F12':
+        this.display.setBackgroundColor(3); // Cyan background
+        break;
+        
       default:
         // Handle printable characters and ignore modifier keys
         if (keyValue.length === 1) {
