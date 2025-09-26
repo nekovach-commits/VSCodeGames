@@ -204,6 +204,17 @@ export class TRS80Display {
   }
   
   /**
+   * Move cursor to specific position
+   * @param {number} col - Column position (0-based)
+   * @param {number} row - Row position (0-based) 
+   */
+  moveCursorTo(col, row) {
+    this.cursorCol = Math.max(0, Math.min(col, TRS80_CONFIG.SCREEN_WIDTH - 1));
+    this.cursorRow = Math.max(0, Math.min(row, TRS80_CONFIG.BUFFER_SIZE - 1));
+    this.adjustScrollToShowCursor();
+  }
+  
+  /**
    * Clear the screen
    */
   clearScreen() {
@@ -368,9 +379,14 @@ export class TRS80Display {
       this.lastBlinkTime = currentTime;
     }
     
-    // Clear canvas with default background color
-    const bgColor = TRS80_CONFIG.C64_COLORS[TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR];
-    this.ctx.fillStyle = bgColor.hex;
+    // Clear canvas with background color (white if transparent)
+    if (TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR === -1) {
+      // Transparent background - use white
+      this.ctx.fillStyle = '#ffffff';
+    } else {
+      const bgColor = TRS80_CONFIG.C64_COLORS[TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR];
+      this.ctx.fillStyle = bgColor.hex;
+    }
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
     // Draw border frame
@@ -410,8 +426,8 @@ export class TRS80Display {
           const x = BORDER_SIZE + col * this.charWidth;
           const y = BORDER_SIZE + screenRow * this.charHeight;
           
-          // Draw background color if not default
-          if (colors && colors.background !== TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
+          // Draw background color if not transparent and not default
+          if (colors && colors.background !== -1 && colors.background !== TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
             const bgColor = TRS80_CONFIG.C64_COLORS[colors.background];
             if (bgColor) {
               this.ctx.fillStyle = bgColor.hex;

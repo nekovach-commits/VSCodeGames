@@ -6,6 +6,7 @@
 import { TRS80_CONFIG } from './trs80-config.js';
 import { TRS80Display } from './trs80-display.js';
 import { TRS80Keyboard } from './trs80-keyboard.js';
+import { TRS80Basic } from './trs80-basic.js';
 
 export class TRS80System {
   constructor() {
@@ -21,8 +22,17 @@ export class TRS80System {
     }
     
     // Initialize subsystems
+    console.log('Initializing TRS-80 subsystems...');
     this.display = new TRS80Display(this.canvas);
+    console.log('✓ Display initialized');
     this.keyboard = new TRS80Keyboard(this.display);
+    console.log('✓ Keyboard initialized');
+    this.basic = new TRS80Basic(this.display, this.keyboard);
+    console.log('✓ BASIC interpreter initialized');
+    
+    // Connect BASIC interpreter to keyboard
+    this.keyboard.setBasicInterpreter(this.basic);
+    console.log('✓ BASIC connected to keyboard');
     
     // Set up the system
     this.setupSystem();
@@ -197,5 +207,20 @@ export class TRS80System {
 
 // Initialize system when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-  window.trs80 = new TRS80System();
+  console.log('DOM loaded, initializing TRS-80 system...');
+  try {
+    const system = new TRS80System();
+    
+    // Expose system globally for input handlers
+    window.trs80 = {
+      display: system.display,
+      keyboard: system.keyboard,
+      basic: system.basic,
+      system: system
+    };
+    
+    console.log('✓ TRS-80 system fully initialized and exposed globally');
+  } catch (error) {
+    console.error('✗ Failed to initialize TRS-80 system:', error);
+  }
 });

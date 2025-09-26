@@ -8,10 +8,20 @@ import { DEVICE_PATTERNS } from './trs80-config.js';
 export class TRS80Keyboard {
   constructor(display) {
     this.display = display;
+    this.colorMode = false; // For @ color system
+    this.basic = null; // Will be set by main system
+    this.currentLine = ''; // Track current input line
     this.setupPhysicalKeyboard();
     this.setupOnScreenKeyboard();
     
     console.log('TRS-80 Keyboard system initialized');
+  }
+  
+  /**
+   * Set BASIC interpreter reference
+   */
+  setBasicInterpreter(basic) {
+    this.basic = basic;
   }
   
   /**
@@ -176,9 +186,17 @@ export class TRS80Keyboard {
     // Handle special navigation and editing keys
     switch (keyValue) {
       case 'Backspace':
+        if (this.currentLine.length > 0) {
+          this.currentLine = this.currentLine.slice(0, -1);
+        }
         this.display.removeChar();
         break;
       case 'Enter':
+        // Process current line as BASIC command if BASIC is available
+        if (this.basic && this.currentLine.trim()) {
+          this.basic.processLine(this.currentLine);
+        }
+        this.currentLine = ''; // Reset line
         this.display.addChar('\n');
         break;
       case 'Tab':
@@ -201,6 +219,13 @@ export class TRS80Keyboard {
         break;
       case ' ':
         this.display.addChar(' ');
+        break;
+        
+      // === SIMPLE COLOR SYSTEM (Kindle-friendly) ===  
+      case '@':
+        console.log('Color mode activated - type 1-8 for colors');
+        this.colorMode = true;
+        // Don't add @ to display
         break;
         
       // === C64-STYLE COLOR COMMANDS ===
@@ -257,8 +282,25 @@ export class TRS80Keyboard {
         break;
         
       default:
+        // Handle @ color system for Kindle compatibility
+        if (this.colorMode && keyValue >= '1' && keyValue <= '8') {
+          const colorIndex = parseInt(keyValue) - 1;
+          const colors = [0, 1, 2, 3, 4, 5, 6, 7]; // Black, White, Red, Cyan, Purple, Green, Blue, Yellow
+          this.display.setTextColor(colors[colorIndex]);
+          this.colorMode = false;
+          console.log('Color set to', colors[colorIndex]);
+          break;
+        }
+        
+        // Cancel color mode if any other key
+        if (this.colorMode) {
+          this.colorMode = false;
+          console.log('Color mode cancelled');
+        }
+        
         // Handle printable characters and ignore modifier keys
         if (keyValue.length === 1) {
+          this.currentLine += keyValue;
           this.display.addChar(keyValue);
         }
         // Ignore modifier keys (Shift, Control, CapsLock, function keys)

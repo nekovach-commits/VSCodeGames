@@ -17,6 +17,8 @@
     
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
       💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen<br>
+      🎨 <strong>Colors:</strong> Type @ then 1-8 for colors (Black,White,Red,Cyan,Purple,Green,Blue,Yellow)<br>
+      📝 <strong>BASIC:</strong> Try: PRINT "HELLO", COLOR 4, PLOT 10,20, LINE 0,0,50,50, CLS<br>
       <span id="status-msg" style="color: #006600;">System Status: Loading...</span>
     </div>
     
@@ -64,6 +66,11 @@
           for (let char of addedText) {
             if (window.trs80 && window.trs80.keyboard) {
               console.log('Sending to TRS-80:', char);
+              // Track current line for BASIC commands
+              if (!window.trs80.keyboard.currentLine) {
+                window.trs80.keyboard.currentLine = '';
+              }
+              window.trs80.keyboard.currentLine += char;
               window.trs80.keyboard.processKeyInput(char);
             } else {
               console.log('TRS-80 not ready, queuing:', char);
@@ -93,6 +100,10 @@
         if (e.key === 'Backspace') {
           console.log('Processing backspace');
           if (window.trs80 && window.trs80.keyboard) {
+            // Update current line
+            if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.length > 0) {
+              window.trs80.keyboard.currentLine = window.trs80.keyboard.currentLine.slice(0, -1);
+            }
             window.trs80.keyboard.processKeyInput('Backspace');
             window.trs80.display.render();
           }
@@ -100,8 +111,13 @@
           inputBuffer = e.target.value.slice(0, -1);
           
         } else if (e.key === 'Enter') {
-          console.log('Processing enter');
+          console.log('Processing enter with line:', window.trs80.keyboard.currentLine);
           if (window.trs80 && window.trs80.keyboard) {
+            // Process as BASIC command if there's a current line
+            if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.trim()) {
+              window.trs80.keyboard.processLine(window.trs80.keyboard.currentLine);
+            }
+            window.trs80.keyboard.currentLine = ''; // Reset line
             window.trs80.keyboard.processKeyInput('Enter');
             window.trs80.display.render();
           }
@@ -204,10 +220,6 @@
           else if (w <= 1024) type = 'Tablet';
           
           deviceType.textContent = type;
-          } else {
-            type = 'Desktop';
-          }
-          deviceType.textContent = type;
         }
         
         // Scale Factor
@@ -240,6 +252,17 @@
     
     // Also update after a short delay to catch canvas initialization
     setTimeout(updateResolutionInfo, 2000);
+  </script>
+
+  <script>
+    // Debug ES6 module loading
+    window.addEventListener('error', function(e) {
+      console.error('Script error:', e.error, e.filename, e.lineno);
+      document.getElementById('status-msg').textContent = 'System Status: ✗ Script Error - ' + e.message;
+      document.getElementById('status-msg').style.color = '#cc0000';
+    });
+    
+    console.log('About to load TRS-80 main module...');
   </script>
 
   <script type="module" src="js/trs80-main.js"></script>
@@ -371,12 +394,29 @@
         this.charWidth = 6 * this.pixelSize; // 5 pixels + 1 space, scaled
         this.charHeight = 8 * this.pixelSize; // 7 pixels + 1 space, scaled
         this.rows = [];
+        this.colorRows = []; // Store color information for each position
         this.currentRow = 0;
         this.currentCol = 0;
+        
+        // C64 color system
+        this.currentTextColor = 14;  // Light Blue (default)
+        this.currentBackgroundColor = -1; // Transparent (no background color)
+        
+        // C64 Color palette (same as main system)
+        this.C64_COLORS = {
+          0: '#000000', 1: '#FFFFFF', 2: '#68372B', 3: '#70A4B2', 
+          4: '#6F3D86', 5: '#588D43', 6: '#352879', 7: '#B8C76F',
+          8: '#6F4F25', 9: '#433900', 10: '#9A6759', 11: '#444444',
+          12: '#6C6C6C', 13: '#9AD284', 14: '#6C5EB5', 15: '#959595'
+        };
         
         // Initialize with empty rows - 40 chars wide to match TRS-80
         for (let i = 0; i < 20; i++) {
           this.rows[i] = '';
+          this.colorRows[i] = new Array(40).fill({
+            text: this.currentTextColor, 
+            background: -1  // Transparent
+          });
         }
         
         console.log('✓ Simple TRS-80 initialized');
@@ -398,7 +438,12 @@
           if (this.currentRow >= 20) {
             // Scroll up
             this.rows.shift();
+            this.colorRows.shift();
             this.rows.push('');
+            this.colorRows.push(new Array(40).fill({
+              text: this.currentTextColor, 
+              background: -1  // Transparent
+            }));
             this.currentRow = 19;
           }
         } else if (char === 'Backspace') {
@@ -411,16 +456,33 @@
             this.rows[this.currentRow] = this.rows[this.currentRow].slice(0, -1);
           }
         } else if (char.length === 1) {
-          // Regular character
+          // Regular character - store both char and color
           if (!this.rows[this.currentRow]) this.rows[this.currentRow] = '';
+          if (!this.colorRows[this.currentRow]) {
+            this.colorRows[this.currentRow] = new Array(40).fill({
+              text: this.currentTextColor, 
+              background: -1  // Transparent
+            });
+          }
+          
           this.rows[this.currentRow] += char;
+          this.colorRows[this.currentRow][this.currentCol] = {
+            text: this.currentTextColor,
+            background: -1  // Transparent
+          };
+          
           this.currentCol++;
           if (this.currentCol >= 40) {
             this.currentRow++;
             this.currentCol = 0;
             if (this.currentRow >= 20) {
               this.rows.shift();
+              this.colorRows.shift();
               this.rows.push('');
+              this.colorRows.push(new Array(40).fill({
+                text: this.currentTextColor, 
+                background: -1  // Transparent
+              }));
               this.currentRow = 19;
             }
           }
@@ -429,23 +491,35 @@
       }
       
       render() {
-        // Clear canvas with white background
+        // Clear canvas with white background (Kindle-friendly)
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw black border
-        this.ctx.strokeStyle = '#000000';
+        // Draw border
+        this.ctx.strokeStyle = this.C64_COLORS[1]; // White border
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(1, 1, this.canvas.width-2, this.canvas.height-2);
         
-        // Draw pixel-style text
-        this.ctx.fillStyle = '#000000';
         
         for (let row = 0; row < 20; row++) {
           const line = this.rows[row] || '';
+          const colorLine = this.colorRows[row] || [];
+          
           for (let col = 0; col < line.length; col++) {
             const char = line[col];
-            this.drawPixelChar(char, col, row);
+            const colors = colorLine[col] || { text: this.currentTextColor, background: this.currentBackgroundColor };
+            
+            const x = 10 + (col * this.charWidth);  // 10px border
+            const y = 10 + (row * this.charHeight);
+            
+            // Draw background color only if not transparent
+            if (colors.background !== -1 && colors.background !== this.currentBackgroundColor) {
+              this.ctx.fillStyle = this.C64_COLORS[colors.background];
+              this.ctx.fillRect(x, y, this.charWidth, this.charHeight);
+            }
+            
+            // Draw character with color
+            this.drawPixelChar(char, col, row, colors.text);
           }
         }
         
@@ -453,13 +527,16 @@
         this.drawCursor(this.currentCol, this.currentRow);
       }
       
-      drawPixelChar(char, col, row) {
+      drawPixelChar(char, col, row, colorIndex = null) {
         const borderSize = 10;
         const x = borderSize + (col * this.charWidth);
         const y = borderSize + (row * this.charHeight);
         
-        // Use original TRS-80 5×7 bitmap font data
-        drawChar(this.ctx, char, x, y, this.pixelSize, '#000000');
+        // Use color from parameter or current text color
+        const color = colorIndex !== null ? this.C64_COLORS[colorIndex] : this.C64_COLORS[this.currentTextColor];
+        
+        // Use original TRS-80 5×7 bitmap font data with color
+        this.drawChar5x7(char, x, y, color);
       }
       
       drawCursor(col, row) {
@@ -483,6 +560,127 @@
           }
         }
       }
+      
+      // Color control methods for Kindle compatibility
+      setTextColor(colorIndex) {
+        if (colorIndex >= 0 && colorIndex <= 15) {
+          this.currentTextColor = colorIndex;
+          console.log('SimpleTRS80: Text color set to', colorIndex, this.C64_COLORS[colorIndex]);
+        }
+      }
+      
+      setBackgroundColor(colorIndex) {
+        if (colorIndex >= 0 && colorIndex <= 15) {
+          this.currentBackgroundColor = colorIndex;
+          console.log('SimpleTRS80: Background color set to', colorIndex, this.C64_COLORS[colorIndex]);
+        }
+      }
+      
+      // Simple 5x7 font renderer for Kindle compatibility
+      drawChar5x7(char, x, y, color) {
+        // Basic 5x7 font data for essential characters
+        const fontData = {
+          ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+          '!': [0x04, 0x04, 0x04, 0x04, 0x04, 0x00, 0x04],
+          '"': [0x0A, 0x0A, 0x0A, 0x00, 0x00, 0x00, 0x00],
+          '#': [0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A],
+          '$': [0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04],
+          '%': [0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03],
+          '&': [0x06, 0x09, 0x09, 0x06, 0x15, 0x09, 0x16],
+          "'": [0x04, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00],
+          '(': [0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02],
+          ')': [0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08],
+          '*': [0x00, 0x04, 0x15, 0x0E, 0x15, 0x04, 0x00],
+          '+': [0x00, 0x04, 0x04, 0x1F, 0x04, 0x04, 0x00],
+          ',': [0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C, 0x08],
+          '-': [0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00],
+          '.': [0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C],
+          '/': [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x00],
+          '0': [0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E],
+          '1': [0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E],
+          '2': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F],
+          '3': [0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E],
+          '4': [0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02],
+          '5': [0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E],
+          '6': [0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E],
+          '7': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08],
+          '8': [0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E],
+          '9': [0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C],
+          ':': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00],
+          ';': [0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x04, 0x08],
+          '<': [0x02, 0x04, 0x08, 0x10, 0x08, 0x04, 0x02],
+          '=': [0x00, 0x00, 0x1F, 0x00, 0x1F, 0x00, 0x00],
+          '>': [0x08, 0x04, 0x02, 0x01, 0x02, 0x04, 0x08],
+          '?': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x00, 0x04],
+          '@': [0x0E, 0x11, 0x01, 0x0D, 0x15, 0x15, 0x0E],
+          'A': [0x0E, 0x11, 0x11, 0x11, 0x1F, 0x11, 0x11],
+          'B': [0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E],
+          'C': [0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E],
+          'D': [0x1C, 0x12, 0x11, 0x11, 0x11, 0x12, 0x1C],
+          'E': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F],
+          'F': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10],
+          'G': [0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F],
+          'H': [0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11],
+          'I': [0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+          'J': [0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C],
+          'K': [0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11],
+          'L': [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F],
+          'M': [0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11],
+          'N': [0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11],
+          'O': [0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+          'P': [0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10],
+          'Q': [0x0E, 0x11, 0x11, 0x15, 0x12, 0x0E, 0x01],
+          'R': [0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11],
+          'S': [0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E],
+          'T': [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
+          'U': [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E],
+          'V': [0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04],
+          'W': [0x11, 0x11, 0x11, 0x15, 0x15, 0x15, 0x0A],
+          'X': [0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11],
+          'Y': [0x11, 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04],
+          'Z': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F],
+          'a': [0x00, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F],
+          'b': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x1E],
+          'c': [0x00, 0x00, 0x0E, 0x10, 0x10, 0x11, 0x0E],
+          'd': [0x01, 0x01, 0x0D, 0x13, 0x11, 0x11, 0x0F],
+          'e': [0x00, 0x00, 0x0E, 0x11, 0x1F, 0x10, 0x0E],
+          'f': [0x06, 0x09, 0x08, 0x1C, 0x08, 0x08, 0x08],
+          'g': [0x00, 0x0F, 0x11, 0x0F, 0x01, 0x0E, 0x10],
+          'h': [0x10, 0x10, 0x16, 0x19, 0x11, 0x11, 0x11],
+          'i': [0x04, 0x00, 0x0C, 0x04, 0x04, 0x04, 0x0E],
+          'j': [0x02, 0x00, 0x06, 0x02, 0x02, 0x12, 0x0C],
+          'k': [0x10, 0x10, 0x12, 0x14, 0x18, 0x14, 0x12],
+          'l': [0x0C, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E],
+          'm': [0x00, 0x00, 0x1A, 0x15, 0x15, 0x11, 0x11],
+          'n': [0x00, 0x00, 0x16, 0x19, 0x11, 0x11, 0x11],
+          'o': [0x00, 0x00, 0x0E, 0x11, 0x11, 0x11, 0x0E],
+          'p': [0x00, 0x00, 0x1E, 0x11, 0x1E, 0x10, 0x10],
+          'q': [0x00, 0x00, 0x0D, 0x13, 0x0F, 0x01, 0x01],
+          'r': [0x00, 0x00, 0x16, 0x19, 0x10, 0x10, 0x10],
+          's': [0x00, 0x00, 0x0E, 0x10, 0x0E, 0x01, 0x1E],
+          't': [0x08, 0x08, 0x1C, 0x08, 0x08, 0x09, 0x06],
+          'u': [0x00, 0x00, 0x11, 0x11, 0x11, 0x13, 0x0D],
+          'v': [0x00, 0x00, 0x11, 0x11, 0x11, 0x0A, 0x04],
+          'w': [0x00, 0x00, 0x11, 0x11, 0x15, 0x15, 0x0A],
+          'x': [0x00, 0x00, 0x11, 0x0A, 0x04, 0x0A, 0x11],
+          'y': [0x00, 0x00, 0x11, 0x11, 0x0F, 0x01, 0x0E],
+          'z': [0x00, 0x00, 0x1F, 0x02, 0x04, 0x08, 0x1F]
+        };
+        
+        const charData = fontData[char.toUpperCase()] || fontData[' '];
+        this.ctx.fillStyle = color;
+        
+        for (let row = 0; row < 7; row++) {
+          const rowData = charData[row];
+          for (let col = 0; col < 5; col++) {
+            if (rowData & (1 << (4 - col))) {
+              const pixelX = x + col * this.pixelSize;
+              const pixelY = y + row * this.pixelSize;
+              this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+            }
+          }
+        }
+      }
     }
     
     // Initialize fallback system if modules fail
@@ -498,12 +696,77 @@
           keyboard: {
             processKeyInput: function(char) {
               console.log('Fallback processing:', char);
+              
+              // Simple color system using Ctrl+Number or @Number
+              // Since Kindle may not support Ctrl easily, use @ as color prefix
+              if (char === '@') {
+                console.log('Color mode activated - type 1-8 for colors');
+                window.colorMode = true;
+                // Don't add @ to display
+                return;
+              }
+              
+              // Handle color selection after @
+              if (window.colorMode && char >= '1' && char <= '8') {
+                const colorIndex = parseInt(char) - 1;
+                const colors = [0, 1, 2, 3, 4, 5, 6, 7]; // Black, White, Red, Cyan, Purple, Green, Blue, Yellow
+                window.simpleTRS80.setTextColor(colors[colorIndex]);
+                window.colorMode = false;
+                console.log('Color set to', colors[colorIndex]);
+                return;
+              }
+              
+              // Cancel color mode if any other key
+              if (window.colorMode) {
+                window.colorMode = false;
+                console.log('Color mode cancelled');
+              }
+              
+              // Regular character input
               window.simpleTRS80.addChar(char);
+            },
+            // Add current line tracking for BASIC commands
+            currentLine: '',
+            processLine: function(line) {
+              // Simple BASIC command processing for fallback
+              line = line.trim().toUpperCase();
+              if (!line) return;
+              
+              // Handle basic BASIC commands
+              if (line.startsWith('PRINT ')) {
+                const text = line.substring(6).replace(/"/g, '');
+                window.simpleTRS80.addChar(text + '\n');
+              } else if (line.startsWith('COLOR ')) {
+                const colorNum = parseInt(line.substring(6));
+                if (colorNum >= 0 && colorNum <= 15) {
+                  window.simpleTRS80.setTextColor(colorNum);
+                }
+              } else if (line === 'CLS') {
+                // Clear screen by resetting rows
+                for (let i = 0; i < 20; i++) {
+                  window.simpleTRS80.rows[i] = '';
+                }
+                window.simpleTRS80.currentRow = 0;
+                window.simpleTRS80.currentCol = 0;
+                window.simpleTRS80.render();
+              } else if (line === 'NEW') {
+                window.simpleTRS80.addChar('Program cleared\n');
+              } else if (line.match(/^\d+/)) {
+                window.simpleTRS80.addChar('Program line stored\n');
+              } else {
+                window.simpleTRS80.addChar('?SYNTAX ERROR\n');
+              }
             }
           },
           display: {
             render: function() {
               window.simpleTRS80.render();
+            },
+            setTextColor: function(colorIndex) {
+              window.simpleTRS80.setTextColor(colorIndex);
+            },
+            setBackgroundColor: function(colorIndex) {  
+              window.simpleTRS80.setBackgroundColor(colorIndex);
             }
           }
         };

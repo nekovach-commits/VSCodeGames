@@ -65,7 +65,7 @@ export const TRS80_CONFIG = {
   
   // Default C64-style colors
   DEFAULT_TEXT_COLOR: 14,      // Light Blue (C64 startup color)
-  DEFAULT_BACKGROUND_COLOR: 0, // Black
+  DEFAULT_BACKGROUND_COLOR: -1, // Transparent (white background)
   
   // === CURSOR BEHAVIOR ===
   CURSOR_BLINK_RATE: 500        // Blink interval in milliseconds
