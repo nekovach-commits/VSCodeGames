@@ -244,6 +244,18 @@ export class TRS80Keyboard {
         this.display.setBackgroundColor(3); // Cyan background
         break;
         
+      // === GRAPHICS MODE COMMANDS ===
+      case 'Insert':
+        this.display.toggleGraphicsMode();
+        break;
+      case 'Home':
+        this.display.clearGraphics();
+        break;
+      case 'End':
+        // Draw a test pattern
+        this.drawTestPattern();
+        break;
+        
       default:
         // Handle printable characters and ignore modifier keys
         if (keyValue.length === 1) {
@@ -251,6 +263,32 @@ export class TRS80Keyboard {
         }
         // Ignore modifier keys (Shift, Control, CapsLock, function keys)
         break;
+    }
+  }
+  
+  /**
+   * Draw a test graphics pattern
+   */
+  drawTestPattern() {
+    this.display.setPixelColor(2); // Red
+    this.display.drawLine(0, 0, 239, 159); // Diagonal line
+    
+    this.display.setPixelColor(3); // Cyan  
+    this.display.drawLine(0, 159, 239, 0); // Other diagonal
+    
+    this.display.setPixelColor(5); // Green
+    this.display.drawLine(119, 0, 119, 159); // Vertical center line
+    
+    this.display.setPixelColor(7); // Yellow
+    this.display.drawLine(0, 79, 239, 79); // Horizontal center line
+    
+    // Draw some pixels in corners
+    this.display.setPixelColor(4); // Purple
+    for (let i = 0; i < 10; i++) {
+      this.display.drawPixel(i, i);           // Top-left
+      this.display.drawPixel(239-i, i);       // Top-right  
+      this.display.drawPixel(i, 159-i);       // Bottom-left
+      this.display.drawPixel(239-i, 159-i);   // Bottom-right
     }
   }
 }

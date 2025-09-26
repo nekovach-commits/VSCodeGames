@@ -71,12 +71,20 @@ export class TRS80Display {
     this.cursorVisible = true;
     this.lastBlinkTime = Date.now();
     
+    // Graphics mode support
+    this.isGraphicsMode = false;
+    this.graphicsBuffer = []; // Pixel-level graphics buffer
+    this.graphicsWidth = 40 * 6;  // 240 pixels wide (40 chars × 6 pixels)
+    this.graphicsHeight = 20 * 8; // 160 pixels tall (20 rows × 8 pixels)
+    
     // Current C64 color state
     this.currentTextColor = TRS80_CONFIG.DEFAULT_TEXT_COLOR;      // Light Blue
     this.currentBackgroundColor = TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR; // Black
+    this.currentPixelColor = TRS80_CONFIG.DEFAULT_TEXT_COLOR;    // For graphics drawing
     
-    // Initialize text buffer
+    // Initialize buffers
     this.initializeBuffer();
+    this.initializeGraphicsBuffer();
     
     console.log('TRS-80 Display initialized');
   }
@@ -92,6 +100,17 @@ export class TRS80Display {
         background: TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR
       });
     }
+  }
+  
+  /**
+   * Initialize the graphics buffer for pixel-level drawing
+   */
+  initializeGraphicsBuffer() {
+    this.graphicsBuffer = [];
+    for (let y = 0; y < this.graphicsHeight; y++) {
+      this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR);
+    }
+    console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels`);
   }
   
   /**
@@ -237,6 +256,88 @@ export class TRS80Display {
   }
   
   /**
+   * Toggle between text and graphics mode
+   */
+  toggleGraphicsMode() {
+    this.isGraphicsMode = !this.isGraphicsMode;
+    console.log(`Graphics mode: ${this.isGraphicsMode ? 'ON' : 'OFF'}`);
+  }
+  
+  /**
+   * Set pixel color for graphics drawing (0-15)
+   * @param {number} colorIndex - C64 color index
+   */
+  setPixelColor(colorIndex) {
+    if (colorIndex >= 0 && colorIndex <= 15) {
+      this.currentPixelColor = colorIndex;
+      console.log(`Pixel color set to: ${TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+    }
+  }
+  
+  /**
+   * Draw a pixel at specified coordinates
+   * @param {number} x - X coordinate (0 to graphicsWidth-1)
+   * @param {number} y - Y coordinate (0 to graphicsHeight-1)
+   * @param {number} colorIndex - Optional color (uses current if not specified)
+   */
+  drawPixel(x, y, colorIndex = null) {
+    if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
+      const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
+      this.graphicsBuffer[y][x] = color;
+      console.log(`Pixel drawn at (${x},${y}) with color ${TRS80_CONFIG.C64_COLORS[color].name}`);
+    }
+  }
+  
+  /**
+   * Draw a line between two points (simple Bresenham algorithm)
+   * @param {number} x1 - Start X coordinate
+   * @param {number} y1 - Start Y coordinate  
+   * @param {number} x2 - End X coordinate
+   * @param {number} y2 - End Y coordinate
+   * @param {number} colorIndex - Optional color
+   */
+  drawLine(x1, y1, x2, y2, colorIndex = null) {
+    const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
+    
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const sx = x1 < x2 ? 1 : -1;
+    const sy = y1 < y2 ? 1 : -1;
+    let err = dx - dy;
+    
+    let x = x1;
+    let y = y1;
+    
+    while (true) {
+      this.drawPixel(x, y, color);
+      
+      if (x === x2 && y === y2) break;
+      
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
+    
+    console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${TRS80_CONFIG.C64_COLORS[color].name}`);
+  }
+  
+  /**
+   * Clear graphics buffer
+   */
+  clearGraphics() {
+    for (let y = 0; y < this.graphicsHeight; y++) {
+      this.graphicsBuffer[y].fill(this.currentBackgroundColor);
+    }
+    console.log('Graphics buffer cleared');
+  }
+  
+  /**
    * Adjust scroll to keep cursor visible
    */
   adjustScrollToShowCursor() {
@@ -280,6 +381,24 @@ export class TRS80Display {
     this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
     this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
+    // Render based on current mode
+    if (this.isGraphicsMode) {
+      this.renderGraphics(BORDER_SIZE);
+    } else {
+      this.renderText(BORDER_SIZE);
+    }
+    
+    // Always render cursor in text mode
+    if (!this.isGraphicsMode) {
+      this.renderCursor(BORDER_SIZE);
+    }
+  }
+  
+  /**
+   * Render text mode display
+   */
+  renderText(BORDER_SIZE) {
+    
     // Render visible text from buffer with colors
     for (let screenRow = 0; screenRow < TRS80_CONFIG.SCREEN_HEIGHT; screenRow++) {
       const bufferRow = screenRow + this.scrollOffset;
@@ -310,27 +429,53 @@ export class TRS80Display {
         }
       }
     }
-    
-    // Render blinking cursor when visible on screen
+  }
+  
+  /**
+   * Render graphics mode display
+   */
+  renderGraphics(BORDER_SIZE) {
+    // Render each pixel from graphics buffer
+    for (let y = 0; y < this.graphicsHeight; y++) {
+      for (let x = 0; x < this.graphicsWidth; x++) {
+        const colorIndex = this.graphicsBuffer[y][x];
+        const color = TRS80_CONFIG.C64_COLORS[colorIndex];
+        
+        if (color && colorIndex !== TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
+          this.ctx.fillStyle = color.hex;
+          const canvasX = BORDER_SIZE + x * this.pixelSize;
+          const canvasY = BORDER_SIZE + y * this.pixelSize;
+          this.ctx.fillRect(canvasX, canvasY, this.pixelSize, this.pixelSize);
+        }
+      }
+    }
+  }
+  
+  /**
+   * Render cursor in text mode
+   */
+  renderCursor(BORDER_SIZE) {
     const screenCursorRow = this.cursorRow - this.scrollOffset;
     if (screenCursorRow >= 0 && screenCursorRow < TRS80_CONFIG.SCREEN_HEIGHT && this.cursorVisible) {
-      const cursorX = BORDER_SIZE + this.cursorCol * this.charWidth;  // Use dynamic char width
-      const cursorY = BORDER_SIZE + screenCursorRow * this.charHeight;  // Use dynamic char height
+      const cursorX = BORDER_SIZE + this.cursorCol * this.charWidth;
+      const cursorY = BORDER_SIZE + screenCursorRow * this.charHeight;
       
-      // Draw solid 6×8 cursor block
-      this.ctx.fillStyle = TRS80_CONFIG.TEXT_COLOR;
+      // Draw solid cursor block with current text color
+      const cursorColor = TRS80_CONFIG.C64_COLORS[this.currentTextColor];
+      this.ctx.fillStyle = cursorColor.hex;
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 6; c++) {
-          const pixelX = cursorX + c * this.pixelSize;  // Use dynamic pixel size
-          const pixelY = cursorY + r * this.pixelSize;  // Use dynamic pixel size
-          this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);  // Use dynamic pixel size
+          const pixelX = cursorX + c * this.pixelSize;
+          const pixelY = cursorY + r * this.pixelSize;
+          this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
         }
       }
       
       // Invert character if present at cursor position
       const charAtCursor = this.textBuffer[this.cursorRow]?.[this.cursorCol];
       if (charAtCursor && charAtCursor !== ' ') {
-        drawChar(this.ctx, charAtCursor, cursorX, cursorY, this.pixelSize, TRS80_CONFIG.BACKGROUND_COLOR);  // Use dynamic pixel size
+        const bgColor = TRS80_CONFIG.C64_COLORS[this.currentBackgroundColor];
+        drawChar(this.ctx, charAtCursor, cursorX, cursorY, this.pixelSize, bgColor.hex);
       }
     }
   }
