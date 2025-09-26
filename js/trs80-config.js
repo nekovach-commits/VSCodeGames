@@ -14,6 +14,11 @@ function getOptimalPixelSize() {
     return 2;
   }
   
+  // Kindle Scribe (930×1240) - use 3×3 pixel scaling
+  if (screenWidth === 930 && screenHeight === 1240) {
+    return 3;
+  }
+  
   // Mobile devices - use 2×2 or 3×3
   if (screenWidth <= 768) {
     return 2;

@@ -31,6 +31,9 @@
       if (screenW === 636 && screenH === 848) {
         pixelSize = 2; // Kindle ColorSoft
         console.log('✓ IMMEDIATE: Kindle ColorSoft detected');
+      } else if (screenW === 930 && screenH === 1240) {
+        pixelSize = 3; // Kindle Scribe
+        console.log('✓ IMMEDIATE: Kindle Scribe detected');
       } else if (screenW <= 768) {
         pixelSize = 2; // Mobile
         console.log('✓ IMMEDIATE: Mobile detected');
@@ -367,9 +370,24 @@
         this.ctx = this.canvas.getContext('2d');
         this.text = '';
         this.cursorPos = 0;
-        this.pixelSize = 2; // For Kindle
-        this.charWidth = 12; // 6 * 2 (5 pixels + 1 space, scaled 2x)
-        this.charHeight = 16; // 8 * 2 (7 pixels + 1 space, scaled 2x)
+        
+        // Detect device and set pixel size
+        const screenW = window.screen.width;
+        const screenH = window.screen.height;
+        
+        if (screenW === 636 && screenH === 848) {
+          this.pixelSize = 2; // Kindle ColorSoft
+          console.log('✓ SimpleTRS80: Kindle ColorSoft detected');
+        } else if (screenW === 930 && screenH === 1240) {
+          this.pixelSize = 3; // Kindle Scribe
+          console.log('✓ SimpleTRS80: Kindle Scribe detected');
+        } else {
+          this.pixelSize = 2; // Default for fallback
+          console.log('✓ SimpleTRS80: Default fallback mode');
+        }
+        
+        this.charWidth = 6 * this.pixelSize; // 5 pixels + 1 space, scaled
+        this.charHeight = 8 * this.pixelSize; // 7 pixels + 1 space, scaled
         this.rows = [];
         this.currentRow = 0;
         this.currentCol = 0;
