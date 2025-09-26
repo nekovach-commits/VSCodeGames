@@ -4,28 +4,18 @@
  * @fileoverview Central configuration for TRS-80 Model 100 emulator
  */
 
-// Detect device and set optimal pixel scaling
+// Simple resolution-based pixel size detection
 function getOptimalPixelSize() {
-  const screenWidth = window.screen.width;
-  const screenHeight = window.screen.height;
+  const w = window.screen.width;
+  const h = window.screen.height;
   
-  // Kindle ColorSoft (636×848) - use 2×2 pixel scaling
-  if (screenWidth === 636 && screenHeight === 848) {
-    return 2;
-  }
+  // Specific device resolutions  
+  if (w === 636 && h === 848) return 2;  // Kindle ColorSoft
+  if (w === 930 && h === 1240) return 3; // Kindle Scribe
   
-  // Kindle Scribe (930×1240) - use 3×3 pixel scaling
-  if (screenWidth === 930 && screenHeight === 1240) {
-    return 3;
-  }
-  
-  // Mobile devices - use 2×2 or 3×3
-  if (screenWidth <= 768) {
-    return 2;
-  }
-  
-  // Desktop/larger screens - use 4×4 (original)
-  return 4;
+  // General size categories
+  if (w <= 768) return 2;  // Mobile devices  
+  return 4;                // Desktop/large screens
 }
 
 const OPTIMAL_PIXEL_SIZE = getOptimalPixelSize();

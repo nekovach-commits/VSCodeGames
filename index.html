@@ -21,23 +21,24 @@
     </div>
     
     <script>
+      // Simple resolution-based pixel size detection
+      function getPixelSize() {
+        const w = window.screen.width;
+        const h = window.screen.height;
+        
+        // Specific device resolutions
+        if (w === 636 && h === 848) return 2;  // Kindle ColorSoft
+        if (w === 930 && h === 1240) return 3; // Kindle Scribe
+        
+        // General size categories
+        if (w <= 768) return 2;  // Mobile devices
+        return 4;                // Desktop/large screens
+      }
+      
       // Immediate canvas sizing - runs before modules load
       const canvas = document.getElementById('retro-canvas');
-      const screenW = window.screen.width;
-      const screenH = window.screen.height;
-      console.log('Immediate sizing - Screen:', screenW + '×' + screenH);
-      
-      let pixelSize = 4; // Default
-      if (screenW === 636 && screenH === 848) {
-        pixelSize = 2; // Kindle ColorSoft
-        console.log('✓ IMMEDIATE: Kindle ColorSoft detected');
-      } else if (screenW === 930 && screenH === 1240) {
-        pixelSize = 3; // Kindle Scribe
-        console.log('✓ IMMEDIATE: Kindle Scribe detected');
-      } else if (screenW <= 768) {
-        pixelSize = 2; // Mobile
-        console.log('✓ IMMEDIATE: Mobile detected');
-      }
+      const pixelSize = getPixelSize();
+      console.log('Screen:', window.screen.width + '×' + window.screen.height, '→ Pixel Size:', pixelSize + '×' + pixelSize);
       
       const width = (40 * 6 * pixelSize) + 20;
       const height = (20 * 8 * pixelSize) + 20;
@@ -181,15 +182,10 @@
         const canvasSize = document.getElementById('canvas-size');
         if (canvasSize) canvasSize.textContent = `${canvas.width}×${canvas.height}`;
         
-        // Expected Size (for Kindle: 40×6×2 + 20 = 500×180)
+        // Expected Size
         const expectedSize = document.getElementById('expected-size');
         if (expectedSize) {
-          const width = screen.width;
-          const height = screen.height;
-          let pixelScale = 4; // Default
-          if (width === 636 && height === 848) pixelScale = 2; // Kindle
-          else if (width <= 768) pixelScale = 2; // Mobile
-          
+          const pixelScale = getPixelSize();
           const expectedW = (40 * 6 * pixelScale) + 20;
           const expectedH = (20 * 8 * pixelScale) + 20;
           expectedSize.textContent = `${expectedW}×${expectedH}`;
@@ -198,15 +194,16 @@
         // Device Type Detection
         const deviceType = document.getElementById('device-type');
         if (deviceType) {
-          let type = 'Unknown';
-          const width = screen.width;
-          const height = screen.height;
-          if (width === 636 && height === 848) {
-            type = 'Kindle ColorSoft';
-          } else if (width <= 768) {
-            type = 'Mobile';
-          } else if (width <= 1024) {
-            type = 'Tablet';
+          const w = screen.width;
+          const h = screen.height;
+          let type = 'Desktop';
+          
+          if (w === 636 && h === 848) type = 'Kindle ColorSoft';
+          else if (w === 930 && h === 1240) type = 'Kindle Scribe';  
+          else if (w <= 768) type = 'Mobile';
+          else if (w <= 1024) type = 'Tablet';
+          
+          deviceType.textContent = type;
           } else {
             type = 'Desktop';
           }
@@ -225,11 +222,7 @@
         // Pixel Scale
         const pixelScaleEl = document.getElementById('pixel-scale');
         if (pixelScaleEl) {
-          const width = screen.width;
-          const height = screen.height;
-          let pixelScale = 4;
-          if (width === 636 && height === 848) pixelScale = 2;
-          else if (width <= 768) pixelScale = 2;
+          const pixelScale = getPixelSize();
           pixelScaleEl.textContent = `${pixelScale}×${pixelScale}`;
         }
         
@@ -371,20 +364,9 @@
         this.text = '';
         this.cursorPos = 0;
         
-        // Detect device and set pixel size
-        const screenW = window.screen.width;
-        const screenH = window.screen.height;
-        
-        if (screenW === 636 && screenH === 848) {
-          this.pixelSize = 2; // Kindle ColorSoft
-          console.log('✓ SimpleTRS80: Kindle ColorSoft detected');
-        } else if (screenW === 930 && screenH === 1240) {
-          this.pixelSize = 3; // Kindle Scribe
-          console.log('✓ SimpleTRS80: Kindle Scribe detected');
-        } else {
-          this.pixelSize = 2; // Default for fallback
-          console.log('✓ SimpleTRS80: Default fallback mode');
-        }
+        // Use same pixel size function
+        this.pixelSize = getPixelSize();
+        console.log('SimpleTRS80: Using', this.pixelSize + '×' + this.pixelSize, 'pixel scaling');
         
         this.charWidth = 6 * this.pixelSize; // 5 pixels + 1 space, scaled
         this.charHeight = 8 * this.pixelSize; // 7 pixels + 1 space, scaled
