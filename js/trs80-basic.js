@@ -155,58 +155,6 @@ export class TRS80Basic {
   }
   
   /**
-   * Parse ANSI escape codes and return array of text/color parts (simplified to 8 colors)
-   */
-  parseAnsiColors(text) {
-    console.log('Parsing ANSI colors in text:', JSON.stringify(text));
-    
-    // Simple mapping: ANSI 30-37 -> COLOR 0-7
-    const ansiToColor = {
-      30: 0,  // Black
-      31: 1,  // Red  
-      32: 2,  // Green
-      33: 3,  // Yellow
-      34: 4,  // Blue
-      35: 5,  // Purple/Magenta
-      36: 6,  // Cyan
-      37: 7,  // White
-      0: 7    // Reset to default (white)
-    };
-    
-    let result = [];
-    let currentPos = 0;
-    
-    // Find ANSI escape sequences: \e[CODEm or \033[CODEm or actual ESC[CODEm
-    const ansiRegex = /\\e\[(\d+)m|\\033\[(\d+)m|\033\[(\d+)m/g;
-    let match;
-    
-    while ((match = ansiRegex.exec(text)) !== null) {
-      // Add text before the escape code
-      if (match.index > currentPos) {
-        const beforeText = text.substring(currentPos, match.index);
-        result.push({ type: 'text', content: beforeText });
-      }
-      
-      // Extract the color code
-      const colorCode = parseInt(match[1] || match[2] || match[3]);
-      if (ansiToColor.hasOwnProperty(colorCode)) {
-        result.push({ type: 'color', code: ansiToColor[colorCode] });
-        console.log('ANSI color change:', colorCode, '-> COLOR', ansiToColor[colorCode]);
-      }
-      
-      currentPos = match.index + match[0].length;
-    }
-    
-    // Add remaining text
-    if (currentPos < text.length) {
-      result.push({ type: 'text', content: text.substring(currentPos) });
-    }
-    
-    console.log('ANSI parsing result:', result);
-    return result;
-  }
-
-  /**
    * PRINT command - display text or variables
    */
   cmdPrint(args) {
@@ -224,19 +172,9 @@ export class TRS80Basic {
     let output = this.evaluateExpression(args);
     console.log('Expression evaluated to:', JSON.stringify(output));
     
-    // Parse ANSI color codes in the output
-    const parsedParts = this.parseAnsiColors(output);
-    
-    // Output each part
-    for (const part of parsedParts) {
-      if (part.type === 'color') {
-        this.display.setTextColor(part.code);
-      } else if (part.type === 'text') {
-        // Add each character individually to the display
-        for (let i = 0; i < part.content.length; i++) {
-          this.display.addChar(part.content[i]);
-        }
-      }
+    // Add each character individually to the display
+    for (let i = 0; i < output.length; i++) {
+      this.display.addChar(output[i]);
     }
     this.display.addChar('\n'); // Add newline separately
     

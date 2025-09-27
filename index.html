@@ -17,8 +17,8 @@
     
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
       💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen<br>
-      🎨 <strong>Colors:</strong> Type @ then 1-8 for colors (Black,White,Red,Cyan,Purple,Green,Blue,Yellow)<br>
-      📝 <strong>BASIC:</strong> Try: PRINT "HELLO", COLOR 4, PLOT 10,20, LINE 0,0,50,50, CLS<br>
+      🎨 <strong>Colors:</strong> Use COLOR 0-7 (Black,Red,Green,Yellow,Blue,Magenta,Cyan,White)<br>
+      📝 <strong>BASIC:</strong> Try: PRINT "HELLO", COLOR 1, COLOR 2, PRINT "GREEN TEXT"<br>
       <span id="status-msg" style="color: #006600;">System Status: Loading...</span>
     </div>
     
@@ -420,10 +420,18 @@
         this.currentTextColor = 14;  // Light Blue (default)
         this.currentBackgroundColor = -1; // Transparent (no background color)
         
-        // C64 Color palette (same as main system)
+        // Standard 8 ANSI colors (0-7) + C64 extended colors (8-15)
         this.C64_COLORS = {
-          0: '#000000', 1: '#FFFFFF', 2: '#68372B', 3: '#70A4B2', 
-          4: '#6F3D86', 5: '#588D43', 6: '#352879', 7: '#B8C76F',
+          // Standard ANSI colors (0-7)
+          0: '#000000', // Black
+          1: '#AA0000', // Red  
+          2: '#00AA00', // Green
+          3: '#AA5500', // Yellow
+          4: '#0000AA', // Blue
+          5: '#AA00AA', // Magenta/Purple
+          6: '#00AAAA', // Cyan
+          7: '#AAAAAA', // White
+          // Extended C64 colors (8-15) - keep original for compatibility
           8: '#6F4F25', 9: '#433900', 10: '#9A6759', 11: '#444444',
           12: '#6C6C6C', 13: '#9AD284', 14: '#6C5EB5', 15: '#959595'
         };
@@ -807,56 +815,6 @@
               window.simpleTRS80.addChar(char);
               console.log('=== processKeyInput complete, currentLine:', JSON.stringify(this.currentLine));
             },
-            // ANSI color code mapping to C64 colors (simplified to 8 basic colors)
-            parseAnsiColors: function(text) {
-              console.log('Parsing ANSI colors in text:', JSON.stringify(text));
-              
-              // Simple mapping: ANSI 30-37 -> COLOR 0-7
-              const ansiToColor = {
-                30: 0,  // Black
-                31: 1,  // Red  
-                32: 2,  // Green
-                33: 3,  // Yellow
-                34: 4,  // Blue
-                35: 5,  // Purple/Magenta
-                36: 6,  // Cyan
-                37: 7,  // White
-                0: 7    // Reset to default (white)
-              };
-              
-              let result = [];
-              let currentPos = 0;
-              
-              // Find ANSI escape sequences: \e[CODEm or \033[CODEm
-              const ansiRegex = /\\e\[(\d+)m|\\033\[(\d+)m|\033\[(\d+)m/g;
-              let match;
-              
-              while ((match = ansiRegex.exec(text)) !== null) {
-                // Add text before the escape code
-                if (match.index > currentPos) {
-                  const beforeText = text.substring(currentPos, match.index);
-                  result.push({ type: 'text', content: beforeText });
-                }
-                
-                // Extract the color code
-                const colorCode = parseInt(match[1] || match[2] || match[3]);
-                if (ansiToColor.hasOwnProperty(colorCode)) {
-                  result.push({ type: 'color', code: ansiToColor[colorCode] });
-                  console.log('ANSI color change:', colorCode, '-> COLOR', ansiToColor[colorCode]);
-                }
-                
-                currentPos = match.index + match[0].length;
-              }
-              
-              // Add remaining text
-              if (currentPos < text.length) {
-                result.push({ type: 'text', content: text.substring(currentPos) });
-              }
-              
-              console.log('ANSI parsing result:', result);
-              return result;
-            },
-
             processLine: function(line) {
               // Full BASIC command processing for fallback - enhanced version
               const originalLine = line.trim();
@@ -917,21 +875,11 @@
                     console.log('Removed single quotes, text now:', JSON.stringify(text));
                   }
                   
-                  console.log('Processing ANSI colors in text:', JSON.stringify(text));
-                  // Parse ANSI color codes
-                  const parsedParts = window.trs80.keyboard.parseAnsiColors(text);
-                  
-                  // Output each part
-                  for (const part of parsedParts) {
-                    if (part.type === 'color') {
-                      window.simpleTRS80.setTextColor(part.code);
-                    } else if (part.type === 'text') {
-                      // Add each character individually
-                      for (let i = 0; i < part.content.length; i++) {
-                        console.log('Adding char:', JSON.stringify(part.content[i]));
-                        window.simpleTRS80.addChar(part.content[i]);
-                      }
-                    }
+                  console.log('Adding characters to display:', JSON.stringify(text));
+                  // Add each character individually like main system
+                  for (let i = 0; i < text.length; i++) {
+                    console.log('Adding char:', JSON.stringify(text[i]));
+                    window.simpleTRS80.addChar(text[i]);
                   }
                   window.simpleTRS80.addChar('\n');
                   console.log('PRINT command completed');

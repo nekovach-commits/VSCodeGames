@@ -43,16 +43,18 @@ export const TRS80_CONFIG = {
   INACTIVE_COLOR: '#cccccc',    // Light grey for UI elements
   
   // === COMMODORE 64 COLOR PALETTE ===
-  // Authentic C64 colors based on original hardware specifications
+  // Standard 8 ANSI colors (0-7) + C64 extended colors (8-15)
   C64_COLORS: {
+    // Standard ANSI colors (0-7)
     0: { name: 'BLACK',       hex: '#000000', rgb: [0,   0,   0  ] },
-    1: { name: 'WHITE',       hex: '#FFFFFF', rgb: [255, 255, 255] },
-    2: { name: 'RED',         hex: '#68372B', rgb: [104, 55,  43 ] },
-    3: { name: 'CYAN',        hex: '#70A4B2', rgb: [112, 164, 178] },
-    4: { name: 'PURPLE',      hex: '#6F3D86', rgb: [111, 61,  134] },
-    5: { name: 'GREEN',       hex: '#588D43', rgb: [88,  141, 67 ] },
-    6: { name: 'BLUE',        hex: '#352879', rgb: [53,  40,  121] },
-    7: { name: 'YELLOW',      hex: '#B8C76F', rgb: [184, 199, 111] },
+    1: { name: 'RED',         hex: '#AA0000', rgb: [170, 0,   0  ] },
+    2: { name: 'GREEN',       hex: '#00AA00', rgb: [0,   170, 0  ] },
+    3: { name: 'YELLOW',      hex: '#AA5500', rgb: [170, 85,  0  ] },
+    4: { name: 'BLUE',        hex: '#0000AA', rgb: [0,   0,   170] },
+    5: { name: 'MAGENTA',     hex: '#AA00AA', rgb: [170, 0,   170] },
+    6: { name: 'CYAN',        hex: '#00AAAA', rgb: [0,   170, 170] },
+    7: { name: 'WHITE',       hex: '#AAAAAA', rgb: [170, 170, 170] },
+    // Extended C64 colors (8-15) - keep original for compatibility
     8: { name: 'ORANGE',      hex: '#6F4F25', rgb: [111, 79,  37 ] },
     9: { name: 'BROWN',       hex: '#433900', rgb: [67,  57,  0  ] },
     10: { name: 'LIGHT RED',   hex: '#9A6759', rgb: [154, 103, 89 ] },
