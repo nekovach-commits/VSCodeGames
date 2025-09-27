@@ -807,6 +807,67 @@
               window.simpleTRS80.addChar(char);
               console.log('=== processKeyInput complete, currentLine:', JSON.stringify(this.currentLine));
             },
+            // ANSI color code mapping to C64 colors
+            parseAnsiColors: function(text) {
+              console.log('Parsing ANSI colors in text:', JSON.stringify(text));
+              
+              // Map ANSI codes to C64 color indices
+              const ansiToC64 = {
+                // Regular colors (30-37)
+                30: 0,  // Black
+                31: 2,  // Red  
+                32: 5,  // Green
+                33: 7,  // Yellow
+                34: 6,  // Blue
+                35: 4,  // Purple/Magenta
+                36: 3,  // Cyan
+                37: 1,  // White
+                // High intensity colors (90-97) - use brighter C64 colors
+                90: 11, // Dark grey
+                91: 10, // Light red
+                92: 13, // Light green  
+                93: 7,  // Yellow (same)
+                94: 14, // Light blue
+                95: 12, // Light purple
+                96: 15, // Light cyan
+                97: 1,  // White (same)
+                // Reset
+                0: 7    // Default (yellow)
+              };
+              
+              let result = [];
+              let currentPos = 0;
+              
+              // Find ANSI escape sequences: \e[CODEm or \033[CODEm
+              const ansiRegex = /\\e\[(\d+)m|\\033\[(\d+)m|\033\[(\d+)m/g;
+              let match;
+              
+              while ((match = ansiRegex.exec(text)) !== null) {
+                // Add text before the escape code
+                if (match.index > currentPos) {
+                  const beforeText = text.substring(currentPos, match.index);
+                  result.push({ type: 'text', content: beforeText });
+                }
+                
+                // Extract the color code
+                const colorCode = parseInt(match[1] || match[2] || match[3]);
+                if (ansiToC64.hasOwnProperty(colorCode)) {
+                  result.push({ type: 'color', code: ansiToC64[colorCode] });
+                  console.log('ANSI color change:', colorCode, '-> C64 color', ansiToC64[colorCode]);
+                }
+                
+                currentPos = match.index + match[0].length;
+              }
+              
+              // Add remaining text
+              if (currentPos < text.length) {
+                result.push({ type: 'text', content: text.substring(currentPos) });
+              }
+              
+              console.log('ANSI parsing result:', result);
+              return result;
+            },
+
             processLine: function(line) {
               // Full BASIC command processing for fallback - enhanced version
               const originalLine = line.trim();
@@ -867,11 +928,21 @@
                     console.log('Removed single quotes, text now:', JSON.stringify(text));
                   }
                   
-                  console.log('Adding characters to display:', JSON.stringify(text));
-                  // Add each character individually like main system
-                  for (let i = 0; i < text.length; i++) {
-                    console.log('Adding char:', JSON.stringify(text[i]));
-                    window.simpleTRS80.addChar(text[i]);
+                  console.log('Processing ANSI colors in text:', JSON.stringify(text));
+                  // Parse ANSI color codes
+                  const parsedParts = window.trs80.keyboard.parseAnsiColors(text);
+                  
+                  // Output each part
+                  for (const part of parsedParts) {
+                    if (part.type === 'color') {
+                      window.simpleTRS80.setTextColor(part.code);
+                    } else if (part.type === 'text') {
+                      // Add each character individually
+                      for (let i = 0; i < part.content.length; i++) {
+                        console.log('Adding char:', JSON.stringify(part.content[i]));
+                        window.simpleTRS80.addChar(part.content[i]);
+                      }
+                    }
                   }
                   window.simpleTRS80.addChar('\n');
                   console.log('PRINT command completed');

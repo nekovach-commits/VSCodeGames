@@ -155,6 +155,69 @@ export class TRS80Basic {
   }
   
   /**
+   * Parse ANSI escape codes and return array of text/color parts
+   */
+  parseAnsiColors(text) {
+    console.log('Parsing ANSI colors in text:', JSON.stringify(text));
+    
+    // Map ANSI codes to C64 color indices
+    const ansiToC64 = {
+      // Regular colors (30-37)
+      30: 0,  // Black
+      31: 2,  // Red  
+      32: 5,  // Green
+      33: 7,  // Yellow
+      34: 6,  // Blue
+      35: 4,  // Purple/Magenta
+      36: 3,  // Cyan
+      37: 1,  // White
+      // High intensity colors (90-97) - use brighter C64 colors
+      90: 11, // Dark grey
+      91: 10, // Light red
+      92: 13, // Light green  
+      93: 7,  // Yellow (same)
+      94: 14, // Light blue
+      95: 12, // Light purple
+      96: 15, // Light cyan
+      97: 1,  // White (same)
+      // Reset
+      0: 7    // Default (yellow)
+    };
+    
+    let result = [];
+    let currentPos = 0;
+    
+    // Find ANSI escape sequences: \e[CODEm or \033[CODEm or actual ESC[CODEm
+    const ansiRegex = /\\e\[(\d+)m|\\033\[(\d+)m|\033\[(\d+)m/g;
+    let match;
+    
+    while ((match = ansiRegex.exec(text)) !== null) {
+      // Add text before the escape code
+      if (match.index > currentPos) {
+        const beforeText = text.substring(currentPos, match.index);
+        result.push({ type: 'text', content: beforeText });
+      }
+      
+      // Extract the color code
+      const colorCode = parseInt(match[1] || match[2] || match[3]);
+      if (ansiToC64.hasOwnProperty(colorCode)) {
+        result.push({ type: 'color', code: ansiToC64[colorCode] });
+        console.log('ANSI color change:', colorCode, '-> C64 color', ansiToC64[colorCode]);
+      }
+      
+      currentPos = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (currentPos < text.length) {
+      result.push({ type: 'text', content: text.substring(currentPos) });
+    }
+    
+    console.log('ANSI parsing result:', result);
+    return result;
+  }
+
+  /**
    * PRINT command - display text or variables
    */
   cmdPrint(args) {
@@ -166,22 +229,30 @@ export class TRS80Basic {
       this.display.addChar('\n');
       return;
     }
-    
+
     // Handle quoted strings and variables
     console.log('About to evaluate expression:', JSON.stringify(args));
     let output = this.evaluateExpression(args);
     console.log('Expression evaluated to:', JSON.stringify(output));
     
-    // Add each character individually to the display
-    for (let i = 0; i < output.length; i++) {
-      this.display.addChar(output[i]);
+    // Parse ANSI color codes in the output
+    const parsedParts = this.parseAnsiColors(output);
+    
+    // Output each part
+    for (const part of parsedParts) {
+      if (part.type === 'color') {
+        this.display.setTextColor(part.code);
+      } else if (part.type === 'text') {
+        // Add each character individually to the display
+        for (let i = 0; i < part.content.length; i++) {
+          this.display.addChar(part.content[i]);
+        }
+      }
     }
     this.display.addChar('\n'); // Add newline separately
     
     console.log('PRINT output complete');
-  }
-  
-  /**
+  }  /**
    * LET command - assign variables
    */
   cmdLet(args) {
