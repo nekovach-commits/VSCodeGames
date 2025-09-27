@@ -397,6 +397,142 @@
       }
     }
     
+    // ========================================
+    // SHARED BASIC COMMAND PROCESSOR
+    // Eliminates duplication between main system and SimpleTRS80
+    // ========================================
+    window.SharedBasicProcessor = {
+      // Process BASIC commands using the provided display interface
+      processCommand: function(cmd, parts, originalLine, program, displayInterface) {
+        switch (cmd) {
+          case 'PRINT':
+            this.cmdPrint(originalLine, displayInterface);
+            break;
+            
+          case 'COLOR':
+            this.cmdColor(parts[1], displayInterface);
+            break;
+            
+          case 'CLS':
+            displayInterface.clearScreen();
+            break;
+            
+          case 'LIST':
+            this.cmdList(program, displayInterface);
+            break;
+            
+          case 'RUN':
+            this.cmdRun(program, displayInterface);
+            break;
+            
+          case 'NEW':
+            this.cmdNew(program, displayInterface);
+            break;
+            
+          default:
+            displayInterface.addText('?SYNTAX ERROR\n');
+            break;
+        }
+      },
+      
+      cmdPrint: function(originalLine, displayInterface) {
+        const printMatch = originalLine.match(/^\s*print\s*(.*)/i);
+        let text = printMatch ? printMatch[1] : originalLine.substring(5).trim();
+        
+        if (!text) {
+          displayInterface.addText('\n');
+          return;
+        }
+        
+        // Handle quoted strings
+        if (text.startsWith('"') && text.endsWith('"')) {
+          text = text.slice(1, -1);
+        } else if (text.startsWith("'") && text.endsWith("'")) {
+          text = text.slice(1, -1);
+        }
+        
+        displayInterface.addText(text + '\n');
+      },
+      
+      cmdColor: function(colorArg, displayInterface) {
+        const colorNum = parseInt(colorArg);
+        if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
+          displayInterface.setTextColor(colorNum);
+        } else {
+          displayInterface.addText('?SYNTAX ERROR - Color must be 0-15\n');
+        }
+      },
+      
+      cmdList: function(program, displayInterface) {
+        const lineNumbers = Array.from(program.keys()).sort((a, b) => a - b);
+        if (lineNumbers.length === 0) {
+          displayInterface.addText('No program lines\n');
+        } else {
+          for (const lineNum of lineNumbers) {
+            const command = program.get(lineNum);
+            displayInterface.addText(lineNum + ' ' + command + '\n');
+          }
+        }
+      },
+      
+      cmdRun: function(program, displayInterface) {
+        if (program.size === 0) {
+          displayInterface.addText('No program to run\n');
+          return;
+        }
+        
+        const lineNumbers = Array.from(program.keys()).sort((a, b) => a - b);
+        for (const lineNum of lineNumbers) {
+          const command = program.get(lineNum);
+          const runParts = command.trim().toUpperCase().split(/\s+/);
+          const runCmd = runParts[0];
+          
+          if (runCmd === 'PRINT') {
+            this.cmdPrint('PRINT ' + command.substring(5).trim(), displayInterface);
+          } else if (runCmd === 'COLOR') {
+            this.cmdColor(runParts[1], displayInterface);
+          }
+        }
+      },
+      
+      // Unified line processing - handles both program lines and direct commands
+      processLine: function(line, program, displayInterface) {
+        const originalLine = line.trim();
+        line = line.trim().toUpperCase();
+        console.log('SharedBasicProcessor.processLine:', JSON.stringify(originalLine));
+        
+        if (!line) return;
+        
+        // Check if line starts with a number (program line)
+        const lineMatch = line.match(/^(\d+)\s*(.*)$/);
+        if (lineMatch) {
+          const lineNum = parseInt(lineMatch[1]);
+          const command = lineMatch[2];
+          
+          console.log('Program line detected:', lineNum, command);
+          if (command) {
+            program.set(lineNum, command);
+            console.log('Stored line', lineNum, 'in program. Program now has', program.size, 'lines');
+          } else {
+            program.delete(lineNum);
+            console.log('Deleted line', lineNum, 'from program');
+          }
+          return;
+        }
+        
+        // Direct commands
+        const parts = line.split(/\s+/);
+        const cmd = parts[0];
+        
+        this.processCommand(cmd, parts, originalLine, program, displayInterface);
+      },
+      
+      cmdNew: function(program, displayInterface) {
+        program.clear();
+        displayInterface.addText('Program cleared\n');
+      }
+    };
+
     // Simple TRS-80 Display System using real font data
     class SimpleTRS80 {
       constructor() {

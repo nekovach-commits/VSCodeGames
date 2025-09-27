@@ -41,34 +41,25 @@ export class TRS80Basic {
    */
   processLine(line) {
     console.log('BASIC processLine called with:', line);
-    line = line.trim().toUpperCase();
-    if (!line) return;
+    if (!line.trim()) return;
     
-    console.log('Processing BASIC line:', line);
-    
-    // Check if line starts with a number (program line)
-    const lineMatch = line.match(/^(\d+)\s*(.*)$/);
-    if (lineMatch) {
-      const lineNum = parseInt(lineMatch[1]);
-      const command = lineMatch[2];
-      
-      console.log('Program line detected:', lineNum, command);
-      if (command) {
-        this.program.set(lineNum, command);
-        console.log('Stored line', lineNum, 'in program. Program now has', this.program.size, 'lines');
-        // Program lines are stored silently - no output message
-      } else {
-        // Delete line if no command
-        this.program.delete(lineNum);
-        console.log('Deleted line', lineNum, 'from program. Program now has', this.program.size, 'lines');
-        // Line deletion is also silent
+    // Create display interface for ES6 system
+    const displayInterface = {
+      addText: (text) => {
+        for (let i = 0; i < text.length; i++) {
+          this.display.addChar(text[i]);
+        }
+      },
+      setTextColor: (colorIndex) => {
+        this.display.setTextColor(colorIndex);
+      },
+      clearScreen: () => {
+        this.display.clearScreen();
       }
-      return;
-    }
+    };
     
-    // Direct command
-    console.log('Direct command:', line);
-    this.executeCommand(line);
+    // Use shared processor - no more duplication!
+    window.SharedBasicProcessor.processLine(line, this.program, displayInterface);
   }
   
   /**
