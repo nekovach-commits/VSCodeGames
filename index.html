@@ -952,189 +952,27 @@
               console.log('=== processKeyInput complete, currentLine:', JSON.stringify(this.currentLine));
             },
             processLine: function(line) {
-              // Full BASIC command processing for fallback - enhanced version
-              const originalLine = line.trim();
-              line = line.trim().toUpperCase();
-              console.log('Fallback BASIC processing line:', JSON.stringify(originalLine));
-              console.log('Fallback BASIC processing uppercase:', JSON.stringify(line));
-              if (!line) {
-                console.log('Empty line, returning');
-                return;
-              }
+              // Use SharedBasicProcessor for consistent behavior
+              console.log('Fallback BASIC using SharedBasicProcessor for line:', JSON.stringify(line));
               
-              // Check if line starts with a number (program line)
-              const lineMatch = line.match(/^(\d+)\s*(.*)$/);
-              if (lineMatch) {
-                const lineNum = parseInt(lineMatch[1]);
-                const command = lineMatch[2];
-                
-                console.log('Program line detected:', lineNum, command);
-                if (command) {
-                  window.trs80.program.set(lineNum, command);
-                  console.log('Stored line', lineNum, 'in program. Program now has', window.trs80.program.size, 'lines');
-                  // Program lines stored silently like real BASIC
-                } else {
-                  window.trs80.program.delete(lineNum);
-                  console.log('Deleted line', lineNum, 'from program');
-                }
-                return;
-              }
-              
-              // Direct commands
-              const parts = line.split(/\s+/);
-              const cmd = parts[0];
-              
-              switch (cmd) {
-                case 'PRINT':
-                  // Find the actual PRINT command in original line (case insensitive)
-                  const printMatch = originalLine.match(/^(\s*print\s*)(.*)/i);
-                  let text = '';
-                  if (printMatch) {
-                    text = printMatch[2]; // Everything after PRINT
-                  } else {
-                    text = originalLine.substring(5).trim(); // Fallback
-                  }
-                  console.log('PRINT command with text:', JSON.stringify(text));
-                  
-                  if (!text) {
-                    console.log('Empty PRINT, adding newline only');
-                    window.simpleTRS80.addChar('\n');
-                    return;
-                  }
-                  
-                  // Handle quoted strings
-                  if (text.startsWith('"') && text.endsWith('"')) {
-                    text = text.slice(1, -1);
-                    console.log('Removed double quotes, text now:', JSON.stringify(text));
-                  } else if (text.startsWith("'") && text.endsWith("'")) {
-                    text = text.slice(1, -1);
-                    console.log('Removed single quotes, text now:', JSON.stringify(text));
-                  }
-                  
-                  console.log('Adding characters to display:', JSON.stringify(text));
-                  // Add each character individually like main system
-                  for (let i = 0; i < text.length; i++) {
-                    console.log('Adding char:', JSON.stringify(text[i]));
-                    window.simpleTRS80.addChar(text[i]);
-                  }
-                  window.simpleTRS80.addChar('\n');
-                  console.log('PRINT command completed');
-                  break;
-                  
-                case 'COLOR':
-                  console.log('COLOR command detected, parts:', parts);
-                  const colorNum = parseInt(parts[1]);
-                  console.log('COLOR command with number:', colorNum, 'isNaN:', isNaN(colorNum));
-                  if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
-                    console.log('Valid color, setting color to:', colorNum);
-                    window.simpleTRS80.setTextColor(colorNum);
-                    console.log('COLOR command completed successfully - silent like laptop');
-                    // No confirmation message - silent like laptop version
-                  } else {
-                    console.log('Invalid color number, showing syntax error');
-                    const message = '?SYNTAX ERROR - Color must be 0-15';
-                    for (let i = 0; i < message.length; i++) {
-                      window.simpleTRS80.addChar(message[i]);
-                    }
-                    window.simpleTRS80.addChar('\n');
-                  }
-                  break;
-                  
-                case 'CLS':
-                  console.log('CLS command executing');
+              // Create display interface for fallback
+              const displayInterface = {
+                addChar: function(char) {
+                  window.simpleTRS80.addChar(char);
+                },
+                clearScreen: function() {
                   window.simpleTRS80.clearScreen();
-                  break;
-                  
-                case 'LIST':
-                  console.log('LIST command executing');
-                  const lineNumbers = Array.from(window.trs80.program.keys()).sort((a, b) => a - b);
-                  console.log('Program has', lineNumbers.length, 'lines:', lineNumbers);
-                  
-                  if (lineNumbers.length === 0) {
-                    const message = 'No program lines';
-                    for (let i = 0; i < message.length; i++) {
-                      window.simpleTRS80.addChar(message[i]);
-                    }
-                    window.simpleTRS80.addChar('\n');
-                  } else {
-                    for (const lineNum of lineNumbers) {
-                      const command = window.trs80.program.get(lineNum);
-                      const line = `${lineNum} ${command}`;
-                      console.log('Listing line:', line);
-                      
-                      // Add each character individually
-                      for (let i = 0; i < line.length; i++) {
-                        window.simpleTRS80.addChar(line[i]);
-                      }
-                      window.simpleTRS80.addChar('\n');
-                    }
-                  }
-                  break;
-                  
-                case 'RUN':
-                  console.log('RUN command executing');
-                  if (window.trs80.program.size === 0) {
-                    const message = 'No program to run';
-                    for (let i = 0; i < message.length; i++) {
-                      window.simpleTRS80.addChar(message[i]);
-                    }
-                    window.simpleTRS80.addChar('\n');
-                  } else {
-                    // Execute program lines in order - using proper fallback processing
-                    const lineNumbers = Array.from(window.trs80.program.keys()).sort((a, b) => a - b);
-                    for (const lineNum of lineNumbers) {
-                      const command = window.trs80.program.get(lineNum);
-                      console.log('Executing line', lineNum + ':', command);
-                      
-                      // Process the command directly instead of recursive call
-                      const runParts = command.trim().toUpperCase().split(/\s+/);
-                      const runCmd = runParts[0];
-                      
-                      if (runCmd === 'PRINT') {
-                        // Use same PRINT logic as direct command
-                        const printMatch = command.match(/^(\s*print\s*)(.*)/i);
-                        let runText = '';
-                        if (printMatch) {
-                          runText = printMatch[2];
-                        } else {
-                          runText = command.substring(5).trim();
-                        }
-                        
-                        if (runText.startsWith('"') && runText.endsWith('"')) {
-                          runText = runText.slice(1, -1);
-                        }
-                        
-                        // Add text character by character
-                        for (let i = 0; i < runText.length; i++) {
-                          window.simpleTRS80.addChar(runText[i]);
-                        }
-                        // Add newline after each PRINT statement like laptop version
-                        window.simpleTRS80.addChar('\n');
-                      }
-                      // Add other command handling as needed
-                    }
-                  }
-                  break;
-                  
-                case 'NEW':
-                  console.log('NEW command executing');
-                  window.trs80.program.clear();
-                  window.trs80.variables.clear();
-                  const newMessage = 'Program cleared';
-                  for (let i = 0; i < newMessage.length; i++) {
-                    window.simpleTRS80.addChar(newMessage[i]);
-                  }
-                  window.simpleTRS80.addChar('\n');
-                  break;
-                  
-                default:
-                  console.log('Unknown command:', cmd);
-                  const errorMessage = '?SYNTAX ERROR';
-                  for (let i = 0; i < errorMessage.length; i++) {
-                    window.simpleTRS80.addChar(errorMessage[i]);
-                  }
-                  window.simpleTRS80.addChar('\n');
-                  break;
+                },
+                setTextColor: function(colorIndex) {
+                  window.simpleTRS80.setTextColor(colorIndex);
+                }
+              };
+              
+              // Use the shared processor
+              if (window.SharedBasicProcessor) {
+                window.SharedBasicProcessor.processLine(line, window.trs80.program, displayInterface);
+              } else {
+                console.error('SharedBasicProcessor not available in fallback');
               }
             }
           },
