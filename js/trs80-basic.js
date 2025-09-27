@@ -155,33 +155,22 @@ export class TRS80Basic {
   }
   
   /**
-   * Parse ANSI escape codes and return array of text/color parts
+   * Parse ANSI escape codes and return array of text/color parts (simplified to 8 colors)
    */
   parseAnsiColors(text) {
     console.log('Parsing ANSI colors in text:', JSON.stringify(text));
     
-    // Map ANSI codes to C64 color indices
-    const ansiToC64 = {
-      // Regular colors (30-37)
+    // Simple mapping: ANSI 30-37 -> COLOR 0-7
+    const ansiToColor = {
       30: 0,  // Black
-      31: 2,  // Red  
-      32: 5,  // Green
-      33: 7,  // Yellow
-      34: 6,  // Blue
-      35: 4,  // Purple/Magenta
-      36: 3,  // Cyan
-      37: 1,  // White
-      // High intensity colors (90-97) - use brighter C64 colors
-      90: 11, // Dark grey
-      91: 10, // Light red
-      92: 13, // Light green  
-      93: 7,  // Yellow (same)
-      94: 14, // Light blue
-      95: 12, // Light purple
-      96: 15, // Light cyan
-      97: 1,  // White (same)
-      // Reset
-      0: 7    // Default (yellow)
+      31: 1,  // Red  
+      32: 2,  // Green
+      33: 3,  // Yellow
+      34: 4,  // Blue
+      35: 5,  // Purple/Magenta
+      36: 6,  // Cyan
+      37: 7,  // White
+      0: 7    // Reset to default (white)
     };
     
     let result = [];
@@ -200,9 +189,9 @@ export class TRS80Basic {
       
       // Extract the color code
       const colorCode = parseInt(match[1] || match[2] || match[3]);
-      if (ansiToC64.hasOwnProperty(colorCode)) {
-        result.push({ type: 'color', code: ansiToC64[colorCode] });
-        console.log('ANSI color change:', colorCode, '-> C64 color', ansiToC64[colorCode]);
+      if (ansiToColor.hasOwnProperty(colorCode)) {
+        result.push({ type: 'color', code: ansiToColor[colorCode] });
+        console.log('ANSI color change:', colorCode, '-> COLOR', ansiToColor[colorCode]);
       }
       
       currentPos = match.index + match[0].length;
