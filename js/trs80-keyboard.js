@@ -192,12 +192,19 @@ export class TRS80Keyboard {
         this.display.removeChar();
         break;
       case 'Enter':
+        // Move to new line first, then process BASIC command
+        this.display.addChar('\n');
+        
         // Process current line as BASIC command if BASIC is available
+        console.log('Enter pressed, current line:', this.currentLine);
+        console.log('BASIC available:', !!this.basic);
         if (this.basic && this.currentLine.trim()) {
+          console.log('Processing BASIC command:', this.currentLine);
           this.basic.processLine(this.currentLine);
+        } else {
+          console.log('No BASIC command to process');
         }
         this.currentLine = ''; // Reset line
-        this.display.addChar('\n');
         break;
       case 'Tab':
         this.display.addChar('    '); // 4 spaces for tab
@@ -218,6 +225,7 @@ export class TRS80Keyboard {
         this.display.moveCursorRight();
         break;
       case ' ':
+        this.currentLine += ' '; // Add space to current line for BASIC commands
         this.display.addChar(' ');
         break;
         
@@ -300,7 +308,9 @@ export class TRS80Keyboard {
         
         // Handle printable characters and ignore modifier keys
         if (keyValue.length === 1) {
+          console.log('Adding character to current line:', keyValue);
           this.currentLine += keyValue;
+          console.log('Current line now:', this.currentLine);
           this.display.addChar(keyValue);
         }
         // Ignore modifier keys (Shift, Control, CapsLock, function keys)

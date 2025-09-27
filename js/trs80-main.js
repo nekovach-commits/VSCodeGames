@@ -219,7 +219,11 @@ document.addEventListener('DOMContentLoaded', function() {
       system: system
     };
     
+    // Add a visible indicator that the system loaded
+    system.display.addChar('SYSTEM READY\n');
+    
     console.log('✓ TRS-80 system fully initialized and exposed globally');
+    console.log('✓ BASIC available:', !!system.basic);
   } catch (error) {
     console.error('✗ Failed to initialize TRS-80 system:', error);
   }

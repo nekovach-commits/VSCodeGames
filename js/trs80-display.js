@@ -118,13 +118,18 @@ export class TRS80Display {
    * @param {string} char - Character to add
    */
   addChar(char) {
+    console.log('TRS80Display.addChar called with:', JSON.stringify(char));
+    console.log('Current cursor position: row', this.cursorRow, 'col', this.cursorCol);
+    
     if (char === '\n') {
+      console.log('Processing newline');
       this.cursorRow++;
       this.cursorCol = 0;
       if (this.cursorRow >= TRS80_CONFIG.BUFFER_SIZE) {
         this.cursorRow = TRS80_CONFIG.BUFFER_SIZE - 1;
       }
     } else {
+      console.log('Adding character to textBuffer at', this.cursorRow, this.cursorCol);
       this.textBuffer[this.cursorRow][this.cursorCol] = char;
       this.colorBuffer[this.cursorRow][this.cursorCol] = {
         text: this.currentTextColor,
@@ -139,7 +144,14 @@ export class TRS80Display {
         }
       }
     }
+    console.log('New cursor position: row', this.cursorRow, 'col', this.cursorCol);
+    console.log('Buffer content at current row:', JSON.stringify(this.textBuffer[this.cursorRow].join('')));
+    
     this.adjustScrollToShowCursor();
+    
+    // Force a render after adding characters
+    console.log('Forcing render after addChar');
+    this.render();
   }
   
   /**

@@ -40,8 +40,11 @@ export class TRS80Basic {
    * @param {string} line - The BASIC command line
    */
   processLine(line) {
+    console.log('BASIC processLine called with:', line);
     line = line.trim().toUpperCase();
     if (!line) return;
+    
+    console.log('Processing BASIC line:', line);
     
     // Check if line starts with a number (program line)
     const lineMatch = line.match(/^(\d+)\s*(.*)$/);
@@ -49,16 +52,22 @@ export class TRS80Basic {
       const lineNum = parseInt(lineMatch[1]);
       const command = lineMatch[2];
       
+      console.log('Program line detected:', lineNum, command);
       if (command) {
         this.program.set(lineNum, command);
+        console.log('Stored line', lineNum, 'in program. Program now has', this.program.size, 'lines');
+        // Program lines are stored silently - no output message
       } else {
         // Delete line if no command
         this.program.delete(lineNum);
+        console.log('Deleted line', lineNum, 'from program. Program now has', this.program.size, 'lines');
+        // Line deletion is also silent
       }
       return;
     }
     
     // Direct command
+    console.log('Direct command:', line);
     this.executeCommand(line);
   }
   
@@ -67,13 +76,21 @@ export class TRS80Basic {
    * @param {string} command - The command to execute
    */
   executeCommand(command) {
+    console.log('BASIC executeCommand called with:', JSON.stringify(command));
+    console.log('Command length:', command.length);
     const parts = command.split(/\s+/);
     const cmd = parts[0];
+    const args = parts.slice(1);
+    console.log('Command:', JSON.stringify(cmd), 'Args:', args);
+    console.log('Args joined:', JSON.stringify(args.join(' ')));
     
     try {
       switch (cmd) {
         case 'PRINT':
-          this.cmdPrint(parts.slice(1).join(' '));
+          console.log('Processing PRINT command');
+          const printArgs = args.join(' ');
+          console.log('PRINT args to pass:', JSON.stringify(printArgs));
+          this.cmdPrint(printArgs);
           break;
           
         case 'LET':
@@ -141,14 +158,27 @@ export class TRS80Basic {
    * PRINT command - display text or variables
    */
   cmdPrint(args) {
-    if (!args) {
+    console.log('cmdPrint called with args:', JSON.stringify(args));
+    console.log('args type:', typeof args, 'length:', args ? args.length : 'null/undefined');
+    
+    if (!args || args.trim() === '') {
+      console.log('No args - printing newline only');
       this.display.addChar('\n');
       return;
     }
     
     // Handle quoted strings and variables
+    console.log('About to evaluate expression:', JSON.stringify(args));
     let output = this.evaluateExpression(args);
-    this.display.addChar(output + '\n');
+    console.log('Expression evaluated to:', JSON.stringify(output));
+    
+    // Add each character individually to the display
+    for (let i = 0; i < output.length; i++) {
+      this.display.addChar(output[i]);
+    }
+    this.display.addChar('\n'); // Add newline separately
+    
+    console.log('PRINT output complete');
   }
   
   /**
@@ -204,17 +234,31 @@ export class TRS80Basic {
    * LIST command - show program
    */
   cmdList() {
+    console.log('LIST command called');
     const lineNumbers = Array.from(this.program.keys()).sort((a, b) => a - b);
+    console.log('Program has', lineNumbers.length, 'lines:', lineNumbers);
     
     if (lineNumbers.length === 0) {
-      this.display.addChar('No program lines\n');
+      const message = 'No program lines';
+      for (let i = 0; i < message.length; i++) {
+        this.display.addChar(message[i]);
+      }
+      this.display.addChar('\n');
       return;
     }
     
     for (const lineNum of lineNumbers) {
       const command = this.program.get(lineNum);
-      this.display.addChar(`${lineNum} ${command}\n`);
+      const line = `${lineNum} ${command}`;
+      console.log('Listing line:', line);
+      
+      // Add each character individually
+      for (let i = 0; i < line.length; i++) {
+        this.display.addChar(line[i]);
+      }
+      this.display.addChar('\n');
     }
+    console.log('LIST command complete');
   }
   
   /**

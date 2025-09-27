@@ -66,12 +66,10 @@
           for (let char of addedText) {
             if (window.trs80 && window.trs80.keyboard) {
               console.log('Sending to TRS-80:', char);
-              // Track current line for BASIC commands
-              if (!window.trs80.keyboard.currentLine) {
-                window.trs80.keyboard.currentLine = '';
-              }
-              window.trs80.keyboard.currentLine += char;
+              console.log('Current window.trs80.keyboard.currentLine before processKeyInput:', JSON.stringify(window.trs80.keyboard.currentLine));
+              // DO NOT modify currentLine here - let processKeyInput handle it
               window.trs80.keyboard.processKeyInput(char);
+              console.log('Current window.trs80.keyboard.currentLine after processKeyInput:', JSON.stringify(window.trs80.keyboard.currentLine));
             } else {
               console.log('TRS-80 not ready, queuing:', char);
               // Queue for when system is ready
@@ -111,16 +109,36 @@
           inputBuffer = e.target.value.slice(0, -1);
           
         } else if (e.key === 'Enter') {
-          console.log('Processing enter with line:', window.trs80.keyboard.currentLine);
-          if (window.trs80 && window.trs80.keyboard) {
-            // Process as BASIC command if there's a current line
-            if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.trim()) {
-              window.trs80.keyboard.processLine(window.trs80.keyboard.currentLine);
+          console.log('=== ENTER KEY PRESSED ===');
+          console.log('window.trs80 exists:', !!window.trs80);
+          console.log('window.trs80.keyboard exists:', !!(window.trs80 && window.trs80.keyboard));
+          
+          // Check if this is the main system or fallback
+          if (window.trs80 && window.trs80.keyboard && window.trs80.keyboard.processLine && typeof window.trs80.keyboard.processLine === 'function') {
+            console.log('*** MAIN TRS-80 SYSTEM DETECTED - Using main system');
+            if (window.trs80 && window.trs80.keyboard) {
+              console.log('Current line value:', JSON.stringify(window.trs80.keyboard.currentLine));
+              console.log('Current line length:', window.trs80.keyboard.currentLine ? window.trs80.keyboard.currentLine.length : 'undefined');
+              console.log('Current line trimmed:', window.trs80.keyboard.currentLine ? JSON.stringify(window.trs80.keyboard.currentLine.trim()) : 'undefined');
+              
+              // Process as BASIC command if there's a current line
+              if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.trim()) {
+                console.log('*** CALLING processLine with:', JSON.stringify(window.trs80.keyboard.currentLine));
+                window.trs80.keyboard.processLine(window.trs80.keyboard.currentLine);
+                console.log('*** processLine completed');
+              } else {
+                console.log('*** No line to process (empty or undefined)');
+              }
+              window.trs80.keyboard.currentLine = ''; // Reset line
+              console.log('*** Line reset, calling processKeyInput(Enter)');
+              window.trs80.keyboard.processKeyInput('Enter');
+              window.trs80.display.render();
+              console.log('*** Enter processing complete');
             }
-            window.trs80.keyboard.currentLine = ''; // Reset line
-            window.trs80.keyboard.processKeyInput('Enter');
-            window.trs80.display.render();
+          } else {
+            console.log('*** FALLBACK SYSTEM DETECTED - Main system not available');
           }
+          
           // Clear input and buffer
           e.target.value = '';
           inputBuffer = '';
@@ -419,7 +437,11 @@
           });
         }
         
-        console.log('✓ Simple TRS-80 initialized');
+        // Show BASIC startup message
+        this.addChar('TRS-80 BASIC v1.0\n');
+        this.addChar('Ready\n\n');
+        
+        console.log('✓ Simple TRS-80 initialized with BASIC');
         console.log(`Canvas: ${this.canvas.width}×${this.canvas.height}`);
         console.log(`Character cell: ${this.charWidth}×${this.charHeight} pixels`);
         console.log(`40 chars × ${this.charWidth} = ${40 * this.charWidth} pixels + 20 border = ${40 * this.charWidth + 20} total`);
@@ -432,7 +454,11 @@
       }
       
       addChar(char) {
+        console.log('SimpleTRS80.addChar called with:', JSON.stringify(char));
+        console.log('Current position: row', this.currentRow, 'col', this.currentCol);
+        
         if (char === '\n' || char === 'Enter') {
+          console.log('Processing newline/enter');
           this.currentRow++;
           this.currentCol = 0;
           if (this.currentRow >= 20) {
@@ -447,6 +473,7 @@
             this.currentRow = 19;
           }
         } else if (char === 'Backspace') {
+          console.log('Processing backspace');
           if (this.currentCol > 0) {
             this.currentCol--;
             this.rows[this.currentRow] = this.rows[this.currentRow].slice(0, -1);
@@ -456,6 +483,7 @@
             this.rows[this.currentRow] = this.rows[this.currentRow].slice(0, -1);
           }
         } else if (char.length === 1) {
+          console.log('Processing regular character:', JSON.stringify(char));
           // Regular character - store both char and color
           if (!this.rows[this.currentRow]) this.rows[this.currentRow] = '';
           if (!this.colorRows[this.currentRow]) {
@@ -465,7 +493,10 @@
             });
           }
           
+          console.log('Before adding char - row content:', JSON.stringify(this.rows[this.currentRow]));
           this.rows[this.currentRow] += char;
+          console.log('After adding char - row content:', JSON.stringify(this.rows[this.currentRow]));
+          
           this.colorRows[this.currentRow][this.currentCol] = {
             text: this.currentTextColor,
             background: -1  // Transparent
@@ -491,6 +522,10 @@
       }
       
       render() {
+        console.log('SimpleTRS80.render called');
+        console.log('Current rows content:', this.rows.filter(r => r && r.length > 0));
+        console.log('Current position: row', this.currentRow, 'col', this.currentCol);
+        
         // Clear canvas with white background (Kindle-friendly)
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -504,6 +539,10 @@
         for (let row = 0; row < 20; row++) {
           const line = this.rows[row] || '';
           const colorLine = this.colorRows[row] || [];
+          
+          if (line.length > 0) {
+            console.log(`Rendering row ${row}: "${line}"`);
+          }
           
           for (let col = 0; col < line.length; col++) {
             const char = line[col];
@@ -574,6 +613,17 @@
           this.currentBackgroundColor = colorIndex;
           console.log('SimpleTRS80: Background color set to', colorIndex, this.C64_COLORS[colorIndex]);
         }
+      }
+      
+      // Print text without newlines - convenience method for BASIC commands
+      printText(text) {
+        console.log('SimpleTRS80.printText called with:', JSON.stringify(text));
+        for (let i = 0; i < text.length; i++) {
+          console.log('printText: adding char', JSON.stringify(text[i]));
+          this.addChar(text[i]);
+        }
+        console.log('printText: complete, current rows:', this.rows);
+        this.render(); // Force a render after printing
       }
       
       // Simple 5x7 font renderer for Kindle compatibility
@@ -693,9 +743,31 @@
         
         // Update input handlers to use simple system
         window.trs80 = {
+          // Add program storage for fallback BASIC
+          program: new Map(),
+          variables: new Map(),
+          
           keyboard: {
+            currentLine: '',  // Add line tracking to fallback
             processKeyInput: function(char) {
-              console.log('Fallback processing:', char);
+              console.log('=== processKeyInput called with:', JSON.stringify(char));
+              console.log('this.currentLine at start:', JSON.stringify(this.currentLine));
+              
+              // Handle special keys
+              if (char === 'Backspace') {
+                if (this.currentLine.length > 0) {
+                  this.currentLine = this.currentLine.slice(0, -1);
+                }
+                console.log('Backspace - currentLine now:', JSON.stringify(this.currentLine));
+                window.simpleTRS80.addChar(char);
+                return;
+              }
+              
+              if (char === 'Enter') {
+                console.log('Enter - currentLine stays:', JSON.stringify(this.currentLine));
+                window.simpleTRS80.addChar(char);
+                return;
+              }
               
               // Simple color system using Ctrl+Number or @Number
               // Since Kindle may not support Ctrl easily, use @ as color prefix
@@ -722,39 +794,158 @@
                 console.log('Color mode cancelled');
               }
               
-              // Regular character input
+              // Regular character input - add to current line AND display
+              if (char.length === 1) {
+                console.log('Regular char - adding to currentLine:', JSON.stringify(char));
+                this.currentLine += char;
+                console.log('Character added to currentLine:', JSON.stringify(char));
+                console.log('Current line now:', JSON.stringify(this.currentLine));
+              }
               window.simpleTRS80.addChar(char);
+              console.log('=== processKeyInput complete, currentLine:', JSON.stringify(this.currentLine));
             },
-            // Add current line tracking for BASIC commands
-            currentLine: '',
             processLine: function(line) {
-              // Simple BASIC command processing for fallback
+              // Full BASIC command processing for fallback - enhanced version
+              const originalLine = line.trim();
               line = line.trim().toUpperCase();
+              console.log('Fallback BASIC processing:', line);
               if (!line) return;
               
-              // Handle basic BASIC commands
-              if (line.startsWith('PRINT ')) {
-                const text = line.substring(6).replace(/"/g, '');
-                window.simpleTRS80.addChar(text + '\n');
-              } else if (line.startsWith('COLOR ')) {
-                const colorNum = parseInt(line.substring(6));
-                if (colorNum >= 0 && colorNum <= 15) {
-                  window.simpleTRS80.setTextColor(colorNum);
+              // Check if line starts with a number (program line)
+              const lineMatch = line.match(/^(\d+)\s*(.*)$/);
+              if (lineMatch) {
+                const lineNum = parseInt(lineMatch[1]);
+                const command = lineMatch[2];
+                
+                console.log('Program line detected:', lineNum, command);
+                if (command) {
+                  window.trs80.program.set(lineNum, command);
+                  console.log('Stored line', lineNum, 'in program. Program now has', window.trs80.program.size, 'lines');
+                  // Program lines stored silently like real BASIC
+                } else {
+                  window.trs80.program.delete(lineNum);
+                  console.log('Deleted line', lineNum, 'from program');
                 }
-              } else if (line === 'CLS') {
-                // Clear screen by resetting rows
-                for (let i = 0; i < 20; i++) {
-                  window.simpleTRS80.rows[i] = '';
-                }
-                window.simpleTRS80.currentRow = 0;
-                window.simpleTRS80.currentCol = 0;
-                window.simpleTRS80.render();
-              } else if (line === 'NEW') {
-                window.simpleTRS80.addChar('Program cleared\n');
-              } else if (line.match(/^\d+/)) {
-                window.simpleTRS80.addChar('Program line stored\n');
-              } else {
-                window.simpleTRS80.addChar('?SYNTAX ERROR\n');
+                return;
+              }
+              
+              // Direct commands
+              const parts = line.split(/\s+/);
+              const cmd = parts[0];
+              
+              switch (cmd) {
+                case 'PRINT':
+                  // Use original line to preserve case and quotes
+                  let text = originalLine.substring(5).trim(); // Remove 'PRINT' (case insensitive)
+                  console.log('PRINT command with text:', text);
+                  
+                  if (!text) {
+                    window.simpleTRS80.addChar('\n');
+                    return;
+                  }
+                  
+                  // Handle quoted strings
+                  if (text.startsWith('"') && text.endsWith('"')) {
+                    text = text.slice(1, -1);
+                  } else if (text.startsWith("'") && text.endsWith("'")) {
+                    text = text.slice(1, -1);
+                  }
+                  
+                  // Add each character individually like main system
+                  for (let i = 0; i < text.length; i++) {
+                    window.simpleTRS80.addChar(text[i]);
+                  }
+                  window.simpleTRS80.addChar('\n');
+                  break;
+                  
+                case 'COLOR':
+                  const colorNum = parseInt(parts[1]);
+                  console.log('COLOR command with number:', colorNum);
+                  if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
+                    window.simpleTRS80.setTextColor(colorNum);
+                    const message = `Color set to ${colorNum}`;
+                    for (let i = 0; i < message.length; i++) {
+                      window.simpleTRS80.addChar(message[i]);
+                    }
+                    window.simpleTRS80.addChar('\n');
+                  } else {
+                    const message = '?SYNTAX ERROR - Color must be 0-15';
+                    for (let i = 0; i < message.length; i++) {
+                      window.simpleTRS80.addChar(message[i]);
+                    }
+                    window.simpleTRS80.addChar('\n');
+                  }
+                  break;
+                  
+                case 'CLS':
+                  console.log('CLS command executing');
+                  window.simpleTRS80.clearScreen();
+                  break;
+                  
+                case 'LIST':
+                  console.log('LIST command executing');
+                  const lineNumbers = Array.from(window.trs80.program.keys()).sort((a, b) => a - b);
+                  console.log('Program has', lineNumbers.length, 'lines:', lineNumbers);
+                  
+                  if (lineNumbers.length === 0) {
+                    const message = 'No program lines';
+                    for (let i = 0; i < message.length; i++) {
+                      window.simpleTRS80.addChar(message[i]);
+                    }
+                    window.simpleTRS80.addChar('\n');
+                  } else {
+                    for (const lineNum of lineNumbers) {
+                      const command = window.trs80.program.get(lineNum);
+                      const line = `${lineNum} ${command}`;
+                      console.log('Listing line:', line);
+                      
+                      // Add each character individually
+                      for (let i = 0; i < line.length; i++) {
+                        window.simpleTRS80.addChar(line[i]);
+                      }
+                      window.simpleTRS80.addChar('\n');
+                    }
+                  }
+                  break;
+                  
+                case 'RUN':
+                  console.log('RUN command executing');
+                  if (window.trs80.program.size === 0) {
+                    const message = 'No program to run';
+                    for (let i = 0; i < message.length; i++) {
+                      window.simpleTRS80.addChar(message[i]);
+                    }
+                    window.simpleTRS80.addChar('\n');
+                  } else {
+                    // Execute program lines in order
+                    const lineNumbers = Array.from(window.trs80.program.keys()).sort((a, b) => a - b);
+                    for (const lineNum of lineNumbers) {
+                      const command = window.trs80.program.get(lineNum);
+                      console.log('Executing line', lineNum + ':', command);
+                      this.processLine(command); // Recursive call to execute command
+                    }
+                  }
+                  break;
+                  
+                case 'NEW':
+                  console.log('NEW command executing');
+                  window.trs80.program.clear();
+                  window.trs80.variables.clear();
+                  const newMessage = 'Program cleared';
+                  for (let i = 0; i < newMessage.length; i++) {
+                    window.simpleTRS80.addChar(newMessage[i]);
+                  }
+                  window.simpleTRS80.addChar('\n');
+                  break;
+                  
+                default:
+                  console.log('Unknown command:', cmd);
+                  const errorMessage = '?SYNTAX ERROR';
+                  for (let i = 0; i < errorMessage.length; i++) {
+                    window.simpleTRS80.addChar(errorMessage[i]);
+                  }
+                  window.simpleTRS80.addChar('\n');
+                  break;
               }
             }
           },
