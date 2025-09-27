@@ -735,9 +735,12 @@
     
     // Initialize fallback system if modules fail
     setTimeout(function() {
+      console.log('DEBUG: Checking for window.trs80...', !!window.trs80);
       if (!window.trs80) {
         console.log('⚠ ES6 modules failed, using fallback system');
+        console.log('DEBUG: Creating SimpleTRS80 instance...');
         window.simpleTRS80 = new SimpleTRS80();
+        console.log('DEBUG: SimpleTRS80 created:', !!window.simpleTRS80);
         document.getElementById('status-msg').textContent = 'System Status: ✓ Fallback Ready';
         document.getElementById('status-msg').style.color = '#ff8800';
         
@@ -808,8 +811,12 @@
               // Full BASIC command processing for fallback - enhanced version
               const originalLine = line.trim();
               line = line.trim().toUpperCase();
-              console.log('Fallback BASIC processing:', line);
-              if (!line) return;
+              console.log('Fallback BASIC processing line:', JSON.stringify(originalLine));
+              console.log('Fallback BASIC processing uppercase:', JSON.stringify(line));
+              if (!line) {
+                console.log('Empty line, returning');
+                return;
+              }
               
               // Check if line starts with a number (program line)
               const lineMatch = line.match(/^(\d+)\s*(.*)$/);
@@ -835,11 +842,18 @@
               
               switch (cmd) {
                 case 'PRINT':
-                  // Use original line to preserve case and quotes
-                  let text = originalLine.substring(5).trim(); // Remove 'PRINT' (case insensitive)
-                  console.log('PRINT command with text:', text);
+                  // Find the actual PRINT command in original line (case insensitive)
+                  const printMatch = originalLine.match(/^(\s*print\s*)(.*)/i);
+                  let text = '';
+                  if (printMatch) {
+                    text = printMatch[2]; // Everything after PRINT
+                  } else {
+                    text = originalLine.substring(5).trim(); // Fallback
+                  }
+                  console.log('PRINT command with text:', JSON.stringify(text));
                   
                   if (!text) {
+                    console.log('Empty PRINT, adding newline only');
                     window.simpleTRS80.addChar('\n');
                     return;
                   }
@@ -847,28 +861,38 @@
                   // Handle quoted strings
                   if (text.startsWith('"') && text.endsWith('"')) {
                     text = text.slice(1, -1);
+                    console.log('Removed double quotes, text now:', JSON.stringify(text));
                   } else if (text.startsWith("'") && text.endsWith("'")) {
                     text = text.slice(1, -1);
+                    console.log('Removed single quotes, text now:', JSON.stringify(text));
                   }
                   
+                  console.log('Adding characters to display:', JSON.stringify(text));
                   // Add each character individually like main system
                   for (let i = 0; i < text.length; i++) {
+                    console.log('Adding char:', JSON.stringify(text[i]));
                     window.simpleTRS80.addChar(text[i]);
                   }
                   window.simpleTRS80.addChar('\n');
+                  console.log('PRINT command completed');
                   break;
                   
                 case 'COLOR':
+                  console.log('COLOR command detected, parts:', parts);
                   const colorNum = parseInt(parts[1]);
-                  console.log('COLOR command with number:', colorNum);
+                  console.log('COLOR command with number:', colorNum, 'isNaN:', isNaN(colorNum));
                   if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
+                    console.log('Valid color, setting color to:', colorNum);
                     window.simpleTRS80.setTextColor(colorNum);
                     const message = `Color set to ${colorNum}`;
+                    console.log('Adding color confirmation message:', JSON.stringify(message));
                     for (let i = 0; i < message.length; i++) {
                       window.simpleTRS80.addChar(message[i]);
                     }
                     window.simpleTRS80.addChar('\n');
+                    console.log('COLOR command completed successfully');
                   } else {
+                    console.log('Invalid color number, showing syntax error');
                     const message = '?SYNTAX ERROR - Color must be 0-15';
                     for (let i = 0; i < message.length; i++) {
                       window.simpleTRS80.addChar(message[i]);
