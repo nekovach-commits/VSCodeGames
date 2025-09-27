@@ -884,13 +884,8 @@
                   if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
                     console.log('Valid color, setting color to:', colorNum);
                     window.simpleTRS80.setTextColor(colorNum);
-                    const message = `Color set to ${colorNum}`;
-                    console.log('Adding color confirmation message:', JSON.stringify(message));
-                    for (let i = 0; i < message.length; i++) {
-                      window.simpleTRS80.addChar(message[i]);
-                    }
-                    window.simpleTRS80.addChar('\n');
-                    console.log('COLOR command completed successfully');
+                    console.log('COLOR command completed successfully - silent like laptop');
+                    // No confirmation message - silent like laptop version
                   } else {
                     console.log('Invalid color number, showing syntax error');
                     const message = '?SYNTAX ERROR - Color must be 0-15';
@@ -941,12 +936,38 @@
                     }
                     window.simpleTRS80.addChar('\n');
                   } else {
-                    // Execute program lines in order
+                    // Execute program lines in order - using proper fallback processing
                     const lineNumbers = Array.from(window.trs80.program.keys()).sort((a, b) => a - b);
                     for (const lineNum of lineNumbers) {
                       const command = window.trs80.program.get(lineNum);
                       console.log('Executing line', lineNum + ':', command);
-                      this.processLine(command); // Recursive call to execute command
+                      
+                      // Process the command directly instead of recursive call
+                      const runParts = command.trim().toUpperCase().split(/\s+/);
+                      const runCmd = runParts[0];
+                      
+                      if (runCmd === 'PRINT') {
+                        // Use same PRINT logic as direct command
+                        const printMatch = command.match(/^(\s*print\s*)(.*)/i);
+                        let runText = '';
+                        if (printMatch) {
+                          runText = printMatch[2];
+                        } else {
+                          runText = command.substring(5).trim();
+                        }
+                        
+                        if (runText.startsWith('"') && runText.endsWith('"')) {
+                          runText = runText.slice(1, -1);
+                        }
+                        
+                        // Add text character by character
+                        for (let i = 0; i < runText.length; i++) {
+                          window.simpleTRS80.addChar(runText[i]);
+                        }
+                        // Add newline after each PRINT statement like laptop version
+                        window.simpleTRS80.addChar('\n');
+                      }
+                      // Add other command handling as needed
                     }
                   }
                   break;
