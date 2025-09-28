@@ -229,28 +229,23 @@
         
         inputBuffer = newValue;
       });
-      
+
+      // Handle Enter key specifically for command execution
       kindleInput.addEventListener('keydown', function(e) {
-        console.log('Key pressed:', e.key);
-        
-        if (e.key === 'Backspace') {
-          console.log('Processing backspace');
-          if (window.trs80 && window.trs80.keyboard) {
-            // Update current line
-            if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.length > 0) {
-              window.trs80.keyboard.currentLine = window.trs80.keyboard.currentLine.slice(0, -1);
-            }
-            window.trs80.keyboard.processKeyInput('Backspace');
-            window.trs80.display.render();
+        if (e.key === 'Enter') {
+          console.log('=== Enter key pressed - processing current input');
+          const currentInput = e.target.value.trim();
+          if (currentInput) {
+            console.log('Processing Enter for input:', JSON.stringify(currentInput));
+            // Set the current line and process Enter
+            currentLine = currentInput;
+            processCharacter('Enter');
+          } else {
+            console.log('Empty input, just processing Enter');
+            processCharacter('Enter');
           }
-          // Update our buffer
-          inputBuffer = e.target.value.slice(0, -1);
           
-        } else if (e.key === 'Enter') {
-          console.log('=== Direct Enter key press - using unified handler');
-          processCharacter('Enter');
-          
-          // Clear input and buffer
+          // Clear input field
           e.target.value = '';
           inputBuffer = '';
           e.preventDefault();
