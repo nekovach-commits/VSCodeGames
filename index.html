@@ -58,34 +58,54 @@
       // Universal display interface - auto-detects which backend to use
       const UnifiedDisplay = {
         addChar: function(char) {
+          console.log('UnifiedDisplay.addChar called with:', JSON.stringify(char));
           if (window.simpleTRS80) {
+            console.log('Using SimpleTRS80 for addChar');
             window.simpleTRS80.addChar(char);
           } else if (window.trs80 && window.trs80.display && window.trs80.display.addChar) {
+            console.log('Using ES6 display for addChar');
             window.trs80.display.addChar(char);
+          } else {
+            console.log('No display system available for addChar!');
           }
         },
         clearScreen: function() {
+          console.log('UnifiedDisplay.clearScreen called');
           if (window.simpleTRS80) {
+            console.log('Using SimpleTRS80 for clearScreen');
             window.simpleTRS80.clearScreen();
           } else if (window.trs80 && window.trs80.display && window.trs80.display.clearScreen) {
+            console.log('Using ES6 display for clearScreen');
             window.trs80.display.clearScreen();
+          } else {
+            console.log('No display system available for clearScreen!');
           }
         },
         setTextColor: function(colorIndex) {
+          console.log('UnifiedDisplay.setTextColor called with:', colorIndex);
           if (window.simpleTRS80) {
+            console.log('Using SimpleTRS80 for setTextColor');
             window.simpleTRS80.setTextColor(colorIndex);
           } else if (window.trs80 && window.trs80.display && window.trs80.display.setTextColor) {
+            console.log('Using ES6 display for setTextColor');
             window.trs80.display.setTextColor(colorIndex);
+          } else {
+            console.log('No display system available for setTextColor!');
           }
         },
         addText: function(text) {
+          console.log('UnifiedDisplay.addText called with:', JSON.stringify(text));
           for (let i = 0; i < text.length; i++) {
             this.addChar(text[i]);
           }
         },
         render: function() {
+          console.log('UnifiedDisplay.render called');
           if (window.trs80 && window.trs80.display && window.trs80.display.render) {
+            console.log('Using ES6 display for render');
             window.trs80.display.render();
+          } else {
+            console.log('No render needed for SimpleTRS80 (auto-renders)');
           }
           // SimpleTRS80 renders automatically
         }
@@ -130,10 +150,18 @@
       function processCharacter(char) {
         console.log('=== Unified processCharacter:', JSON.stringify(char));
         
+        // Ensure SimpleTRS80 is initialized if ES6 modules haven't loaded
+        if (!window.trs80 && !window.simpleTRS80) {
+          console.log('Neither ES6 nor SimpleTRS80 available, initializing SimpleTRS80 now');
+          window.simpleTRS80 = new SimpleTRS80();
+        }
+        
         if (char === 'Backspace') {
+          console.log('Processing Backspace - currentLine before:', JSON.stringify(currentLine));
           if (currentLine.length > 0) {
             currentLine = currentLine.slice(0, -1);
           }
+          console.log('Processing Backspace - currentLine after:', JSON.stringify(currentLine));
           UnifiedDisplay.addChar(char);
           return;
         }
@@ -143,8 +171,13 @@
           if (currentLine.trim()) {
             // Process through SharedBasicProcessor
             if (window.SharedBasicProcessor) {
+              console.log('Calling SharedBasicProcessor.processLine');
               window.SharedBasicProcessor.processLine(currentLine.trim(), UnifiedProgram, UnifiedDisplay);
+            } else {
+              console.log('SharedBasicProcessor not available!');
             }
+          } else {
+            console.log('Empty line, just adding newline');
           }
           currentLine = ''; // Clear line
           UnifiedDisplay.addChar(char);
@@ -154,9 +187,11 @@
 
         // Regular character
         if (char.length === 1) {
+          console.log('Adding regular character to currentLine:', JSON.stringify(char));
           currentLine += char;
           UnifiedDisplay.addChar(char);
         }
+        console.log('Current line now:', JSON.stringify(currentLine));
         UnifiedDisplay.render();
       }
       
