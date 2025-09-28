@@ -97,9 +97,10 @@
         getStorage: function() {
           if (!this.storage) {
             if (window.trs80 && window.trs80.program) {
+              console.log('UnifiedProgram: Using ES6 module storage');
               this.storage = window.trs80.program;
             } else {
-              // Create fallback storage
+              console.log('UnifiedProgram: Creating fallback storage');
               this.storage = new Map();
             }
           }
@@ -512,15 +513,26 @@
       },
       
       cmdList: function(program, displayInterface) {
+        console.log('=== SharedBasicProcessor.cmdList ===');
+        console.log('program:', program);
+        console.log('program.keys():', program.keys());
         const lineNumbers = Array.from(program.keys()).sort((a, b) => a - b);
+        console.log('lineNumbers:', lineNumbers);
+        console.log('lineNumbers.length:', lineNumbers.length);
+        
         if (lineNumbers.length === 0) {
+          console.log('No program lines found, displaying message');
           displayInterface.addText('No program lines\n');
         } else {
+          console.log('Found', lineNumbers.length, 'program lines, listing them');
           for (const lineNum of lineNumbers) {
             const command = program.get(lineNum);
-            displayInterface.addText(lineNum + ' ' + command + '\n');
+            const line = lineNum + ' ' + command + '\n';
+            console.log('Listing line:', JSON.stringify(line));
+            displayInterface.addText(line);
           }
         }
+        console.log('=== cmdList complete ===');
       },
       
       cmdRun: function(program, displayInterface) {
@@ -558,9 +570,11 @@
           const command = lineMatch[2];
           
           console.log('Program line detected:', lineNum, command);
+          console.log('Using program storage:', program);
           if (command) {
             program.set(lineNum, command);
             console.log('Stored line', lineNum, 'in program. Program now has', program.size, 'lines');
+            console.log('Program keys after storage:', Array.from(program.keys()));
           } else {
             program.delete(lineNum);
             console.log('Deleted line', lineNum, 'from program');
