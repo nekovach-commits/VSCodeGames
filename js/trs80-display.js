@@ -488,7 +488,7 @@ export class TRS80Display {
       const cursorX = BORDER_SIZE + this.cursorCol * this.charWidth;
       const cursorY = BORDER_SIZE + screenCursorRow * this.charHeight;
       
-      // Draw solid cursor block with current text color
+      // Draw simple blinking cursor block with current text color
       const cursorColor = TRS80_CONFIG.C64_COLORS[this.currentTextColor];
       this.ctx.fillStyle = cursorColor.hex;
       for (let r = 0; r < 8; r++) {
@@ -499,12 +499,7 @@ export class TRS80Display {
         }
       }
       
-      // Invert character if present at cursor position
-      const charAtCursor = this.textBuffer[this.cursorRow]?.[this.cursorCol];
-      if (charAtCursor && charAtCursor !== ' ') {
-        const bgColor = TRS80_CONFIG.C64_COLORS[this.currentBackgroundColor];
-        drawChar(this.ctx, charAtCursor, cursorX, cursorY, this.pixelSize, bgColor.hex);
-      }
+      // No character inversion needed - cursor is always at end of input
     }
   }
 }
