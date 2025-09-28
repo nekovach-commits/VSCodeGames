@@ -51,35 +51,134 @@
       
       // Kindle Input Handler
       const kindleInput = document.getElementById('kindle-input');
+      // Unified input handling - works same way for all systems
+      let currentLine = '';
       let inputBuffer = '';
+
+      // Universal display interface - auto-detects which backend to use
+      const UnifiedDisplay = {
+        addChar: function(char) {
+          if (window.simpleTRS80) {
+            window.simpleTRS80.addChar(char);
+          } else if (window.trs80 && window.trs80.display && window.trs80.display.addChar) {
+            window.trs80.display.addChar(char);
+          }
+        },
+        clearScreen: function() {
+          if (window.simpleTRS80) {
+            window.simpleTRS80.clearScreen();
+          } else if (window.trs80 && window.trs80.display && window.trs80.display.clearScreen) {
+            window.trs80.display.clearScreen();
+          }
+        },
+        setTextColor: function(colorIndex) {
+          if (window.simpleTRS80) {
+            window.simpleTRS80.setTextColor(colorIndex);
+          } else if (window.trs80 && window.trs80.display && window.trs80.display.setTextColor) {
+            window.trs80.display.setTextColor(colorIndex);
+          }
+        },
+        addText: function(text) {
+          for (let i = 0; i < text.length; i++) {
+            this.addChar(text[i]);
+          }
+        },
+        render: function() {
+          if (window.trs80 && window.trs80.display && window.trs80.display.render) {
+            window.trs80.display.render();
+          }
+          // SimpleTRS80 renders automatically
+        }
+      };
+
+      // Universal program storage - auto-detects which storage to use
+      const UnifiedProgram = {
+        storage: null,
+        getStorage: function() {
+          if (!this.storage) {
+            if (window.trs80 && window.trs80.program) {
+              this.storage = window.trs80.program;
+            } else {
+              // Create fallback storage
+              this.storage = new Map();
+            }
+          }
+          return this.storage;
+        },
+        set: function(lineNum, command) {
+          this.getStorage().set(lineNum, command);
+        },
+        get: function(lineNum) {
+          return this.getStorage().get(lineNum);
+        },
+        delete: function(lineNum) {
+          this.getStorage().delete(lineNum);
+        },
+        clear: function() {
+          this.getStorage().clear();
+        },
+        keys: function() {
+          return this.getStorage().keys();
+        },
+        size: function() {
+          return this.getStorage().size;
+        }
+      };
+
+      // Unified input processing
+      function processCharacter(char) {
+        console.log('=== Unified processCharacter:', JSON.stringify(char));
+        
+        if (char === 'Backspace') {
+          if (currentLine.length > 0) {
+            currentLine = currentLine.slice(0, -1);
+          }
+          UnifiedDisplay.addChar(char);
+          return;
+        }
+
+        if (char === 'Enter') {
+          console.log('=== Enter key - processing line:', JSON.stringify(currentLine));
+          if (currentLine.trim()) {
+            // Process through SharedBasicProcessor
+            if (window.SharedBasicProcessor) {
+              window.SharedBasicProcessor.processLine(currentLine.trim(), UnifiedProgram, UnifiedDisplay);
+            }
+          }
+          currentLine = ''; // Clear line
+          UnifiedDisplay.addChar(char);
+          UnifiedDisplay.render();
+          return;
+        }
+
+        // Regular character
+        if (char.length === 1) {
+          currentLine += char;
+          UnifiedDisplay.addChar(char);
+        }
+        UnifiedDisplay.render();
+      }
       
       kindleInput.addEventListener('input', function(e) {
         const newValue = e.target.value;
-        console.log('Input changed:', newValue);
+        console.log('Unified input handler - value changed:', newValue);
         
         // Find what was added (handle typing and pasting)
         if (newValue.length > inputBuffer.length) {
           const addedText = newValue.slice(inputBuffer.length);
           console.log('Added text:', addedText);
           
-          // Add each character to TRS-80
+          // Process each character through unified system
           for (let char of addedText) {
-            if (window.trs80 && window.trs80.keyboard) {
-              console.log('Sending to TRS-80:', char);
-              console.log('Current window.trs80.keyboard.currentLine before processKeyInput:', JSON.stringify(window.trs80.keyboard.currentLine));
-              // DO NOT modify currentLine here - let processKeyInput handle it
-              window.trs80.keyboard.processKeyInput(char);
-              console.log('Current window.trs80.keyboard.currentLine after processKeyInput:', JSON.stringify(window.trs80.keyboard.currentLine));
-            } else {
-              console.log('TRS-80 not ready, queuing:', char);
-              // Queue for when system is ready
-              window.pendingInput = window.pendingInput || [];
-              window.pendingInput.push(char);
-            }
+            processCharacter(char);
           }
-          
-          if (window.trs80 && window.trs80.display) {
-            window.trs80.display.render();
+        }
+        
+        // Find what was removed (backspace)
+        if (newValue.length < inputBuffer.length) {
+          const removedCount = inputBuffer.length - newValue.length;
+          for (let i = 0; i < removedCount; i++) {
+            processCharacter('Backspace');
           }
         }
         
@@ -109,76 +208,14 @@
           inputBuffer = e.target.value.slice(0, -1);
           
         } else if (e.key === 'Enter') {
-          console.log('=== ENTER KEY PRESSED ===');
-          console.log('window.trs80 exists:', !!window.trs80);
-          console.log('window.trs80.keyboard exists:', !!(window.trs80 && window.trs80.keyboard));
-          
-          // Check if this is the main system or fallback
-          if (window.trs80 && window.trs80.keyboard && window.trs80.keyboard.processLine && typeof window.trs80.keyboard.processLine === 'function') {
-            console.log('*** MAIN TRS-80 SYSTEM DETECTED - Using main system');
-            if (window.trs80 && window.trs80.keyboard) {
-              console.log('Current line value:', JSON.stringify(window.trs80.keyboard.currentLine));
-              console.log('Current line length:', window.trs80.keyboard.currentLine ? window.trs80.keyboard.currentLine.length : 'undefined');
-              console.log('Current line trimmed:', window.trs80.keyboard.currentLine ? JSON.stringify(window.trs80.keyboard.currentLine.trim()) : 'undefined');
-              
-              // Process as BASIC command if there's a current line
-              if (window.trs80.keyboard.currentLine && window.trs80.keyboard.currentLine.trim()) {
-                console.log('*** CALLING processLine with:', JSON.stringify(window.trs80.keyboard.currentLine));
-                window.trs80.keyboard.processLine(window.trs80.keyboard.currentLine);
-                console.log('*** processLine completed');
-              } else {
-                console.log('*** No line to process (empty or undefined)');
-              }
-              window.trs80.keyboard.currentLine = ''; // Reset line
-              console.log('*** Line reset, calling processKeyInput(Enter)');
-              window.trs80.keyboard.processKeyInput('Enter');
-              window.trs80.display.render();
-              console.log('*** Enter processing complete');
-            }
-          } else {
-            console.log('*** FALLBACK SYSTEM DETECTED - Using fallback Enter handling');
-            // For fallback, just process Enter through the fallback keyboard system
-            // The fallback keyboard system will handle line processing internally
-            if (window.trs80 && window.trs80.keyboard && window.trs80.keyboard.processKeyInput) {
-              // Sync the input field value with the fallback currentLine
-              const inputValue = e.target.value.trim();
-              if (inputValue && inputValue !== window.trs80.keyboard.currentLine) {
-                console.log('*** Syncing input field to fallback currentLine:', JSON.stringify(inputValue));
-                window.trs80.keyboard.currentLine = inputValue;
-              }
-              window.trs80.keyboard.processKeyInput('Enter');
-            }
-          }
+          console.log('=== Direct Enter key press - using unified handler');
+          processCharacter('Enter');
           
           // Clear input and buffer
           e.target.value = '';
           inputBuffer = '';
           e.preventDefault();
         }
-      });
-      
-      // Process any queued input when TRS-80 system is ready
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          if (window.trs80 && window.trs80.keyboard && window.trs80.display) {
-            console.log('✓ TRS-80 system loaded successfully');
-            document.getElementById('status-msg').textContent = 'System Status: ✓ Ready for input';
-            document.getElementById('status-msg').style.color = '#006600';
-            
-            if (window.pendingInput && window.pendingInput.length > 0) {
-              console.log('Processing queued input:', window.pendingInput);
-              for (let char of window.pendingInput) {
-                window.trs80.keyboard.processKeyInput(char);
-              }
-              window.trs80.display.render();
-              window.pendingInput = [];
-            }
-          } else {
-            console.log('✗ TRS-80 system failed to load');
-            document.getElementById('status-msg').textContent = 'System Status: ✗ Load Failed';
-            document.getElementById('status-msg').style.color = '#cc0000';
-          }
-        }, 2000); // Wait 2 seconds for modules to load
       });
     </script>
     
@@ -888,136 +925,23 @@
       }
     }
     
-    // Initialize fallback system if modules fail
+    // Simple unified initialization
     setTimeout(function() {
-      console.log('DEBUG: Checking for window.trs80...', !!window.trs80);
+      console.log('=== Unified system initialization ===');
+      
+      // Initialize fallback display if ES6 modules didn't load
       if (!window.trs80) {
-        console.log('⚠ ES6 modules failed, using fallback system');
-        console.log('DEBUG: Creating SimpleTRS80 instance...');
+        console.log('⚠ ES6 modules failed, initializing fallback display');
         window.simpleTRS80 = new SimpleTRS80();
-        console.log('DEBUG: SimpleTRS80 created:', !!window.simpleTRS80);
         document.getElementById('status-msg').textContent = 'System Status: ✓ Fallback Ready';
         document.getElementById('status-msg').style.color = '#ff8800';
-        
-        // Update input handlers to use simple system
-        window.trs80 = {
-          // Add program storage for fallback BASIC
-          program: new Map(),
-          variables: new Map(),
-          
-          keyboard: {
-            currentLine: '',  // Add line tracking to fallback
-            processKeyInput: function(char) {
-              console.log('=== processKeyInput called with:', JSON.stringify(char));
-              console.log('this.currentLine at start:', JSON.stringify(this.currentLine));
-              
-              // Handle special keys
-              if (char === 'Backspace') {
-                if (this.currentLine.length > 0) {
-                  this.currentLine = this.currentLine.slice(0, -1);
-                }
-                console.log('Backspace - currentLine now:', JSON.stringify(this.currentLine));
-                window.simpleTRS80.addChar(char);
-                return;
-              }
-              
-              if (char === 'Enter') {
-                console.log('Enter - processing currentLine:', JSON.stringify(this.currentLine));
-                // Process the current line if it exists
-                if (this.currentLine && this.currentLine.trim()) {
-                  console.log('*** Processing line through SharedBasicProcessor:', JSON.stringify(this.currentLine));
-                  if (window.SharedBasicProcessor) {
-                    const displayInterface = {
-                      addChar: function(char) { window.simpleTRS80.addChar(char); },
-                      clearScreen: function() { window.simpleTRS80.clearScreen(); },
-                      setTextColor: function(colorIndex) { window.simpleTRS80.setTextColor(colorIndex); },
-                      addText: function(text) {
-                        for (let i = 0; i < text.length; i++) {
-                          window.simpleTRS80.addChar(text[i]);
-                        }
-                      }
-                    };
-                    window.SharedBasicProcessor.processLine(this.currentLine.trim(), window.trs80.program, displayInterface);
-                  }
-                }
-                this.currentLine = ''; // Clear line after processing
-                window.simpleTRS80.addChar(char); // Add newline to display
-                return;
-              }
-              
-              // Simple color system using Ctrl+Number or @Number
-              // Since Kindle may not support Ctrl easily, use @ as color prefix
-              if (char === '@') {
-                console.log('Color mode activated - type 1-8 for colors');
-                window.colorMode = true;
-                // Don't add @ to display
-                return;
-              }
-              
-              // Handle color selection after @
-              if (window.colorMode && char >= '1' && char <= '8') {
-                const colorIndex = parseInt(char) - 1;
-                const colors = [0, 1, 2, 3, 4, 5, 6, 7]; // Black, White, Red, Cyan, Purple, Green, Blue, Yellow
-                window.simpleTRS80.setTextColor(colors[colorIndex]);
-                window.colorMode = false;
-                console.log('Color set to', colors[colorIndex]);
-                return;
-              }
-              
-              // Cancel color mode if any other key
-              if (window.colorMode) {
-                window.colorMode = false;
-                console.log('Color mode cancelled');
-              }
-              
-              // Regular character input - add to current line AND display
-              if (char.length === 1) {
-                console.log('Regular char - adding to currentLine:', JSON.stringify(char));
-                this.currentLine += char;
-                console.log('Character added to currentLine:', JSON.stringify(char));
-                console.log('Current line now:', JSON.stringify(this.currentLine));
-              }
-              window.simpleTRS80.addChar(char);
-              console.log('=== processKeyInput complete, currentLine:', JSON.stringify(this.currentLine));
-            },
-            processLine: function(line) {
-              // Use SharedBasicProcessor for consistent behavior
-              console.log('Fallback BASIC using SharedBasicProcessor for line:', JSON.stringify(line));
-              
-              // Create display interface for fallback
-              const displayInterface = {
-                addChar: function(char) {
-                  window.simpleTRS80.addChar(char);
-                },
-                clearScreen: function() {
-                  window.simpleTRS80.clearScreen();
-                },
-                setTextColor: function(colorIndex) {
-                  window.simpleTRS80.setTextColor(colorIndex);
-                }
-              };
-              
-              // Use the shared processor
-              if (window.SharedBasicProcessor) {
-                window.SharedBasicProcessor.processLine(line, window.trs80.program, displayInterface);
-              } else {
-                console.error('SharedBasicProcessor not available in fallback');
-              }
-            }
-          },
-          display: {
-            render: function() {
-              window.simpleTRS80.render();
-            },
-            setTextColor: function(colorIndex) {
-              window.simpleTRS80.setTextColor(colorIndex);
-            },
-            setBackgroundColor: function(colorIndex) {  
-              window.simpleTRS80.setBackgroundColor(colorIndex);
-            }
-          }
-        };
+      } else {
+        console.log('✓ ES6 modules loaded successfully');
+        document.getElementById('status-msg').textContent = 'System Status: ✓ Ready';
+        document.getElementById('status-msg').style.color = '#006600';
       }
+      
+      console.log('=== Unified system ready ===');
     }, 1000);
   </script>
 </body>
