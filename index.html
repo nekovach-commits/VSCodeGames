@@ -254,6 +254,15 @@
           e.target.value = '';
           inputBuffer = '';
           e.preventDefault();
+        } else if (e.key === 'Backspace') {
+          console.log('=== Backspace key pressed - processing backspace');
+          // Handle backspace directly since input event might not fire reliably on Kindle
+          if (currentLine.length > 0) {
+            console.log('Backspace: currentLine before:', JSON.stringify(currentLine));
+            currentLine = currentLine.slice(0, -1);
+            console.log('Backspace: currentLine after:', JSON.stringify(currentLine));
+            UnifiedDisplay.addChar('Backspace');
+          }
         }
       });
     </script>
@@ -857,6 +866,24 @@
           this.currentBackgroundColor = colorIndex;
           console.log('SimpleTRS80: Background color set to', colorIndex, this.C64_COLORS[colorIndex]);
         }
+      }
+      
+      // Clear screen - essential for CLS command
+      clearScreen() {
+        console.log('SimpleTRS80.clearScreen called');
+        // Reset all rows to empty strings
+        for (let i = 0; i < 20; i++) {
+          this.rows[i] = '';
+          this.colorRows[i] = new Array(40).fill({
+            text: this.currentTextColor, 
+            background: -1  // Transparent
+          });
+        }
+        // Reset cursor position
+        this.currentRow = 0;
+        this.currentCol = 0;
+        console.log('SimpleTRS80: Screen cleared, cursor reset to 0,0');
+        this.render(); // Immediately refresh display
       }
       
       // Print text without newlines - convenience method for BASIC commands
