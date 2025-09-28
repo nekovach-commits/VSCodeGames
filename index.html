@@ -168,6 +168,10 @@
 
         if (char === 'Enter') {
           console.log('=== Enter key - processing line:', JSON.stringify(currentLine));
+          
+          // FIRST: Add newline to move cursor down (this is what was missing!)
+          UnifiedDisplay.addChar('\n');
+          
           if (currentLine.trim()) {
             // Process through SharedBasicProcessor
             if (window.SharedBasicProcessor) {
@@ -177,10 +181,9 @@
               console.log('SharedBasicProcessor not available!');
             }
           } else {
-            console.log('Empty line, just adding newline');
+            console.log('Empty line, already added newline');
           }
           currentLine = ''; // Clear line
-          UnifiedDisplay.addChar(char);
           UnifiedDisplay.render();
           return;
         }
