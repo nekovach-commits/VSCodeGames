@@ -20,7 +20,7 @@ export class TRS80Basic {
     this.isDirectMode = true; // Direct command vs program mode
     
     console.log('TRS-80 BASIC Interpreter initialized');
-    this.showStartupMessage();
+    // Startup message removed to match SimpleTRS80 fallback behavior
   }
   
   /**

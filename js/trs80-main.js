@@ -219,8 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
       system: system
     };
     
-    // Add a visible indicator that the system loaded
-    system.display.addChar('SYSTEM READY\n');
+    // System ready - no startup message to match SimpleTRS80 fallback
     
     console.log('✓ TRS-80 system fully initialized and exposed globally');
     console.log('✓ BASIC available:', !!system.basic);

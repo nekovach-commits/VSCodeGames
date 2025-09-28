@@ -11,7 +11,6 @@
   <div id="retro-container" tabindex="0" style="background: #ffffff !important;">
     <canvas id="retro-canvas" style="background: #ffffff !important; border: 3px solid #000000 !important; cursor: text;"></canvas>
     
-    <!-- Kindle Keyboard Input -->
     <input type="text" id="kindle-input" placeholder="Tap here to open Kindle keyboard and type..." 
            style="width: 100%; max-width: 500px; padding: 10px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 16px; border: 2px solid #000; border-radius: 3px;">
     
@@ -23,18 +22,27 @@
     </div>
     
     <script>
-      // Simple resolution-based pixel size detection
-      function getPixelSize() {
+      // ========================================
+      // DEVICE DETECTION & PIXEL SCALING
+      // ========================================
+      
+      // Unified device detection and pixel size calculation
+      function getDeviceInfo() {
         const w = window.screen.width;
         const h = window.screen.height;
         
         // Specific device resolutions
-        if (w === 636 && h === 848) return 2;  // Kindle ColorSoft
-        if (w === 930 && h === 1240) return 3; // Kindle Scribe
+        if (w === 636 && h === 848) return { type: 'Kindle ColorSoft', pixelSize: 2 };
+        if (w === 930 && h === 1240) return { type: 'Kindle Scribe', pixelSize: 3 };
         
         // General size categories
-        if (w <= 768) return 2;  // Mobile devices
-        return 4;                // Desktop/large screens
+        if (w <= 768) return { type: 'Mobile', pixelSize: 2 };
+        if (w <= 1024) return { type: 'Tablet', pixelSize: 3 };
+        return { type: 'Desktop', pixelSize: 4 };
+      }
+      
+      function getPixelSize() {
+        return getDeviceInfo().pixelSize;
       }
       
       // Immediate canvas sizing - runs before modules load
@@ -55,72 +63,73 @@
       let currentLine = '';
       let inputBuffer = '';
 
+      // ========================================
+      // UNIFIED DISPLAY ABSTRACTION LAYER
+      // ========================================
+      
+      // Helper function to get ES6 display if available
+      function getES6Display() {
+        return window.trs80 && window.trs80.display ? window.trs80.display : null;
+      }
+      
       // Universal display interface - auto-detects which backend to use
       const UnifiedDisplay = {
         addChar: function(char) {
-          console.log('UnifiedDisplay.addChar called with:', JSON.stringify(char));
           if (window.simpleTRS80) {
-            console.log('Using SimpleTRS80 for addChar');
             window.simpleTRS80.addChar(char);
-          } else if (window.trs80 && window.trs80.display && window.trs80.display.addChar) {
-            console.log('Using ES6 display for addChar');
-            window.trs80.display.addChar(char);
           } else {
-            console.log('No display system available for addChar!');
+            const es6Display = getES6Display();
+            if (es6Display && es6Display.addChar) {
+              es6Display.addChar(char);
+            }
           }
         },
         clearScreen: function() {
-          console.log('UnifiedDisplay.clearScreen called');
           if (window.simpleTRS80) {
-            console.log('Using SimpleTRS80 for clearScreen');
             window.simpleTRS80.clearScreen();
-          } else if (window.trs80 && window.trs80.display && window.trs80.display.clearScreen) {
-            console.log('Using ES6 display for clearScreen');
-            window.trs80.display.clearScreen();
           } else {
-            console.log('No display system available for clearScreen!');
+            const es6Display = getES6Display();
+            if (es6Display && es6Display.clearScreen) {
+              es6Display.clearScreen();
+            }
           }
         },
         setTextColor: function(colorIndex) {
-          console.log('UnifiedDisplay.setTextColor called with:', colorIndex);
           if (window.simpleTRS80) {
-            console.log('Using SimpleTRS80 for setTextColor');
             window.simpleTRS80.setTextColor(colorIndex);
-          } else if (window.trs80 && window.trs80.display && window.trs80.display.setTextColor) {
-            console.log('Using ES6 display for setTextColor');
-            window.trs80.display.setTextColor(colorIndex);
           } else {
-            console.log('No display system available for setTextColor!');
+            const es6Display = getES6Display();
+            if (es6Display && es6Display.setTextColor) {
+              es6Display.setTextColor(colorIndex);
+            }
           }
         },
         addText: function(text) {
-          console.log('UnifiedDisplay.addText called with:', JSON.stringify(text));
           for (let i = 0; i < text.length; i++) {
             this.addChar(text[i]);
           }
         },
         render: function() {
-          console.log('UnifiedDisplay.render called');
-          if (window.trs80 && window.trs80.display && window.trs80.display.render) {
-            console.log('Using ES6 display for render');
-            window.trs80.display.render();
-          } else {
-            console.log('No render needed for SimpleTRS80 (auto-renders)');
+          const es6Display = getES6Display();
+          if (es6Display && es6Display.render) {
+            es6Display.render();
           }
           // SimpleTRS80 renders automatically
         }
       };
 
+      // ========================================
+      // UNIFIED PROGRAM STORAGE ABSTRACTION
+      // ========================================
+      
       // Universal program storage - auto-detects which storage to use
       const UnifiedProgram = {
         storage: null,
         getStorage: function() {
           if (!this.storage) {
             if (window.trs80 && window.trs80.program) {
-              console.log('UnifiedProgram: Using ES6 module storage');
               this.storage = window.trs80.program;
             } else {
-              console.log('UnifiedProgram: Creating fallback storage');
               this.storage = new Map();
             }
           }
@@ -146,47 +155,31 @@
         }
       };
 
+      // ========================================
+      // UNIFIED INPUT PROCESSING
+      // ========================================
+      
       // Unified input processing
       function processCharacter(char) {
-        console.log('=== Unified processCharacter:', JSON.stringify(char));
-        
-        // Ensure SimpleTRS80 is initialized if ES6 modules haven't loaded
-        if (!window.trs80 && !window.simpleTRS80) {
-          console.log('Neither ES6 nor SimpleTRS80 available, initializing SimpleTRS80 now');
-          window.simpleTRS80 = new SimpleTRS80();
-        }
-        
         if (char === 'Backspace') {
-          console.log('Processing Backspace - currentLine before:', JSON.stringify(currentLine));
           if (currentLine.length > 0) {
             currentLine = currentLine.slice(0, -1);
           }
-          console.log('Processing Backspace - currentLine after:', JSON.stringify(currentLine));
           UnifiedDisplay.addChar(char);
           return;
         }
 
         if (char === 'Enter') {
-          console.log('=== Enter key - processing line:', JSON.stringify(currentLine));
-          
           // Add newline ONLY for SimpleTRS80 (Kindle) - ES6 system handles this internally
           if (window.simpleTRS80 && !window.trs80) {
-            console.log('Using SimpleTRS80: adding newline before command processing');
             UnifiedDisplay.addChar('\n');
-          } else {
-            console.log('Using ES6 system: no extra newline needed');
           }
           
           if (currentLine.trim()) {
             // Process through SharedBasicProcessor
             if (window.SharedBasicProcessor) {
-              console.log('Calling SharedBasicProcessor.processLine');
               window.SharedBasicProcessor.processLine(currentLine.trim(), UnifiedProgram, UnifiedDisplay);
-            } else {
-              console.log('SharedBasicProcessor not available!');
             }
-          } else {
-            console.log('Empty line, already handled newline if needed');
           }
           currentLine = ''; // Clear line
           UnifiedDisplay.render();
@@ -195,23 +188,22 @@
 
         // Regular character
         if (char.length === 1) {
-          console.log('Adding regular character to currentLine:', JSON.stringify(char));
           currentLine += char;
           UnifiedDisplay.addChar(char);
         }
-        console.log('Current line now:', JSON.stringify(currentLine));
         UnifiedDisplay.render();
       }
       
+      // ========================================
+      // INPUT EVENT HANDLERS
+      // ========================================
+      
       kindleInput.addEventListener('input', function(e) {
         const newValue = e.target.value;
-        console.log('Unified input handler - value changed:', newValue);
         
         // Find what was added (handle typing and pasting)
         if (newValue.length > inputBuffer.length) {
           const addedText = newValue.slice(inputBuffer.length);
-          console.log('Added text:', addedText);
-          
           // Process each character through unified system
           for (let char of addedText) {
             processCharacter(char);
@@ -238,15 +230,12 @@
       // Handle Enter key specifically for command execution
       kindleInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-          console.log('=== Enter key pressed - processing current input');
           const currentInput = e.target.value.trim();
           if (currentInput) {
-            console.log('Processing Enter for input:', JSON.stringify(currentInput));
             // Set the current line and process Enter
             currentLine = currentInput;
             processCharacter('Enter');
           } else {
-            console.log('Empty input, just processing Enter');
             processCharacter('Enter');
           }
           
@@ -255,12 +244,9 @@
           inputBuffer = '';
           e.preventDefault();
         } else if (e.key === 'Backspace') {
-          console.log('=== Backspace key pressed - processing backspace');
           // Handle backspace directly since input event might not fire reliably on Kindle
           if (currentLine.length > 0) {
-            console.log('Backspace: currentLine before:', JSON.stringify(currentLine));
             currentLine = currentLine.slice(0, -1);
-            console.log('Backspace: currentLine after:', JSON.stringify(currentLine));
             UnifiedDisplay.addChar('Backspace');
           }
         }
@@ -286,6 +272,10 @@
   </div>
 
   <script>
+    // ========================================
+    // RESOLUTION & DEVICE INFO FUNCTIONS
+    // ========================================
+    
     function updateResolutionInfo() {
       const resolutionInfo = document.getElementById('resolution-info');
       
@@ -324,16 +314,7 @@
         // Device Type Detection
         const deviceType = document.getElementById('device-type');
         if (deviceType) {
-          const w = screen.width;
-          const h = screen.height;
-          let type = 'Desktop';
-          
-          if (w === 636 && h === 848) type = 'Kindle ColorSoft';
-          else if (w === 930 && h === 1240) type = 'Kindle Scribe';  
-          else if (w <= 768) type = 'Mobile';
-          else if (w <= 1024) type = 'Tablet';
-          
-          deviceType.textContent = type;
+          deviceType.textContent = getDeviceInfo().type;
         }
         
         // Scale Factor
@@ -560,26 +541,17 @@
       },
       
       cmdList: function(program, displayInterface) {
-        console.log('=== SharedBasicProcessor.cmdList ===');
-        console.log('program:', program);
-        console.log('program.keys():', program.keys());
         const lineNumbers = Array.from(program.keys()).sort((a, b) => a - b);
-        console.log('lineNumbers:', lineNumbers);
-        console.log('lineNumbers.length:', lineNumbers.length);
         
         if (lineNumbers.length === 0) {
-          console.log('No program lines found, displaying message');
           displayInterface.addText('No program lines\n');
         } else {
-          console.log('Found', lineNumbers.length, 'program lines, listing them');
           for (const lineNum of lineNumbers) {
             const command = program.get(lineNum);
             const line = lineNum + ' ' + command + '\n';
-            console.log('Listing line:', JSON.stringify(line));
             displayInterface.addText(line);
           }
         }
-        console.log('=== cmdList complete ===');
       },
       
       cmdRun: function(program, displayInterface) {
@@ -606,7 +578,6 @@
       processLine: function(line, program, displayInterface) {
         const originalLine = line.trim();
         line = line.trim().toUpperCase();
-        console.log('SharedBasicProcessor.processLine:', JSON.stringify(originalLine));
         
         if (!line) return;
         
@@ -616,15 +587,10 @@
           const lineNum = parseInt(lineMatch[1]);
           const command = lineMatch[2];
           
-          console.log('Program line detected:', lineNum, command);
-          console.log('Using program storage:', program);
           if (command) {
             program.set(lineNum, command);
-            console.log('Stored line', lineNum, 'in program. Program now has', program.size, 'lines');
-            console.log('Program keys after storage:', Array.from(program.keys()));
           } else {
             program.delete(lineNum);
-            console.log('Deleted line', lineNum, 'from program');
           }
           return;
         }
@@ -642,6 +608,10 @@
       }
     };
 
+    // ========================================
+    // SIMPLE TRS-80 DISPLAY SYSTEM (KINDLE FALLBACK)
+    // ========================================
+    
     // Simple TRS-80 Display System using real font data
     class SimpleTRS80 {
       constructor() {
@@ -1003,6 +973,10 @@
         }
       }
     }
+    
+    // ========================================
+    // SYSTEM INITIALIZATION
+    // ========================================
     
     // Simple unified initialization
     setTimeout(function() {
