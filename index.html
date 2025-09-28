@@ -136,7 +136,18 @@
               console.log('*** Enter processing complete');
             }
           } else {
-            console.log('*** FALLBACK SYSTEM DETECTED - Main system not available');
+            console.log('*** FALLBACK SYSTEM DETECTED - Using fallback Enter handling');
+            // For fallback, just process Enter through the fallback keyboard system
+            // The fallback keyboard system will handle line processing internally
+            if (window.trs80 && window.trs80.keyboard && window.trs80.keyboard.processKeyInput) {
+              // Sync the input field value with the fallback currentLine
+              const inputValue = e.target.value.trim();
+              if (inputValue && inputValue !== window.trs80.keyboard.currentLine) {
+                console.log('*** Syncing input field to fallback currentLine:', JSON.stringify(inputValue));
+                window.trs80.keyboard.currentLine = inputValue;
+              }
+              window.trs80.keyboard.processKeyInput('Enter');
+            }
           }
           
           // Clear input and buffer
@@ -911,8 +922,26 @@
               }
               
               if (char === 'Enter') {
-                console.log('Enter - currentLine stays:', JSON.stringify(this.currentLine));
-                window.simpleTRS80.addChar(char);
+                console.log('Enter - processing currentLine:', JSON.stringify(this.currentLine));
+                // Process the current line if it exists
+                if (this.currentLine && this.currentLine.trim()) {
+                  console.log('*** Processing line through SharedBasicProcessor:', JSON.stringify(this.currentLine));
+                  if (window.SharedBasicProcessor) {
+                    const displayInterface = {
+                      addChar: function(char) { window.simpleTRS80.addChar(char); },
+                      clearScreen: function() { window.simpleTRS80.clearScreen(); },
+                      setTextColor: function(colorIndex) { window.simpleTRS80.setTextColor(colorIndex); },
+                      addText: function(text) {
+                        for (let i = 0; i < text.length; i++) {
+                          window.simpleTRS80.addChar(text[i]);
+                        }
+                      }
+                    };
+                    window.SharedBasicProcessor.processLine(this.currentLine.trim(), window.trs80.program, displayInterface);
+                  }
+                }
+                this.currentLine = ''; // Clear line after processing
+                window.simpleTRS80.addChar(char); // Add newline to display
                 return;
               }
               
