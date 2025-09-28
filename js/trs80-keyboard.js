@@ -11,10 +11,33 @@ export class TRS80Keyboard {
     this.colorMode = false; // For @ color system
     this.basic = null; // Will be set by main system
     this.currentLine = ''; // Track current input line
+    this.showingPrompt = false; // Track Apple IIe style prompt
     this.setupPhysicalKeyboard();
     this.setupOnScreenKeyboard();
     
     console.log('TRS-80 Keyboard system initialized');
+  }
+  
+  /**
+   * Show Apple IIe style prompt
+   */
+  showPrompt() {
+    if (!this.showingPrompt) {
+      this.display.addChar(']');
+      this.showingPrompt = true;
+      this.display.render();
+    }
+  }
+  
+  /**
+   * Hide Apple IIe style prompt
+   */
+  hidePrompt() {
+    if (this.showingPrompt) {
+      this.display.removeChar(); // Remove the ] character
+      this.showingPrompt = false;
+      this.display.render();
+    }
   }
   
   /**
@@ -186,12 +209,16 @@ export class TRS80Keyboard {
     // Handle special navigation and editing keys
     switch (keyValue) {
       case 'Backspace':
+        // Only allow backspace if there are characters to delete (protect the ] prompt)
         if (this.currentLine.length > 0) {
           this.currentLine = this.currentLine.slice(0, -1);
+          this.display.removeChar();
         }
-        this.display.removeChar();
         break;
       case 'Enter':
+        // Don't hide prompt - just move to new line and process command
+        // The prompt will naturally disappear when we move to the next line
+        
         // Move to new line first, then process BASIC command
         this.display.addChar('\n');
         
@@ -201,28 +228,25 @@ export class TRS80Keyboard {
         if (this.basic && this.currentLine.trim()) {
           console.log('Processing BASIC command:', this.currentLine);
           this.basic.processLine(this.currentLine);
+        } else if (!this.currentLine.trim()) {
+          // Empty line - just processed newline above
+          console.log('Empty line processed');
         } else {
           console.log('No BASIC command to process');
         }
         this.currentLine = ''; // Reset line
+        this.showingPrompt = false; // Reset prompt state since we moved to new line
+        
+        // Show prompt for next input
+        setTimeout(() => {
+          this.showPrompt();
+        }, 10);
         break;
       case 'Tab':
         this.display.addChar('    '); // 4 spaces for tab
         break;
       case 'Escape':
         this.display.clearScreen();
-        break;
-      case 'ArrowUp':
-        this.display.moveCursorUp();
-        break;
-      case 'ArrowDown':
-        this.display.moveCursorDown();
-        break;
-      case 'ArrowLeft':
-        this.display.moveCursorLeft();
-        break;
-      case 'ArrowRight':
-        this.display.moveCursorRight();
         break;
       case ' ':
         this.currentLine += ' '; // Add space to current line for BASIC commands
@@ -308,6 +332,7 @@ export class TRS80Keyboard {
         
         // Handle printable characters and ignore modifier keys
         if (keyValue.length === 1) {
+          // Don't hide prompt when typing - just add characters after the ]
           console.log('Adding character to current line:', keyValue);
           this.currentLine += keyValue;
           console.log('Current line now:', this.currentLine);

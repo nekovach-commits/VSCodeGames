@@ -40,6 +40,11 @@ export class TRS80System {
     // Start animation loop
     this.startAnimationLoop();
     
+    // Show Apple IIe style prompt after system is ready
+    setTimeout(() => {
+      this.keyboard.showPrompt();
+    }, 100);
+    
     console.log('TRS-80 Model 100 system ready');
   }
   
