@@ -169,8 +169,13 @@
         if (char === 'Enter') {
           console.log('=== Enter key - processing line:', JSON.stringify(currentLine));
           
-          // FIRST: Add newline to move cursor down (this is what was missing!)
-          UnifiedDisplay.addChar('\n');
+          // Add newline ONLY for SimpleTRS80 (Kindle) - ES6 system handles this internally
+          if (window.simpleTRS80 && !window.trs80) {
+            console.log('Using SimpleTRS80: adding newline before command processing');
+            UnifiedDisplay.addChar('\n');
+          } else {
+            console.log('Using ES6 system: no extra newline needed');
+          }
           
           if (currentLine.trim()) {
             // Process through SharedBasicProcessor
@@ -181,7 +186,7 @@
               console.log('SharedBasicProcessor not available!');
             }
           } else {
-            console.log('Empty line, already added newline');
+            console.log('Empty line, already handled newline if needed');
           }
           currentLine = ''; // Clear line
           UnifiedDisplay.render();
