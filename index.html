@@ -416,67 +416,103 @@
     // Eliminates duplication between main system and SimpleTRS80
     // ========================================
     window.SharedBasicProcessor = {
+      _vars: {}, // simple variable storage
       // Process BASIC commands using the provided display interface
       processCommand: function(cmd, parts, originalLine, program, displayInterface) {
         switch (cmd) {
           case 'PRINT':
             this.cmdPrint(originalLine, displayInterface);
             break;
-            
+          case 'LET':
+            this.cmdAssignment(originalLine, displayInterface); // LET A=5
+            break;
           case 'COLOR':
             this.cmdColor(parts[1], displayInterface);
             break;
-            
           case 'CLS':
             displayInterface.clearScreen();
             break;
-            
           case 'LIST':
             this.cmdList(program, displayInterface);
             break;
-            
           case 'RUN':
             this.cmdRun(program, displayInterface);
             break;
-            
           case 'NEW':
             this.cmdNew(program, displayInterface);
             break;
-            
           default:
-            displayInterface.addText('?SYNTAX ERROR\n');
+            // Check inline assignment without LET (e.g., A=10)
+            if (/^[A-Z][A-Z0-9]*\s*=/.test(originalLine.trim().toUpperCase())) {
+              this.cmdAssignment('LET ' + originalLine, displayInterface, true);
+            } else {
+              displayInterface.addText('?SYNTAX ERROR\n');
+            }
             break;
         }
       },
-      
+      cmdAssignment: function(originalLine, displayInterface, silent) {
+        // Normalize to remove LET if present
+        let line = originalLine.replace(/^LET\s+/i,'').trim();
+        const m = line.match(/^([A-Z][A-Z0-9]*)\s*=\s*(.*)$/i);
+        if (!m) {
+          if (!silent) displayInterface.addText('?SYNTAX ERROR\n');
+          return;
+        }
+        const name = m[1].toUpperCase();
+        let expr = m[2].trim();
+        // Handle simple numeric or quoted string assignment only
+        if (/^".*"$/.test(expr)) {
+          this._vars[name] = expr.slice(1,-1);
+        } else if (/^\d+$/.test(expr)) {
+          this._vars[name] = parseInt(expr,10);
+        } else if (/^[A-Z][A-Z0-9]*$/.test(expr)) {
+          // variable to variable copy
+            const src = expr.toUpperCase();
+            this._vars[name] = this._vars[src];
+        } else if (/^CHR\$\s*\(\s*\d+\s*\)$/i.test(expr)) {
+            const code = parseInt(expr.match(/\d+/)[0],10);
+            this._vars[name] = this.getCharacterByCode(code);
+        } else {
+          if (!silent) displayInterface.addText('?UNSUPPORTED EXPR\n');
+          return;
+        }
+        if (!silent) displayInterface.addText('OK\n');
+      },
       cmdPrint: function(originalLine, displayInterface) {
         const printMatch = originalLine.match(/^\s*print\s*(.*)/i);
         let text = printMatch ? printMatch[1] : originalLine.substring(5).trim();
-        
-        if (!text) {
-          displayInterface.addText('\n');
-          return;
+        if (!text) { displayInterface.addText('\n'); return; }
+        // Split by commas or semicolons retaining them to mimic BASIC list style
+        const segments = text.split(/(?=,|;)|(?<=,|;)/);
+        let output = '';
+        for (let seg of segments) {
+          seg = seg.trim();
+          if (!seg) continue;
+          if (seg === ',' || seg === ';') { // spacing control - minimal implementation
+            output += ' ';
+            continue;
+          }
+          // CHR$ inline
+          const chrMatch = seg.match(/^CHR\$\s*\(\s*(\d+)\s*\)$/i);
+          if (chrMatch) {
+            output += this.getCharacterByCode(parseInt(chrMatch[1],10));
+            continue;
+          }
+          // Quoted string literal only prints
+          if (/^".*"$/.test(seg)) {
+            output += seg.slice(1,-1);
+            continue;
+          }
+          // Variable reference: do NOT print per requirement (treat as variable token)
+          if (/^[A-Z][A-Z0-9]*$/.test(seg.toUpperCase())) {
+            // intentionally skip output
+            continue;
+          }
+          // Everything else ignored for now
         }
-        
-        // Handle CHR$ function
-        const chrMatch = text.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
-        if (chrMatch) {
-          const charCode = parseInt(chrMatch[1]);
-          const specialChar = this.getCharacterByCode(charCode);
-          displayInterface.addText(specialChar + '\n');
-          return;
-        }
-        
-        // Handle quoted strings
-        if (text.startsWith('"') && text.endsWith('"')) {
-          text = text.slice(1, -1);
-        } else if (text.startsWith("'") && text.endsWith("'")) {
-          text = text.slice(1, -1);
-        }
-        
-        displayInterface.addText(text + '\n');
+        displayInterface.addText(output + '\n');
       },
-      
       cmdColor: function(colorArg, displayInterface) {
         const colorNum = parseInt(colorArg);
         if (!isNaN(colorNum) && colorNum >= 0 && colorNum <= 15) {
@@ -904,18 +940,28 @@
     (function initSystem(){
       const canvas = document.getElementById('retro-canvas');
       const ctx = canvas.getContext('2d');
-      // Create simple system instance
       window.simpleTRS80 = new SimpleTRS80();
-
-      // Diagnostic: draw a test row of smileys once (will not repeat)
+      // existing diagnostic row logic remains
       if (!window._diagRowDrawn) {
         window._diagRowDrawn = true;
-        for (let i = 0; i < 40; i++) {
-          window.simpleTRS80.rows[0] += '\x01';
-        }
+        for (let i = 0; i < 40; i++) { window.simpleTRS80.rows[0] += '\x01'; }
         window.simpleTRS80.render();
-        console.log('Diagnostic row of CHR$(1) drawn for alignment test.');
       }
+      // Basic demo of variable rules:
+      const di = {
+        addText: t=>window.simpleTRS80.addChar(t),
+        clearScreen: ()=>window.simpleTRS80.clearScreen(),
+        setTextColor: c=>window.simpleTRS80.setTextColor(c)
+      };
+      const prog = new Map();
+      const P = window.SharedBasicProcessor;
+      P.processLine('LET A=5', prog, di);
+      P.processLine('LET MSG="HELLO"', prog, di);
+      P.processLine('PRINT A', prog, di);          // should print blank line
+      P.processLine('PRINT "A="', prog, di);       // prints A=
+      P.processLine('PRINT CHR$(1)', prog, di);     // prints smiley
+      P.processLine('PRINT MSG', prog, di);         // suppressed
+      P.processLine('PRINT "DONE"', prog, di);     // prints DONE
     })();
 
     // Simple unified initialization
