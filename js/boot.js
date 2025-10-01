@@ -11,8 +11,10 @@
   const pixelSize = computePixelSize();
   const canvas = document.getElementById('retro-canvas');
   if(canvas){
-    canvas.width = CHAR_COLS*CHAR_W*pixelSize;
-    canvas.height = CHAR_ROWS*CHAR_H*pixelSize;
+    // Add 20px padding (10px border on each side) so characters don't get clipped
+    const BORDER_PADDING = 20;
+    canvas.width = CHAR_COLS*CHAR_W*pixelSize + BORDER_PADDING;
+    canvas.height = CHAR_ROWS*CHAR_H*pixelSize + BORDER_PADDING;
     canvas.dataset.pixelSize = pixelSize;
   }
   const params = new URLSearchParams(window.location.search);
