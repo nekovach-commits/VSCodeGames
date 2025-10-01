@@ -18,7 +18,9 @@
       this.cursorX=0; this.cursorY=0;
       this.buffer = Array.from({length: ROWS},()=>Array(COLS).fill(' '));
       this.ctx.imageSmoothingEnabled=false;
-      this.fullRedraw();
+  this.fullRedraw();
+  // Initial READY banner similar to advanced system
+  this.printText('READY\n');
       window.addEventListener('keydown', e=>this.onKey(e));
       console.log('SimpleTRS80 fallback active');
     }
@@ -46,7 +48,8 @@
       }
     }
     fullRedraw(){
-      this.ctx.fillStyle='black';
+      // White background for Kindle readability
+      this.ctx.fillStyle='#ffffff';
       this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
       for(let y=0;y<this.rows;y++) for(let x=0;x<this.cols;x++) this.drawCell(x,y,this.buffer[y][x]);
     }

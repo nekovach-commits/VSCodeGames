@@ -15,7 +15,9 @@
     canvas.height = CHAR_ROWS*CHAR_H*pixelSize;
     canvas.dataset.pixelSize = pixelSize;
   }
-  const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent);
+  const params = new URLSearchParams(window.location.search);
+  const forceSimple = params.get('mode') === 'simple';
+  const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple;
   function loadScript(src, type='text/javascript'){
     return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); });
   }
