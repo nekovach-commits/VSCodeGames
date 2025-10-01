@@ -47,6 +47,15 @@ export class TRS80System {
     }, 100);
     
     console.log('TRS-80 Model 100 system ready');
+    // Initial greeting so screen isn't empty
+    try {
+      this.display.addChar('R');
+      this.display.addChar('E');
+      this.display.addChar('A');
+      this.display.addChar('D');
+      this.display.addChar('Y');
+      this.display.addChar('\n');
+    } catch(e){ console.warn('Failed to write READY message', e); }
   }
   
   /**

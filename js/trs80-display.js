@@ -14,45 +14,13 @@ export class TRS80Display {
     // Debug: Log initial canvas size
     console.log(`Module init - canvas size: ${this.canvas.width}×${this.canvas.height}`);
     
-    // Check if canvas was already sized by inline script
-    if (this.canvas.width === 300 && this.canvas.height === 150) {
-      console.log('Canvas still at default size, applying module sizing...');
-      
-      // Detect device and set optimal canvas size
-      const screenWidth = window.screen.width;
-      const screenHeight = window.screen.height;
-      console.log(`Module detection: ${screenWidth}×${screenHeight}`);
-      
-      let pixelSize = 4; // Default desktop
-      if (screenWidth === 636 && screenHeight === 848) {
-        pixelSize = 2; // Kindle ColorSoft
-        console.log('✓ MODULE: Kindle ColorSoft detected - using 2x2 pixel scaling');
-      } else if (screenWidth <= 768) {
-        pixelSize = 2; // Mobile
-        console.log('✓ MODULE: Mobile device detected - using 2x2 pixel scaling');
-      } else {
-        console.log('✓ MODULE: Desktop detected - using 4x4 pixel scaling');
-      }
-      
-      // Calculate canvas dimensions: 40 chars × 10 rows
-      const canvasWidth = (40 * 6 * pixelSize) + 20; // 40 chars, 6px wide, + border
-      const canvasHeight = (10 * 8 * pixelSize) + 20; // 10 rows, 8px tall, + border
-      
-      console.log(`MODULE: Calculated dimensions: ${canvasWidth}×${canvasHeight} with ${pixelSize}x${pixelSize} pixels`);
-      
-      // Set canvas dimensions explicitly
-      this.canvas.width = canvasWidth;
-      this.canvas.height = canvasHeight;
-      
-      console.log(`✓ MODULE: Canvas set to: ${this.canvas.width}×${this.canvas.height}`);
-    } else {
-      console.log('✓ Canvas already sized by inline script:', this.canvas.width + '×' + this.canvas.height);
-    }
-    
-    // Determine pixel size from canvas dimensions
-    const actualWidth = this.canvas.width - 20; // Subtract border
-    const charPixelWidth = actualWidth / 40 / 6; // 40 chars, 6 pixels wide
-    this.pixelSize = Math.round(charPixelWidth);
+    // Assume canvas pre-sized by boot loader for full 40x20 grid (no legacy 10-row logic)
+    // Derive pixel size directly from width/height ratios
+    const cols = TRS80_CONFIG.SCREEN_WIDTH;      // 40
+    const rows = TRS80_CONFIG.SCREEN_HEIGHT;     // 20
+    // Estimate pixel size ignoring border (border drawing will not consume logical space now)
+    this.pixelSize = Math.floor(this.canvas.width / (cols * 6));
+    if (this.pixelSize < 1) this.pixelSize = 1;
     this.charWidth = 6 * this.pixelSize;
     this.charHeight = 8 * this.pixelSize;
     
