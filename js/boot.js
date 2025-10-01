@@ -17,7 +17,8 @@
   }
   const params = new URLSearchParams(window.location.search);
   const forceSimple = params.get('mode') === 'simple';
-  const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple;
+  const forceSvg = params.get('mode') === 'svg';
+  const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple || forceSvg;
   function loadScript(src, type='text/javascript'){
     return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); });
   }
@@ -33,7 +34,16 @@
           return;
         }
       }
-      // Fallback path or if advanced failed
+      // Try SVG fallback first for Kindle, then canvas fallback
+      if(forceSvg || /Kindle|ColorSoft/i.test(navigator.userAgent)){
+        await loadScript('js/svg-trs80.js');
+        if(window.SvgTRS80){ 
+          const svg = new window.SvgTRS80(canvas, pixelSize);
+          window.simpleTRS80 = svg; // Compatibility alias for BASIC
+          return; 
+        }
+      }
+      // Canvas fallback
       await loadScript('js/simple-trs80.js');
       if(window.SimpleTRS80){ new window.SimpleTRS80(canvas, pixelSize); }
     } catch(e){
