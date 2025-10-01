@@ -7,6 +7,7 @@ import { TRS80_CONFIG } from './trs80-config.js';
 import { TRS80Display } from './trs80-display.js';
 import { TRS80Keyboard } from './trs80-keyboard.js';
 import { TRS80Basic } from './trs80-basic.js';
+import * as TRS80Font from './trs80-font.js';
 
 export class TRS80System {
   constructor() {
@@ -221,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
       display: system.display,
       keyboard: system.keyboard,
       basic: system.basic,
+      font: TRS80Font,
       system: system
     };
     

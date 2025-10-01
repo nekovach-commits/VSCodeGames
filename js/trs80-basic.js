@@ -160,11 +160,19 @@ export class TRS80Basic {
 
     // Handle quoted strings and variables
     console.log('About to evaluate expression:', JSON.stringify(args));
+    console.log('Testing CHR$ regex on:', args);
+    const chrTest = args.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
+    console.log('CHR$ regex match result:', chrTest);
+    
     let output = this.evaluateExpression(args);
-    console.log('Expression evaluated to:', JSON.stringify(output));
+    console.log('Expression evaluated to:', JSON.stringify(output), 'type:', typeof output);
+    
+    // Convert to string if needed
+    output = String(output);
     
     // Add each character individually to the display
     for (let i = 0; i < output.length; i++) {
+      console.log('Adding character:', JSON.stringify(output[i]), 'char code:', output.charCodeAt(i));
       this.display.addChar(output[i]);
     }
     this.display.addChar('\n'); // Add newline separately
@@ -355,6 +363,13 @@ export class TRS80Basic {
   evaluateExpression(expr) {
     expr = expr.trim();
     
+    // Handle CHR$ function
+    const chrMatch = expr.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
+    if (chrMatch) {
+      const charCode = parseInt(chrMatch[1]);
+      return this.getCharacterByCode(charCode);
+    }
+    
     // Handle quoted strings
     if (expr.startsWith('"') && expr.endsWith('"')) {
       return expr.slice(1, -1);
@@ -372,5 +387,36 @@ export class TRS80Basic {
     
     // Default to treating as string
     return expr;
+  }
+  
+  /**
+   * Get special character by character code (for CHR$ function)
+   */
+  getCharacterByCode(code) {
+    // For codes 1-31, return the actual character code as a special marker
+    // The display system will need to handle these specially
+    if (code >= 1 && code <= 31) {
+      return String.fromCharCode(code);
+    }
+    
+    // For regular ASCII characters (32-126), return them normally
+    if (code >= 32 && code <= 126) {
+      return String.fromCharCode(code);
+    }
+    
+    // For extended graphics characters (128+), map to control codes
+    const extendedChars = {
+      219: String.fromCharCode(1),   // Solid block -> CHR$(1)
+      221: String.fromCharCode(2),   // Left half block -> CHR$(2)
+      222: String.fromCharCode(3),   // Right half block -> CHR$(3)
+      223: String.fromCharCode(4),   // Lower half block -> CHR$(4)
+      220: String.fromCharCode(5)    // Upper half block -> CHR$(5)
+    };
+    
+    if (extendedChars[code]) {
+      return extendedChars[code];
+    }
+    
+    return '?'; // Unknown character
   }
 }

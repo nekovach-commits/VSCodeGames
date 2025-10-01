@@ -32,8 +32,8 @@
         const h = window.screen.height;
         
         // Specific device resolutions - conservative for small screens
-        if (w === 636 && h === 848) return { type: 'Kindle ColorSoft', pixelSize: 1 };
-        if (w === 930 && h === 1240) return { type: 'Kindle Scribe', pixelSize: 2 };
+        if (w === 636 && h === 848) return { type: 'Kindle ColorSoft', pixelSize: 2 };
+        if (w === 930 && h === 1240) return { type: 'Kindle Scribe', pixelSize: 3 };
         
         // General size categories - proper scaling for web
         if (w <= 768) return { type: 'Mobile', pixelSize: 1 };
