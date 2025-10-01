@@ -16,8 +16,9 @@
     
     <div style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
       💡 <strong>Kindle Users:</strong> Type in the input box above - text will appear on TRS-80 screen<br>
-      🎨 <strong>Colors:</strong> Use COLOR 0-7 (Black,Red,Green,Yellow,Blue,Magenta,Cyan,White)<br>
-      📝 <strong>BASIC:</strong> Try: PRINT "HELLO", COLOR 1, COLOR 2, PRINT "GREEN TEXT"<br>
+      🖥️ <strong>E-ink Optimized:</strong> High contrast black/white display for better readability<br>
+      📝 <strong>BASIC Commands:</strong> PRINT "HELLO", CLS, LIST, COLOR 1, LET A=5<br>
+      ⚡ <strong>Canvas Mode:</strong> Optimized for e-ink displays with crisp pixel rendering<br>
       <span id="status-msg" style="color: #006600;">System Status: Loading...</span>
     </div>
     
@@ -210,8 +211,12 @@
           }
           
           if (currentLine.trim()) {
-            // Process through SharedBasicProcessor
-            if (window.SharedBasicProcessor) {
+            // Process command through appropriate BASIC system
+            if (window.trs80 && window.trs80.basic) {
+              // Advanced system with TRS80Basic
+              window.trs80.basic.processLine(currentLine.trim());
+            } else if (window.SharedBasicProcessor) {
+              // Simple system with SharedBasicProcessor
               window.SharedBasicProcessor.processLine(currentLine.trim(), UnifiedProgram, UnifiedDisplay);
             }
           } else {
@@ -404,7 +409,6 @@
     console.log('About to load TRS-80 main module...');
   </script>
 
-  <script src="js/shared-basic.js"></script>
   <script src="js/boot.js"></script>
 </body>
 </html>
