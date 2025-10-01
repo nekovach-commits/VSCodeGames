@@ -17,10 +17,16 @@
       this.cols=COLS; this.rows=ROWS;
       this.cursorX=0; this.cursorY=0;
       this.buffer = Array.from({length: ROWS},()=>Array(COLS).fill(' '));
-      this.ctx.imageSmoothingEnabled=false;
+  this.ctx.imageSmoothingEnabled=false;
+  this.textColor = '#0066cc'; // Light blue similar to advanced default
+  this.bgColor = '#ffffff';
+  this.cellBg = '#ffffff'; // keep cells white (no black block look)
+  this.cursorVisible = true;
+  this.lastBlink = Date.now();
   this.fullRedraw();
   // Initial READY banner similar to advanced system
   this.printText('READY\n');
+  this.fullRedraw();
       window.addEventListener('keydown', e=>this.onKey(e));
       console.log('SimpleTRS80 fallback active');
     }
@@ -58,15 +64,24 @@
       const pxSize=this.pixelSize;
       const x0=cx*CHAR_W*pxSize; const y0=cy*CHAR_H*pxSize;
       // wipe cell
-      this.ctx.fillStyle='black';
+      this.ctx.fillStyle=this.cellBg;
       this.ctx.fillRect(x0,y0,CHAR_W*pxSize,CHAR_H*pxSize);
-      this.ctx.fillStyle='lime';
+      this.ctx.fillStyle=this.textColor;
       for(let row=0; row<CHAR_H; row++){
         const bits = glyph[row] || 0;
         for(let col=0; col<CHAR_W; col++){
           if(bits & (1 << (5-col))){
             this.ctx.fillRect(x0+col*pxSize, y0+row*pxSize, pxSize, pxSize);
           }
+        }
+      }
+      // simple blinking cursor if at this cell
+      if(this.cursorX===cx && this.cursorY===cy){
+        const now=Date.now();
+        if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
+        if(this.cursorVisible){
+          this.ctx.fillStyle=this.textColor;
+          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
         }
       }
     }
