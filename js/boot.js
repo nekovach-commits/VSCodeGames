@@ -20,6 +20,7 @@
   const params = new URLSearchParams(window.location.search);
   const forceSimple = params.get('mode') === 'simple';
   const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple;
+  const isOldBrowser = !window.Promise || !window.fetch || typeof Symbol === 'undefined';
   function loadScript(src, type='text/javascript'){
     return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); });
   }
@@ -35,7 +36,8 @@
     console.log('Canvas:', canvas ? canvas.width + 'x' + canvas.height : 'NOT FOUND');
     
     try {
-      if(!isKindle){
+      // Try advanced system only for modern browsers that support ES6
+      if(!isKindle && !isOldBrowser){
         console.log('Loading advanced system for desktop...');
         try {
           const mod = await import('./trs80-main.js');
@@ -56,7 +58,13 @@
           console.log('Falling back to simple system...');
         }
       } else {
-        console.log('Kindle detected, skipping advanced system');
+        if(isKindle) {
+          console.log('Kindle detected - using simple canvas system');
+        } else if(isOldBrowser) {
+          console.log('Older browser detected - using simple canvas system');
+        } else {
+          console.log('Using simple system');
+        }
       }
       // Load font data first - required by all renderers
       console.log('Loading font data...');
