@@ -3,10 +3,10 @@
  * Handles all screen rendering and display management
  */
 
-import { TRS80_CONFIG } from './trs80-config.js';
-import { drawChar } from './trs80-font.js';
+// Use global references instead of imports
+// Dependencies: window.TRS80_CONFIG, window.drawChar
 
-export class TRS80Display {
+window.TRS80Display = class TRS80Display {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');

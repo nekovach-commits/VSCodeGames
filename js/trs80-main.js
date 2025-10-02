@@ -1,15 +1,32 @@
 /**
  * TRS-80 Model 100 Main System
  * Coordinates all subsystems and manages the overall emulation
+ * Non-module version for compatibility with old browsers
  */
 
-import { TRS80_CONFIG } from './trs80-config.js';
-import { TRS80Display } from './trs80-display.js';
-import { TRS80Keyboard } from './trs80-keyboard.js';
-import { TRS80Basic } from './trs80-basic.js';
-import * as TRS80Font from './trs80-font.js';
-
-export class TRS80System {
+// Wait for dependencies to load
+(function() {
+  'use strict';
+  
+  // Check if all dependencies are loaded
+  function checkDependencies() {
+    return window.TRS80_CONFIG && 
+           window.TRS80Display && 
+           window.TRS80Keyboard && 
+           window.TRS80Basic && 
+           window.FONT_DATA;
+  }
+  
+  function initSystem() {
+    if (!checkDependencies()) {
+      console.log('Waiting for dependencies...');
+      setTimeout(initSystem, 100);
+      return;
+    }
+    
+    console.log('All dependencies loaded, creating TRS80System class...');
+    
+    window.TRS80System = class TRS80System {
   constructor() {
     console.log('TRS-80 Model 100 system starting...');
     
@@ -218,28 +235,11 @@ export class TRS80System {
       bufferSize: this.display.textBuffer.length
     };
   }
-}
-
-// Initialize system when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM loaded, initializing TRS-80 system...');
-  try {
-    const system = new TRS80System();
+    }; // End of TRS80System class
     
-    // Expose system globally for input handlers
-    window.trs80 = {
-      display: system.display,
-      keyboard: system.keyboard,
-      basic: system.basic,
-      font: TRS80Font,
-      system: system
-    };
-    
-    // System ready - no startup message to match SimpleTRS80 fallback
-    
-    console.log('✓ TRS-80 system fully initialized and exposed globally');
-    console.log('✓ BASIC available:', !!system.basic);
-  } catch (error) {
-    console.error('✗ Failed to initialize TRS-80 system:', error);
+    console.log('✓ TRS80System class created and available globally');
   }
-});
+  
+  // Start the initialization check
+  initSystem();
+})(); // End of IIFE

@@ -21,7 +21,7 @@ function getOptimalPixelSize() {
 const OPTIMAL_PIXEL_SIZE = getOptimalPixelSize();
 
 // TRS-80 Model 100 Hardware Specifications
-export const TRS80_CONFIG = {
+window.TRS80_CONFIG = {
   // === DISPLAY GRID SPECIFICATIONS ===
   SCREEN_WIDTH: 40,          // Characters per row
   SCREEN_HEIGHT: 20,         // Visible rows (extended from original 10)
@@ -74,7 +74,7 @@ export const TRS80_CONFIG = {
 };
 
 // Device detection configuration for responsive keyboard
-export const DEVICE_PATTERNS = {
+window.DEVICE_PATTERNS = {
   // Enhanced regex to catch more Kindle variations and ColorSoft specifically
   MOBILE_REGEX: /Mobi|Android|iPhone|iPad|Kindle|Silk|ColorSoft|KFOT|KFTT|KFJWI|KFJWA|KFSOWI|KFTHWI|KFTHWA|KFAPWI|KFAPWA/i,
   MOBILE_WIDTH_THRESHOLD: 900,  // Increased from 800 to catch more tablet-sized devices
@@ -85,7 +85,7 @@ export const DEVICE_PATTERNS = {
 };
 
 // Enhanced device detection function
-export function detectKindleColorSoft() {
+window.detectKindleColorSoft = function() {
   const ua = navigator.userAgent;
   const width = window.screen.width || window.innerWidth;
   const height = window.screen.height || window.innerHeight;

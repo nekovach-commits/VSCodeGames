@@ -36,34 +36,38 @@
     console.log('Canvas:', canvas ? canvas.width + 'x' + canvas.height : 'NOT FOUND');
     
     try {
-      // Try advanced system only for modern browsers that support ES6
-      if(!isKindle && !isOldBrowser){
+      // Skip ES6 entirely for Kindle and old browsers
+      if(isKindle || isOldBrowser){
+        if(isKindle) {
+          console.log('Kindle detected - using simple canvas system');
+        } else {
+          console.log('Older browser detected - using simple canvas system');
+        }
+      } else {
+        // Only try advanced system for modern browsers
         console.log('Loading advanced system for desktop...');
         try {
-          const mod = await import('./trs80-main.js');
-          console.log('trs80-main.js loaded, module:', mod);
-          if(mod && mod.TRS80System){
+          // Load dependencies first
+          await loadScript('js/trs80-config.js');
+          await loadScript('js/trs80-font.js');
+          await loadScript('js/trs80-display.js');
+          await loadScript('js/trs80-keyboard.js');
+          await loadScript('js/trs80-basic.js');
+          
+          // Load the main system as a regular script (not module) for better compatibility
+          await loadScript('js/trs80-main.js');
+          if(window.TRS80System){
             console.log('Creating TRS80System instance...');
-            const sys = new mod.TRS80System();
-            window.TRS80System = mod.TRS80System; // expose class
-            // global alias similar to previous pattern
-            window.trs80 = window.trs80 || { display: sys.display, keyboard: sys.keyboard, basic: sys.basic, font: mod, system: sys };
+            const sys = new window.TRS80System();
+            window.trs80 = window.trs80 || { display: sys.display, keyboard: sys.keyboard, basic: sys.basic, system: sys };
             console.log('✓ Advanced system loaded and running');
             return;
           } else {
-            console.error('TRS80System class not found in module');
+            console.error('TRS80System class not found');
           }
         } catch(advancedError) {
           console.error('Advanced system failed to load:', advancedError);
           console.log('Falling back to simple system...');
-        }
-      } else {
-        if(isKindle) {
-          console.log('Kindle detected - using simple canvas system');
-        } else if(isOldBrowser) {
-          console.log('Older browser detected - using simple canvas system');
-        } else {
-          console.log('Using simple system');
         }
       }
       // Load font data first - required by all renderers
