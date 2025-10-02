@@ -61,30 +61,12 @@
       window.addEventListener('keydown', e=>this.onKey(e));
       this.setupInputHandling();
       
-      // Emergency Kindle debugging
-      console.log('=== KINDLE DEBUG ===');
-      console.log('Font data available:', !!window.FONT_DATA);
-      console.log('Font data keys:', window.FONT_DATA ? Object.keys(window.FONT_DATA).slice(0, 10) : 'NONE');
-      console.log('Test glyph for R:', getGlyph('R'));
-      console.log('Canvas context:', !!this.ctx);
-      console.log('Device and canvas info:', {
+      // Basic info logging
+      console.log('SimpleTRS80 active:', {
         isKindle: this.isKindle,
         canvasSize: this.canvas.width + 'x' + this.canvas.height,
-        pixelSize: this.pixelSize,
-        colors: { text: this.textColor, bg: this.bgColor }
+        pixelSize: this.pixelSize
       });
-      
-      // Test draw something immediately - make it huge and visible
-      console.log('Drawing test elements...');
-      this.ctx.fillStyle = '#000000'; // Pure black
-      this.ctx.fillRect(10, 10, 200, 50); // Big black rectangle
-      this.ctx.fillStyle = '#ffffff'; // White text on black
-      this.ctx.fillRect(20, 20, 180, 30); // White rectangle inside
-      this.ctx.fillStyle = '#000000'; // Black border
-      this.ctx.strokeRect(0, 0, this.canvas.width-1, this.canvas.height-1);
-      console.log('Test elements drawn - you should see black rectangles');
-      
-      console.log('SimpleTRS80 canvas renderer initialized for', this.isKindle ? 'Kindle e-ink' : 'standard display');
     }
     onKey(e){
       if(e.key.length===1){ this.putChar(e.key); }
@@ -131,19 +113,9 @@
       }
     }
     drawCell(cx,cy,ch){
-      if(ch !== ' ') {
-        console.log(`DRAW: '${ch}' at (${cx},${cy})`);
-      }
-      
       const glyph=getGlyph(ch);
       const pxSize=this.pixelSize;
       const x0=cx*CHAR_W*pxSize; const y0=cy*CHAR_H*pxSize;
-      
-      if(ch !== ' ') {
-        console.log('Glyph:', glyph);
-        console.log('Position:', x0, y0, 'Size:', pxSize);
-        console.log('Text color:', this.textColor);
-      }
       
       // Clear cell background
       this.ctx.fillStyle=this.cellBg;
@@ -154,7 +126,6 @@
       
       // Draw character pixels with high contrast
       this.ctx.fillStyle=this.textColor;
-      let pixelsDrawn = 0;
       for(let row=0; row<CHAR_H; row++){
         const bits = glyph[row] || 0;
         for(let col=0; col<CHAR_W; col++){
@@ -163,15 +134,7 @@
             const px = Math.floor(x0+col*pxSize);
             const py = Math.floor(y0+row*pxSize);
             this.ctx.fillRect(px, py, pxSize, pxSize);
-            pixelsDrawn++;
           }
-        }
-      }
-      
-      if(ch !== ' ') {
-        console.log('Drew', pixelsDrawn, 'pixels for', ch);
-        if(pixelsDrawn === 0) {
-          console.error('ERROR: No pixels drawn for character', ch);
         }
       }
       
