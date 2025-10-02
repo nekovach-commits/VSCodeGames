@@ -23,283 +23,30 @@
     </div>
     
     <script>
-      // ========================================
-      // DEVICE DETECTION & PIXEL SCALING
-      // ========================================
-      
-      // Unified device detection and pixel size calculation
-      function getDeviceInfo() {
+      // Simple device detection for canvas sizing
+      function getPixelSize() {
         const w = window.screen.width;
         const h = window.screen.height;
         
-        // Specific device resolutions - conservative for small screens
-        if (w === 636 && h === 848) return { type: 'Kindle ColorSoft', pixelSize: 2 };
-        if (w === 930 && h === 1240) return { type: 'Kindle Scribe', pixelSize: 3 };
+        // Kindle devices - conservative sizing
+        if (w === 636 && h === 848) return 2; // Kindle ColorSoft
+        if (w === 930 && h === 1240) return 3; // Kindle Scribe
         
-        // General size categories - proper scaling for web
-        if (w <= 768) return { type: 'Mobile', pixelSize: 1 };
-        if (w <= 1024) return { type: 'Tablet', pixelSize: 2 };
-        return { type: 'Desktop', pixelSize: 4 };  // Back to 4x for proper retro look
+        // General categories
+        if (w <= 768) return 1;   // Mobile
+        if (w <= 1024) return 2; // Tablet
+        return 4; // Desktop - proper retro scaling
       }
       
-      function getPixelSize() {
-        return getDeviceInfo().pixelSize;
-      }
-      
-      // Immediate canvas sizing - runs before modules load
+      // Set canvas size immediately
       const canvas = document.getElementById('retro-canvas');
       const pixelSize = getPixelSize();
-      
-      // Optimized canvas size for perfect 6x8 character fit
       const charArea = { width: 40 * 6 * pixelSize, height: 20 * 8 * pixelSize };
-      const border = 10; // 10px border on each side
-      const width = charArea.width + (border * 2);
-      const height = charArea.height + (border * 2);
+      const border = 10;
+      canvas.width = charArea.width + (border * 2);
+      canvas.height = charArea.height + (border * 2);
       
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Debug: Show what we're working with
-      console.log('DEBUG: pixelSize =', pixelSize);
-      console.log('DEBUG: charArea =', charArea);
-      console.log('DEBUG: canvas size =', width, 'x', height);
-      console.log('DEBUG: Expected chars = 40x20');
-      console.log('DEBUG: Actual char size = 6x8 pixels each');
-      console.log('✓ GRID: 40×20 chars, 6×8 pixels each, scale=' + pixelSize);
-      
-      // Kindle Input Handler
-      const kindleInput = document.getElementById('kindle-input');
-      // Unified input handling - works same way for all systems
-      let currentLine = '';
-      let inputBuffer = '';
-      let showingPrompt = false;
-
-      // ========================================
-      // APPLE IIE STYLE PROMPT SYSTEM
-      // ========================================
-      
-      function showPrompt() {
-        if (!showingPrompt) {
-          UnifiedDisplay.addChar(']');
-          showingPrompt = true;
-          UnifiedDisplay.render();
-        }
-      }
-      
-      function hidePrompt() {
-        if (showingPrompt) {
-          // Remove the ] character by sending backspace
-          UnifiedDisplay.addChar('Backspace');
-          showingPrompt = false;
-          UnifiedDisplay.render();
-        }
-      }
-
-      // ========================================
-      // UNIFIED DISPLAY ABSTRACTION LAYER
-      // ========================================
-      
-      // Helper function to get ES6 display if available
-      function getES6Display() {
-        return window.trs80 && window.trs80.display ? window.trs80.display : null;
-      }
-      
-      // Universal display interface - auto-detects which backend to use
-      const UnifiedDisplay = {
-        addChar: function(char) {
-          if (window.simpleTRS80) {
-            window.simpleTRS80.addChar(char);
-          } else {
-            const es6Display = getES6Display();
-            if (es6Display && es6Display.addChar) {
-              es6Display.addChar(char);
-            }
-          }
-        },
-        clearScreen: function() {
-          if (window.simpleTRS80) {
-            window.simpleTRS80.clearScreen();
-          } else {
-            const es6Display = getES6Display();
-            if (es6Display && es6Display.clearScreen) {
-              es6Display.clearScreen();
-            }
-          }
-        },
-        setTextColor: function(colorIndex) {
-          if (window.simpleTRS80) {
-            window.simpleTRS80.setTextColor(colorIndex);
-          } else {
-            const es6Display = getES6Display();
-            if (es6Display && es6Display.setTextColor) {
-              es6Display.setTextColor(colorIndex);
-            }
-          }
-        },
-        addText: function(text) {
-          for (let i = 0; i < text.length; i++) {
-            this.addChar(text[i]);
-          }
-        },
-        render: function() {
-          const es6Display = getES6Display();
-          if (es6Display && es6Display.render) {
-            es6Display.render();
-          }
-          // SimpleTRS80 renders automatically
-        }
-      };
-
-      // ========================================
-      // UNIFIED PROGRAM STORAGE ABSTRACTION
-      // ========================================
-      
-      // Universal program storage - auto-detects which storage to use
-      const UnifiedProgram = {
-        storage: null,
-        getStorage: function() {
-          if (!this.storage) {
-            if (window.trs80 && window.trs80.program) {
-              this.storage = window.trs80.program;
-            } else {
-              this.storage = new Map();
-            }
-          }
-          return this.storage;
-        },
-        set: function(lineNum, command) {
-          this.getStorage().set(lineNum, command);
-        },
-        get: function(lineNum) {
-          return this.getStorage().get(lineNum);
-        },
-        delete: function(lineNum) {
-          this.getStorage().delete(lineNum);
-        },
-        clear: function() {
-          this.getStorage().clear();
-        },
-        keys: function() {
-          return this.getStorage().keys();
-        },
-        get size() {
-          return this.getStorage().size;
-        }
-      };
-
-      // ========================================
-      // UNIFIED INPUT PROCESSING
-      // ========================================
-      
-      // Unified input processing
-      function processCharacter(char) {
-        if (char === 'Backspace') {
-          // Only allow backspace if there are characters to delete (protect the ] prompt)
-          if (currentLine.length > 0) {
-            currentLine = currentLine.slice(0, -1);
-            UnifiedDisplay.addChar(char);
-          }
-          return;
-        }
-
-        if (char === 'Enter') {
-          // Don't hide prompt - just move to new line and let it naturally disappear
-          
-          // Add newline ONLY for SimpleTRS80 (Kindle) - ES6 system handles this internally
-          if (window.simpleTRS80 && !window.trs80) {
-            UnifiedDisplay.addChar('\n');
-          }
-          
-          if (currentLine.trim()) {
-            // Process command through appropriate BASIC system
-            if (window.trs80 && window.trs80.basic) {
-              // Advanced system with TRS80Basic
-              window.trs80.basic.processLine(currentLine.trim());
-            } else if (window.SharedBasicProcessor) {
-              // Simple system with SharedBasicProcessor
-              window.SharedBasicProcessor.processLine(currentLine.trim(), UnifiedProgram, UnifiedDisplay);
-            }
-          } else {
-            // Empty line - just add newline and show prompt again
-            if (window.simpleTRS80 && !window.trs80) {
-              // Already added newline above for Kindle
-            } else {
-              UnifiedDisplay.addChar('\n');
-            }
-          }
-          
-          currentLine = ''; // Clear line
-          showingPrompt = false; // Reset prompt state since we moved to new line
-          showPrompt(); // Show prompt for next input
-          UnifiedDisplay.render();
-          return;
-        }
-
-        // Regular character - don't hide prompt when typing, just add characters after ]
-        if (char.length === 1) {
-          currentLine += char;
-          UnifiedDisplay.addChar(char);
-        }
-        UnifiedDisplay.render();
-      }
-      
-      // ========================================
-      // INPUT EVENT HANDLERS
-      // ========================================
-      
-      kindleInput.addEventListener('input', function(e) {
-        const newValue = e.target.value;
-        
-        // Find what was added (handle typing and pasting)
-        if (newValue.length > inputBuffer.length) {
-          const addedText = newValue.slice(inputBuffer.length);
-          // Process each character through unified system
-          for (let char of addedText) {
-            processCharacter(char);
-          }
-        }
-        
-        // Find what was removed (backspace)
-        if (newValue.length < inputBuffer.length) {
-          const removedCount = inputBuffer.length - newValue.length;
-          for (let i = 0; i < removedCount; i++) {
-            processCharacter('Backspace');
-          }
-        }
-        
-        // Clear the input field to prevent duplicate display
-        setTimeout(() => {
-          e.target.value = '';
-          inputBuffer = '';
-        }, 50);
-        
-        inputBuffer = newValue;
-      });
-
-      // Handle Enter key specifically for command execution
-      kindleInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          const currentInput = e.target.value.trim();
-          if (currentInput) {
-            // Set the current line and process Enter
-            currentLine = currentInput;
-            processCharacter('Enter');
-          } else {
-            processCharacter('Enter');
-          }
-          
-          // Clear input field
-          e.target.value = '';
-          inputBuffer = '';
-          e.preventDefault();
-        } else if (e.key === 'Backspace') {
-          // Handle backspace directly since input event might not fire reliably on Kindle
-          if (currentLine.length > 0) {
-            currentLine = currentLine.slice(0, -1);
-            UnifiedDisplay.addChar('Backspace');
-          }
-        }
-      });
+      console.log('Canvas sized:', canvas.width + 'x' + canvas.height, 'for pixel scale', pixelSize);
     </script>
     
     <div id="keyboard-area" style="background: #ffffff !important; color: #000000 !important;">
