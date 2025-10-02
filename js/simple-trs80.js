@@ -73,7 +73,11 @@
   // Initial READY banner similar to advanced system
   this.printText('READY\n');
   this.fullRedraw();
-      window.addEventListener('keydown', e=>this.onKey(e));
+      
+      // Only set up window keydown for non-Kindle devices to avoid double input
+      if(!this.isKindle) {
+        window.addEventListener('keydown', e=>this.onKey(e));
+      }
       this.setupInputHandling();
       
       // Kindle-specific canvas setup
@@ -198,13 +202,14 @@
         // Handle input events from Kindle input field
         kindleInput.addEventListener('input', (e) => {
           const newValue = e.target.value;
-          console.log('Kindle input:', newValue);
+          console.log('🔹 Kindle input event - value:', newValue, 'buffer:', inputBuffer);
           
           // Find what was added (handle typing and pasting)
           if (newValue.length > inputBuffer.length) {
             const addedText = newValue.slice(inputBuffer.length);
+            console.log('🔹 Added text:', addedText);
             for (let char of addedText) {
-              console.log('Processing char:', char);
+              console.log('🔹 Processing char:', char);
               currentLine += char;
               this.putChar(char);
             }
