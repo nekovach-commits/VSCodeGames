@@ -36,39 +36,16 @@
     console.log('Canvas:', canvas ? canvas.width + 'x' + canvas.height : 'NOT FOUND');
     
     try {
-      // Skip ES6 entirely for Kindle and old browsers
-      if(isKindle || isOldBrowser){
-        if(isKindle) {
-          console.log('Kindle detected - using simple canvas system');
-        } else {
-          console.log('Older browser detected - using simple canvas system');
-        }
+      // Skip advanced system entirely for Kindle and old browsers - go straight to simple system
+      if(isKindle) {
+        console.log('Kindle detected - skipping advanced system, loading simple canvas system');
+      } else if(isOldBrowser) {
+        console.log('Older browser detected - skipping advanced system, loading simple canvas system');
       } else {
-        // Only try advanced system for modern browsers
-        console.log('Loading advanced system for desktop...');
-        try {
-          // Load dependencies first
-          await loadScript('js/trs80-config.js');
-          await loadScript('js/trs80-font.js');
-          await loadScript('js/trs80-display.js');
-          await loadScript('js/trs80-keyboard.js');
-          await loadScript('js/trs80-basic.js');
-          
-          // Load the main system as a regular script (not module) for better compatibility
-          await loadScript('js/trs80-main.js');
-          if(window.TRS80System){
-            console.log('Creating TRS80System instance...');
-            const sys = new window.TRS80System();
-            window.trs80 = window.trs80 || { display: sys.display, keyboard: sys.keyboard, basic: sys.basic, system: sys };
-            console.log('✓ Advanced system loaded and running');
-            return;
-          } else {
-            console.error('TRS80System class not found');
-          }
-        } catch(advancedError) {
-          console.error('Advanced system failed to load:', advancedError);
-          console.log('Falling back to simple system...');
-        }
+        // Try advanced system for modern browsers
+        console.log('Modern browser detected - trying advanced system...');
+        // Note: Advanced system currently has ES6 dependencies, skipping for now
+        console.log('Advanced system temporarily disabled - using simple system for all browsers');
       }
       // Load font data first - required by all renderers
       console.log('Loading font data...');
