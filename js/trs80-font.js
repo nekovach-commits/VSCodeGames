@@ -4,7 +4,7 @@
  */
 
 // TRS-80 Model 100 6x8 Font Data (with built-in spacing)
-export const FONT_DATA = {
+window.FONT_DATA = {
   // Control characters 1-31 (special TRS-80 graphics)
   '\x01': [0x3C, 0x42, 0xA5, 0x81, 0xA5, 0x99, 0x42, 0x3C], // CHR$(1) - Smiley face ☺
   '\x02': [0x3C, 0x7E, 0xDB, 0xFF, 0xDB, 0xE7, 0x7E, 0x3C], // CHR$(2) - Filled smiley ☻
@@ -145,7 +145,7 @@ export const FONT_DATA = {
  * @param {number} pixelSize - Size of each font pixel (typically 4px)
  * @param {string} color - Fill color for active pixels
  */
-export function drawChar(ctx, char, x, y, pixelSize, color) {
+window.drawChar = function(ctx, char, x, y, pixelSize, color) {
   const fontData = FONT_DATA[char];
   if (!fontData) return;
   

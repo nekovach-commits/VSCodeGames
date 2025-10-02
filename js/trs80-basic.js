@@ -3,7 +3,7 @@
  * Supports graphics commands and classic BASIC programming
  */
 
-export class TRS80Basic {
+window.TRS80Basic = class TRS80Basic {
   constructor(display, keyboard) {
     this.display = display;
     this.keyboard = keyboard;

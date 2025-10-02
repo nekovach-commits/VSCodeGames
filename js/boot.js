@@ -42,10 +42,31 @@
       } else if(isOldBrowser) {
         console.log('Older browser detected - skipping advanced system, loading simple canvas system');
       } else {
-        // Try advanced system for modern browsers
-        console.log('Modern browser detected - trying advanced system...');
-        // Note: Advanced system currently has ES6 dependencies, skipping for now
-        console.log('Advanced system temporarily disabled - using simple system for all browsers');
+        // Try advanced system for modern desktop browsers using traditional script loading
+        console.log('Modern browser detected - loading advanced system...');
+        try {
+          // Load advanced system using script tags (avoiding ES6 modules for now)
+          await loadScript('js/trs80-config.js');
+          await loadScript('js/trs80-font.js');
+          await loadScript('js/trs80-display.js');
+          await loadScript('js/trs80-keyboard.js');
+          await loadScript('js/trs80-basic.js');
+          await loadScript('js/trs80-main.js');
+          
+          if(window.TRS80System){
+            console.log('Creating TRS80System instance...');
+            const sys = new window.TRS80System();
+            window.trs80 = { display: sys.display, keyboard: sys.keyboard, basic: sys.basic, system: sys };
+            console.log('✓ Advanced system loaded and running');
+            return;
+          } else {
+            console.error('TRS80System class not found');
+            throw new Error('TRS80System not available');
+          }
+        } catch(advancedError) {
+          console.error('Advanced system failed to load:', advancedError);
+          console.log('Falling back to simple system...');
+        }
       }
       // Load font data first - required by all renderers
       console.log('Loading font data...');

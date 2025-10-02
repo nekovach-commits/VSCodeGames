@@ -16,8 +16,8 @@ window.TRS80Display = class TRS80Display {
     
     // Assume canvas pre-sized by boot loader for full 40x20 grid (no legacy 10-row logic)
     // Derive pixel size directly from width/height ratios
-    const cols = TRS80_CONFIG.SCREEN_WIDTH;      // 40
-    const rows = TRS80_CONFIG.SCREEN_HEIGHT;     // 20
+    const cols = window.TRS80_CONFIG.SCREEN_WIDTH;      // 40
+    const rows = window.TRS80_CONFIG.SCREEN_HEIGHT;     // 20
     // Estimate pixel size ignoring border (border drawing will not consume logical space now)
     this.pixelSize = Math.floor(this.canvas.width / (cols * 6));
     if (this.pixelSize < 1) this.pixelSize = 1;
@@ -46,9 +46,9 @@ window.TRS80Display = class TRS80Display {
     this.graphicsHeight = 20 * 8; // 160 pixels tall (20 rows × 8 pixels)
     
     // Current C64 color state
-    this.currentTextColor = TRS80_CONFIG.DEFAULT_TEXT_COLOR;      // Light Blue
-    this.currentBackgroundColor = TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR; // Black
-    this.currentPixelColor = TRS80_CONFIG.DEFAULT_TEXT_COLOR;    // For graphics drawing
+    this.currentTextColor = window.TRS80_CONFIG.DEFAULT_TEXT_COLOR;      // Light Blue
+    this.currentBackgroundColor = window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR; // Black
+    this.currentPixelColor = window.TRS80_CONFIG.DEFAULT_TEXT_COLOR;    // For graphics drawing
     
     // Initialize buffers
     this.initializeBuffer();
@@ -61,11 +61,11 @@ window.TRS80Display = class TRS80Display {
    * Initialize the text buffer with empty spaces and default colors
    */
   initializeBuffer() {
-    for (let i = 0; i < TRS80_CONFIG.BUFFER_SIZE; i++) {
-      this.textBuffer[i] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
-      this.colorBuffer[i] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill({
-        text: TRS80_CONFIG.DEFAULT_TEXT_COLOR,
-        background: TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR
+    for (let i = 0; i < window.TRS80_CONFIG.BUFFER_SIZE; i++) {
+      this.textBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
+      this.colorBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill({
+        text: window.TRS80_CONFIG.DEFAULT_TEXT_COLOR,
+        background: window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR
       });
     }
   }
@@ -76,7 +76,7 @@ window.TRS80Display = class TRS80Display {
   initializeGraphicsBuffer() {
     this.graphicsBuffer = [];
     for (let y = 0; y < this.graphicsHeight; y++) {
-      this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR);
+      this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR);
     }
     console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels`);
   }
@@ -93,8 +93,8 @@ window.TRS80Display = class TRS80Display {
       console.log('Processing newline');
       this.cursorRow++;
       this.cursorCol = 0;
-      if (this.cursorRow >= TRS80_CONFIG.BUFFER_SIZE) {
-        this.cursorRow = TRS80_CONFIG.BUFFER_SIZE - 1;
+      if (this.cursorRow >= window.TRS80_CONFIG.BUFFER_SIZE) {
+        this.cursorRow = window.TRS80_CONFIG.BUFFER_SIZE - 1;
       }
     } else {
       console.log('Adding character to textBuffer at', this.cursorRow, this.cursorCol);
@@ -104,11 +104,11 @@ window.TRS80Display = class TRS80Display {
         background: this.currentBackgroundColor
       };
       this.cursorCol++;
-      if (this.cursorCol >= TRS80_CONFIG.SCREEN_WIDTH) {
+      if (this.cursorCol >= window.TRS80_CONFIG.SCREEN_WIDTH) {
         this.cursorCol = 0;
         this.cursorRow++;
-        if (this.cursorRow >= TRS80_CONFIG.BUFFER_SIZE) {
-          this.cursorRow = TRS80_CONFIG.BUFFER_SIZE - 1;
+        if (this.cursorRow >= window.TRS80_CONFIG.BUFFER_SIZE) {
+          this.cursorRow = window.TRS80_CONFIG.BUFFER_SIZE - 1;
         }
       }
     }
@@ -131,7 +131,7 @@ window.TRS80Display = class TRS80Display {
       this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
     } else if (this.cursorRow > 0) {
       this.cursorRow--;
-      this.cursorCol = TRS80_CONFIG.SCREEN_WIDTH - 1;
+      this.cursorCol = window.TRS80_CONFIG.SCREEN_WIDTH - 1;
       this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
     }
     this.adjustScrollToShowCursor();
@@ -151,7 +151,7 @@ window.TRS80Display = class TRS80Display {
    * Move cursor down
    */
   moveCursorDown() {
-    if (this.cursorRow < TRS80_CONFIG.BUFFER_SIZE - 1) {
+    if (this.cursorRow < window.TRS80_CONFIG.BUFFER_SIZE - 1) {
       this.cursorRow++;
       this.adjustScrollToShowCursor();
     }
@@ -165,7 +165,7 @@ window.TRS80Display = class TRS80Display {
       this.cursorCol--;
     } else if (this.cursorRow > 0) {
       this.cursorRow--;
-      this.cursorCol = TRS80_CONFIG.SCREEN_WIDTH - 1;
+      this.cursorCol = window.TRS80_CONFIG.SCREEN_WIDTH - 1;
       this.adjustScrollToShowCursor();
     }
   }
@@ -174,9 +174,9 @@ window.TRS80Display = class TRS80Display {
    * Move cursor right
    */
   moveCursorRight() {
-    if (this.cursorCol < TRS80_CONFIG.SCREEN_WIDTH - 1) {
+    if (this.cursorCol < window.TRS80_CONFIG.SCREEN_WIDTH - 1) {
       this.cursorCol++;
-    } else if (this.cursorRow < TRS80_CONFIG.BUFFER_SIZE - 1) {
+    } else if (this.cursorRow < window.TRS80_CONFIG.BUFFER_SIZE - 1) {
       this.cursorRow++;
       this.cursorCol = 0;
       this.adjustScrollToShowCursor();
@@ -189,8 +189,8 @@ window.TRS80Display = class TRS80Display {
    * @param {number} row - Row position (0-based) 
    */
   moveCursorTo(col, row) {
-    this.cursorCol = Math.max(0, Math.min(col, TRS80_CONFIG.SCREEN_WIDTH - 1));
-    this.cursorRow = Math.max(0, Math.min(row, TRS80_CONFIG.BUFFER_SIZE - 1));
+    this.cursorCol = Math.max(0, Math.min(col, window.TRS80_CONFIG.SCREEN_WIDTH - 1));
+    this.cursorRow = Math.max(0, Math.min(row, window.TRS80_CONFIG.BUFFER_SIZE - 1));
     this.adjustScrollToShowCursor();
   }
   
@@ -198,9 +198,9 @@ window.TRS80Display = class TRS80Display {
    * Clear the screen
    */
   clearScreen() {
-    for (let i = 0; i < TRS80_CONFIG.BUFFER_SIZE; i++) {
-      this.textBuffer[i] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
-      this.colorBuffer[i] = new Array(TRS80_CONFIG.SCREEN_WIDTH).fill({
+    for (let i = 0; i < window.TRS80_CONFIG.BUFFER_SIZE; i++) {
+      this.textBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
+      this.colorBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill({
         text: this.currentTextColor,
         background: this.currentBackgroundColor
       });
@@ -217,7 +217,7 @@ window.TRS80Display = class TRS80Display {
   setTextColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentTextColor = colorIndex;
-      console.log(`Text color set to: ${TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      console.log(`Text color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -228,7 +228,7 @@ window.TRS80Display = class TRS80Display {
   setBackgroundColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentBackgroundColor = colorIndex;
-      console.log(`Background color set to: ${TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      console.log(`Background color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -236,8 +236,8 @@ window.TRS80Display = class TRS80Display {
    * Fill entire screen with current background color
    */
   fillScreenWithBackgroundColor() {
-    for (let row = 0; row < TRS80_CONFIG.BUFFER_SIZE; row++) {
-      for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
+    for (let row = 0; row < window.TRS80_CONFIG.BUFFER_SIZE; row++) {
+      for (let col = 0; col < window.TRS80_CONFIG.SCREEN_WIDTH; col++) {
         this.colorBuffer[row][col] = {
           text: this.colorBuffer[row][col].text,
           background: this.currentBackgroundColor
@@ -261,7 +261,7 @@ window.TRS80Display = class TRS80Display {
   setPixelColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentPixelColor = colorIndex;
-      console.log(`Pixel color set to: ${TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      console.log(`Pixel color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -275,7 +275,7 @@ window.TRS80Display = class TRS80Display {
     if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
-      console.log(`Pixel drawn at (${x},${y}) with color ${TRS80_CONFIG.C64_COLORS[color].name}`);
+      console.log(`Pixel drawn at (${x},${y}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
     }
   }
   
@@ -315,7 +315,7 @@ window.TRS80Display = class TRS80Display {
       }
     }
     
-    console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${TRS80_CONFIG.C64_COLORS[color].name}`);
+    console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
   }
   
   /**
@@ -337,12 +337,12 @@ window.TRS80Display = class TRS80Display {
       this.scrollOffset = this.cursorRow;
     }
     // If cursor is below visible area, scroll down
-    else if (this.cursorRow >= this.scrollOffset + TRS80_CONFIG.SCREEN_HEIGHT) {
-      this.scrollOffset = this.cursorRow - TRS80_CONFIG.SCREEN_HEIGHT + 1;
+    else if (this.cursorRow >= this.scrollOffset + window.TRS80_CONFIG.SCREEN_HEIGHT) {
+      this.scrollOffset = this.cursorRow - window.TRS80_CONFIG.SCREEN_HEIGHT + 1;
     }
     
     // Keep scroll within bounds
-    this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, TRS80_CONFIG.BUFFER_SIZE - TRS80_CONFIG.SCREEN_HEIGHT));
+    this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, window.TRS80_CONFIG.BUFFER_SIZE - window.TRS80_CONFIG.SCREEN_HEIGHT));
   }
   
   /**
@@ -354,23 +354,23 @@ window.TRS80Display = class TRS80Display {
     
     // Handle cursor blinking
     const currentTime = Date.now();
-    if (currentTime - this.lastBlinkTime > TRS80_CONFIG.CURSOR_BLINK_RATE) {
+    if (currentTime - this.lastBlinkTime > window.TRS80_CONFIG.CURSOR_BLINK_RATE) {
       this.cursorVisible = !this.cursorVisible;
       this.lastBlinkTime = currentTime;
     }
     
     // Clear canvas with background color (white if transparent)
-    if (TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR === -1) {
+    if (window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR === -1) {
       // Transparent background - use white
       this.ctx.fillStyle = '#ffffff';
     } else {
-      const bgColor = TRS80_CONFIG.C64_COLORS[TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR];
+      const bgColor = window.TRS80_CONFIG.C64_COLORS[window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR];
       this.ctx.fillStyle = bgColor.hex;
     }
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
     // Draw border frame
-    const borderColor = TRS80_CONFIG.C64_COLORS[1]; // White border
+    const borderColor = window.TRS80_CONFIG.C64_COLORS[1]; // White border
     this.ctx.fillStyle = borderColor.hex;
     this.ctx.fillRect(0, 0, this.canvas.width, BORDER_SIZE); // Top
     this.ctx.fillRect(0, this.canvas.height - BORDER_SIZE, this.canvas.width, BORDER_SIZE); // Bottom  
@@ -396,10 +396,10 @@ window.TRS80Display = class TRS80Display {
   renderText(BORDER_SIZE) {
     
     // Render visible text from buffer with colors
-    for (let screenRow = 0; screenRow < TRS80_CONFIG.SCREEN_HEIGHT; screenRow++) {
+    for (let screenRow = 0; screenRow < window.TRS80_CONFIG.SCREEN_HEIGHT; screenRow++) {
       const bufferRow = screenRow + this.scrollOffset;
-      if (bufferRow >= 0 && bufferRow < TRS80_CONFIG.BUFFER_SIZE) {
-        for (let col = 0; col < TRS80_CONFIG.SCREEN_WIDTH; col++) {
+      if (bufferRow >= 0 && bufferRow < window.TRS80_CONFIG.BUFFER_SIZE) {
+        for (let col = 0; col < window.TRS80_CONFIG.SCREEN_WIDTH; col++) {
           const char = this.textBuffer[bufferRow][col];
           const colors = this.colorBuffer[bufferRow][col];
           
@@ -407,8 +407,8 @@ window.TRS80Display = class TRS80Display {
           const y = BORDER_SIZE + screenRow * this.charHeight;
           
           // Draw background color if not transparent and not default
-          if (colors && colors.background !== -1 && colors.background !== TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
-            const bgColor = TRS80_CONFIG.C64_COLORS[colors.background];
+          if (colors && colors.background !== -1 && colors.background !== window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
+            const bgColor = window.TRS80_CONFIG.C64_COLORS[colors.background];
             if (bgColor) {
               this.ctx.fillStyle = bgColor.hex;
               this.ctx.fillRect(x, y, this.charWidth, this.charHeight);
@@ -417,9 +417,9 @@ window.TRS80Display = class TRS80Display {
           
           // Draw character with foreground color
           if (char && char !== ' ') {
-            const textColor = colors ? TRS80_CONFIG.C64_COLORS[colors.text] : TRS80_CONFIG.C64_COLORS[TRS80_CONFIG.DEFAULT_TEXT_COLOR];
+            const textColor = colors ? window.TRS80_CONFIG.C64_COLORS[colors.text] : window.TRS80_CONFIG.C64_COLORS[window.TRS80_CONFIG.DEFAULT_TEXT_COLOR];
             if (textColor) {
-              drawChar(this.ctx, char, x, y, this.pixelSize, textColor.hex);
+              window.drawChar(this.ctx, char, x, y, this.pixelSize, textColor.hex);
             }
           }
         }
@@ -435,9 +435,9 @@ window.TRS80Display = class TRS80Display {
     for (let y = 0; y < this.graphicsHeight; y++) {
       for (let x = 0; x < this.graphicsWidth; x++) {
         const colorIndex = this.graphicsBuffer[y][x];
-        const color = TRS80_CONFIG.C64_COLORS[colorIndex];
+        const color = window.TRS80_CONFIG.C64_COLORS[colorIndex];
         
-        if (color && colorIndex !== TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
+        if (color && colorIndex !== window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
           this.ctx.fillStyle = color.hex;
           const canvasX = BORDER_SIZE + x * this.pixelSize;
           const canvasY = BORDER_SIZE + y * this.pixelSize;
@@ -452,12 +452,12 @@ window.TRS80Display = class TRS80Display {
    */
   renderCursor(BORDER_SIZE) {
     const screenCursorRow = this.cursorRow - this.scrollOffset;
-    if (screenCursorRow >= 0 && screenCursorRow < TRS80_CONFIG.SCREEN_HEIGHT && this.cursorVisible) {
+    if (screenCursorRow >= 0 && screenCursorRow < window.TRS80_CONFIG.SCREEN_HEIGHT && this.cursorVisible) {
       const cursorX = BORDER_SIZE + this.cursorCol * this.charWidth;
       const cursorY = BORDER_SIZE + screenCursorRow * this.charHeight;
       
       // Draw simple blinking cursor block with current text color
-      const cursorColor = TRS80_CONFIG.C64_COLORS[this.currentTextColor];
+      const cursorColor = window.TRS80_CONFIG.C64_COLORS[this.currentTextColor];
       this.ctx.fillStyle = cursorColor.hex;
       for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 6; c++) {

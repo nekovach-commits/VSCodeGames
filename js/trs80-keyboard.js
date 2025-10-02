@@ -3,9 +3,10 @@
  * Handles both physical keyboard and on-screen keyboard input
  */
 
-import { DEVICE_PATTERNS } from './trs80-config.js';
+// Use global references instead of imports
+// Dependencies: window.window.DEVICE_PATTERNS
 
-export class TRS80Keyboard {
+window.TRS80Keyboard = class TRS80Keyboard {
   constructor(display) {
     this.display = display;
     this.colorMode = false; // For @ color system
@@ -81,8 +82,8 @@ export class TRS80Keyboard {
       console.log('Screen height:', screen.height);
       console.log('Device pixel ratio:', window.devicePixelRatio);
       console.log('Touch support:', 'ontouchstart' in window);
-      console.log('Mobile regex test:', DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent));
-      console.log('Width threshold test:', window.innerWidth < DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD);
+      console.log('Mobile regex test:', window.DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent));
+      console.log('Width threshold test:', window.innerWidth < window.DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD);
       
       if (this.isMobileDevice()) {
         console.log('✅ Mobile/Kindle device detected - showing TRS-80 keyboard');
@@ -104,10 +105,10 @@ export class TRS80Keyboard {
   isMobileDevice() {
     // Check user agent first
     const userAgent = navigator.userAgent.toLowerCase();
-    const isMobileUA = DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent);
+    const isMobileUA = window.DEVICE_PATTERNS.MOBILE_REGEX.test(navigator.userAgent);
     
     // Check screen width
-    const isNarrowScreen = window.innerWidth < DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD;
+    const isNarrowScreen = window.innerWidth < window.DEVICE_PATTERNS.MOBILE_WIDTH_THRESHOLD;
     
     // Check for touch capability
     const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
