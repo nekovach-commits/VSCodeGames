@@ -58,8 +58,49 @@ export class TRS80Basic {
       }
     };
     
-    // Use shared processor - no more duplication!
-    window.SharedBasicProcessor.processLine(line, this.program, displayInterface);
+    // Process BASIC commands directly in advanced system
+    if (!line.trim()) return;
+    
+    const originalLine = line;
+    line = line.trim().toUpperCase();
+    
+    // Handle program lines (numbers)
+    const numMatch = line.match(/^(\d+)\s*(.*)$/);
+    if (numMatch) {
+      const lineNum = parseInt(numMatch[1], 10);
+      const command = numMatch[2];
+      if (command) {
+        this.program.set(lineNum, originalLine.substring(originalLine.indexOf(' ') + 1));
+      } else {
+        this.program.delete(lineNum);
+      }
+      return;
+    }
+    
+    // Handle direct commands
+    if (line.startsWith('PRINT ')) {
+      const text = originalLine.substring(6).trim();
+      if (text.startsWith('"') && text.endsWith('"')) {
+        displayInterface.addText(text.slice(1, -1) + '\n');
+      }
+    } else if (line === 'CLS') {
+      displayInterface.clearScreen();
+    } else if (line === 'LIST') {
+      const sortedLines = Array.from(this.program.keys()).sort((a, b) => a - b);
+      for (const lineNum of sortedLines) {
+        displayInterface.addText(lineNum + ' ' + this.program.get(lineNum) + '\n');
+      }
+    } else if (line === 'RUN') {
+      const sortedLines = Array.from(this.program.keys()).sort((a, b) => a - b);
+      for (const lineNum of sortedLines) {
+        this.processLine(this.program.get(lineNum));
+      }
+    } else if (line.startsWith('COLOR ')) {
+      const colorIndex = parseInt(line.substring(6), 10);
+      if (!isNaN(colorIndex)) {
+        displayInterface.setTextColor(colorIndex);
+      }
+    }
   }
   
   /**
