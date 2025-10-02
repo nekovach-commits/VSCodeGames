@@ -14,6 +14,21 @@
     ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   };
   
+  // Debug function to visualize glyph data
+  function debugGlyph(ch, glyph) {
+    if (ch === 'R') { // Only debug 'R' to avoid spam
+      console.log('=== GLYPH DEBUG for R ===');
+      for (let row = 0; row < 8; row++) {
+        const bits = glyph[row] || 0;
+        let line = '';
+        for (let col = 0; col < 6; col++) {
+          line += (bits & (1 << (5-col))) ? '█' : '·';
+        }
+        console.log(`Row ${row}: ${bits.toString(16).padStart(2,'0')} ${line}`);
+      }
+    }
+  }
+  
   function getGlyph(ch){
     // Try main font first
     if(FONT[ch]) return FONT[ch];
@@ -61,11 +76,24 @@
       window.addEventListener('keydown', e=>this.onKey(e));
       this.setupInputHandling();
       
+      // Kindle-specific canvas setup
+      if(this.isKindle) {
+        // Force integer scaling for e-ink
+        this.pixelSize = Math.max(1, Math.floor(this.pixelSize));
+        
+        // Ensure crisp rendering
+        this.canvas.style.imageRendering = 'pixelated';
+        this.canvas.style.imageRendering = 'crisp-edges';
+        
+        console.log('Kindle optimizations applied');
+      }
+      
       // Basic info logging
       console.log('SimpleTRS80 active:', {
         isKindle: this.isKindle,
         canvasSize: this.canvas.width + 'x' + this.canvas.height,
-        pixelSize: this.pixelSize
+        pixelSize: this.pixelSize,
+        devicePixelRatio: window.devicePixelRatio || 1
       });
     }
     onKey(e){
@@ -117,6 +145,9 @@
       const pxSize=this.pixelSize;
       const x0=cx*CHAR_W*pxSize; const y0=cy*CHAR_H*pxSize;
       
+      // Debug glyph data for troubleshooting
+      debugGlyph(ch, glyph);
+      
       // Clear cell background
       this.ctx.fillStyle=this.cellBg;
       this.ctx.fillRect(x0,y0,CHAR_W*pxSize,CHAR_H*pxSize);
@@ -126,14 +157,18 @@
       
       // Draw character pixels with high contrast
       this.ctx.fillStyle=this.textColor;
+      
+      // Kindle-specific pixel size adjustment
+      const effectivePixelSize = this.isKindle ? Math.max(1, Math.floor(pxSize)) : pxSize;
+      
       for(let row=0; row<CHAR_H; row++){
         const bits = glyph[row] || 0;
         for(let col=0; col<CHAR_W; col++){
           if(bits & (1 << (5-col))){
             // Use integer coordinates for crisp pixels on e-ink
-            const px = Math.floor(x0+col*pxSize);
-            const py = Math.floor(y0+row*pxSize);
-            this.ctx.fillRect(px, py, pxSize, pxSize);
+            const px = Math.floor(x0+col*effectivePixelSize);
+            const py = Math.floor(y0+row*effectivePixelSize);
+            this.ctx.fillRect(px, py, effectivePixelSize, effectivePixelSize);
           }
         }
       }
