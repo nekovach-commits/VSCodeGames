@@ -15,6 +15,7 @@ window.TRS80Keyboard = class TRS80Keyboard {
     this.showingPrompt = false; // Track Apple IIe style prompt
     this.setupPhysicalKeyboard();
     this.setupOnScreenKeyboard();
+    this.setupKindleInputField(); // Add Kindle support
     
     console.log('TRS-80 Keyboard system initialized');
   }
@@ -63,6 +64,66 @@ window.TRS80Keyboard = class TRS80Keyboard {
     this.processKeyInput(e.key);
     this.display.render();
     e.preventDefault();
+  }
+  
+  /**
+   * Set up Kindle input field integration
+   */
+  setupKindleInputField() {
+    const kindleInput = document.getElementById('kindle-input');
+    if (!kindleInput) return;
+    
+    // Check if this is a Kindle device
+    const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent);
+    if (!isKindle) return;
+    
+    console.log('Setting up Kindle input field integration...');
+    
+    let inputBuffer = '';
+    let currentLine = '';
+    
+    // Handle text input from Kindle virtual keyboard
+    kindleInput.addEventListener('input', (e) => {
+      const newValue = e.target.value;
+      
+      // Handle added characters
+      if (newValue.length > inputBuffer.length) {
+        const addedText = newValue.slice(inputBuffer.length);
+        for (let char of addedText) {
+          currentLine += char;
+          this.processKeyInput(char);
+        }
+        this.display.render();
+      }
+      
+      // Handle backspace
+      if (newValue.length < inputBuffer.length) {
+        const removedCount = inputBuffer.length - newValue.length;
+        for (let i = 0; i < removedCount; i++) {
+          if (currentLine.length > 0) {
+            currentLine = currentLine.slice(0, -1);
+            this.processKeyInput('Backspace');
+          }
+        }
+        this.display.render();
+      }
+      
+      inputBuffer = newValue;
+    });
+    
+    // Handle Enter key
+    kindleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.processKeyInput('Enter');
+        this.display.render();
+        
+        // Reset input
+        currentLine = '';
+        e.target.value = '';
+        inputBuffer = '';
+        e.preventDefault();
+      }
+    });
   }
   
   /**

@@ -36,14 +36,16 @@
     console.log('Canvas:', canvas ? canvas.width + 'x' + canvas.height : 'NOT FOUND');
     
     try {
-      // Skip advanced system entirely for Kindle and old browsers - go straight to simple system
-      if(isKindle) {
-        console.log('Kindle detected - skipping advanced system, loading simple canvas system');
-      } else if(isOldBrowser) {
-        console.log('Older browser detected - skipping advanced system, loading simple canvas system');
+      // Skip advanced system only for old browsers - Kindle ColorSoft can handle it
+      if(isOldBrowser) {
+        console.log('Older browser detected - using simple canvas system');
       } else {
-        // Try advanced system for modern desktop browsers using traditional script loading
-        console.log('Modern browser detected - loading advanced system...');
+        // Try advanced system for modern browsers (including Kindle ColorSoft)
+        if(isKindle) {
+          console.log('Kindle ColorSoft detected - using advanced system with input field integration');
+        } else {
+          console.log('Modern browser detected - loading advanced system...');
+        }
         try {
           // Load advanced system using script tags (avoiding ES6 modules for now)
           await loadScript('js/trs80-config.js');
