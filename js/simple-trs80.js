@@ -64,17 +64,14 @@
       this.buffer = Array.from({length: ROWS},()=>Array(COLS).fill(' '));
   this.ctx.imageSmoothingEnabled=false;
   
-  // Optimize colors for e-ink displays - high contrast
+  // Use same colors as advanced system for all devices (including Kindle ColorSoft)
   this.isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent);
+  this.textColor = '#0066cc'; // Same light blue as desktop for all devices
+  this.bgColor = '#ffffff';   // White background
+  this.cellBg = '#ffffff';    // White cells
+  
   if(this.isKindle) {
-    this.textColor = '#000000'; // Pure black for e-ink
-    this.bgColor = '#ffffff';   // Pure white background
-    this.cellBg = '#ffffff';    // Keep cells white
-    console.log('Kindle detected - using high contrast colors');
-  } else {
-    this.textColor = '#0066cc'; // Light blue for regular displays
-    this.bgColor = '#ffffff';
-    this.cellBg = '#ffffff';
+    console.log('Kindle ColorSoft detected - using same colors as desktop');
   }
   this.cursorVisible = true;
   this.lastBlink = Date.now();
@@ -101,6 +98,11 @@
         
         console.log('Kindle optimizations applied');
       }
+      
+      // Start cursor blink timer for all devices
+      setInterval(() => {
+        this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
+      }, 100); // Redraw cursor position every 100ms to ensure blinking works
       
       // Basic info logging
       console.log('SimpleTRS80 active:', {
@@ -199,23 +201,15 @@
         }
       }
       
-      // Cursor rendering - optimized for e-ink displays
+      // Cursor rendering - same for all devices (including Kindle ColorSoft)
       if(this.cursorX===cx && this.cursorY===cy){
-        console.log('🔵 Drawing cursor at', cx, cy, 'isKindle:', this.isKindle);
         this.ctx.fillStyle=this.textColor;
         
-        if(this.isKindle) {
-          // Solid block cursor for e-ink displays (always visible)
-          // Draw cursor ABOVE the character to avoid conflicts
-          this.ctx.fillRect(x0, y0+ (CHAR_H-2)*pxSize, CHAR_W*pxSize, 2*pxSize);
-          console.log('🔵 Kindle cursor drawn at', x0, y0+ (CHAR_H-2)*pxSize);
-        } else {
-          // Blinking underline cursor for regular displays
-          const now=Date.now();
-          if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
-          if(this.cursorVisible){
-            this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
-          }
+        // Blinking underline cursor for all devices (Kindle ColorSoft can handle this)
+        const now=Date.now();
+        if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
+        if(this.cursorVisible){
+          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
         }
       }
     }

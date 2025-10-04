@@ -67,7 +67,15 @@
           }
         } catch(advancedError) {
           console.error('Advanced system failed to load:', advancedError);
-          console.log('Falling back to simple system...');
+          console.error('Error details:', advancedError.stack);
+          
+          if(isKindle) {
+            console.error('KINDLE: Advanced system failed - this should not happen!');
+            // Don't fall back for Kindle - we want to see what's wrong
+            throw advancedError;
+          } else {
+            console.log('Falling back to simple system...');
+          }
         }
       }
       // Load font data first - required by all renderers
