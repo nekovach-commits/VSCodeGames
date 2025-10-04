@@ -5,12 +5,14 @@
   const FONT = window.FONT_DATA || {};
   
   // Emergency fallback font data for basic characters if FONT_DATA fails
+  // Using 5-pixel wide patterns (bits 7-3) to leave space for proper character spacing
   const FALLBACK_FONT = {
-    'R': [0x3E, 0x63, 0x63, 0x3E, 0x36, 0x63, 0x63, 0x00],
-    'E': [0x7F, 0x60, 0x60, 0x7E, 0x60, 0x60, 0x7F, 0x00],
-    'A': [0x1C, 0x36, 0x63, 0x7F, 0x63, 0x63, 0x63, 0x00],
-    'D': [0x7E, 0x63, 0x63, 0x63, 0x63, 0x63, 0x7E, 0x00],
-    'Y': [0x63, 0x63, 0x36, 0x1C, 0x1C, 0x1C, 0x1C, 0x00],
+    'R': [0x3C, 0x66, 0x66, 0x3C, 0x36, 0x66, 0x66, 0x00], // R with spacing
+    'E': [0x7E, 0x60, 0x60, 0x7C, 0x60, 0x60, 0x7E, 0x00], // E with spacing  
+    'A': [0x18, 0x3C, 0x66, 0x7E, 0x66, 0x66, 0x66, 0x00], // A with spacing
+    'D': [0x7C, 0x66, 0x66, 0x66, 0x66, 0x66, 0x7C, 0x00], // D with spacing
+    'Y': [0x66, 0x66, 0x3C, 0x18, 0x18, 0x18, 0x18, 0x00], // Y with spacing
+    ']': [0x3C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x3C, 0x00], // ] bracket
     ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   };
   
@@ -30,6 +32,13 @@
   }
   
   function getGlyph(ch){
+    // Debug font loading status
+    if(ch === 'R' && !window._fontDebugDone) {
+      console.log('🔤 Font loading check - FONT keys:', Object.keys(FONT).slice(0,10));
+      console.log('🔤 window.FONT_DATA available:', !!window.FONT_DATA);
+      window._fontDebugDone = true;
+    }
+    
     // Try main font first
     if(FONT[ch]) return FONT[ch];
     const code = ch.charCodeAt(0);
@@ -37,12 +46,12 @@
     
     // Try fallback font
     if(FALLBACK_FONT[ch]) {
-      console.log('Using fallback font for', ch);
+      if(ch !== ' ') console.log('🔤 Using fallback font for', ch);
       return FALLBACK_FONT[ch];
     }
     
     // Last resort - return a simple block
-    console.warn('No glyph found for', ch, 'using block');
+    console.warn('🔤 No glyph found for', ch, 'using block');
     return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
   }
   class SimpleTRS80 {
@@ -110,10 +119,19 @@
       this.buffer[this.cursorY][this.cursorX]=ch;
       this.drawCell(this.cursorX,this.cursorY,ch);
       this.cursorX++;
-      if(this.cursorX>=this.cols){ this.newLine(); }
+      if(this.cursorX>=this.cols){ 
+        this.newLine(); 
+      } else {
+        // Redraw cursor at new position
+        this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
+      }
     }
     backspace(){
-      if(this.cursorX>0){ this.cursorX--; this.buffer[this.cursorY][this.cursorX]=' '; this.drawCell(this.cursorX,this.cursorY,' '); }
+      if(this.cursorX>0){ 
+        this.cursorX--; 
+        this.buffer[this.cursorY][this.cursorX]=' '; 
+        this.drawCell(this.cursorX,this.cursorY,' '); // This will also draw cursor since we're at cursor position
+      }
     }
     newLine(){
       this.cursorX=0; this.cursorY++;
@@ -122,6 +140,9 @@
         this.buffer.push(Array(this.cols).fill(' '));
         this.cursorY=this.rows-1;
         this.fullRedraw();
+      } else {
+        // Redraw cursor at new line position
+        this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
       }
     }
     fullRedraw(){
@@ -180,11 +201,14 @@
       
       // Cursor rendering - optimized for e-ink displays
       if(this.cursorX===cx && this.cursorY===cy){
+        console.log('🔵 Drawing cursor at', cx, cy, 'isKindle:', this.isKindle);
         this.ctx.fillStyle=this.textColor;
         
         if(this.isKindle) {
           // Solid block cursor for e-ink displays (always visible)
-          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, 2*pxSize);
+          // Draw cursor ABOVE the character to avoid conflicts
+          this.ctx.fillRect(x0, y0+ (CHAR_H-2)*pxSize, CHAR_W*pxSize, 2*pxSize);
+          console.log('🔵 Kindle cursor drawn at', x0, y0+ (CHAR_H-2)*pxSize);
         } else {
           // Blinking underline cursor for regular displays
           const now=Date.now();
