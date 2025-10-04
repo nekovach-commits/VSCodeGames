@@ -259,9 +259,9 @@
         kindleInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             console.log('Enter pressed, current line:', currentLine);
-            this.newLine();
             
             // Process BASIC command if SharedBasicProcessor is available
+            // Note: Don't call this.newLine() here as BASIC processor handles its own line endings
             if (window.SharedBasicProcessor && currentLine.trim()) {
               const displayInterface = {
                 addText: (text) => this.printText(text),
@@ -270,6 +270,9 @@
               };
               const program = new Map(); // Simple program storage
               window.SharedBasicProcessor.processLine(currentLine.trim(), program, displayInterface);
+            } else if (currentLine.trim() === '') {
+              // Only add newline for empty commands
+              this.newLine();
             }
             
             // Add new prompt after command execution
