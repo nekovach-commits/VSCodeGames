@@ -72,6 +72,7 @@
   this.fullRedraw();
   // Initial READY banner similar to advanced system
   this.printText('READY\n');
+  this.putChar(']'); // Add BASIC prompt like desktop version
   this.fullRedraw();
       
       // Only set up window keydown for non-Kindle devices to avoid double input
@@ -177,13 +178,20 @@
         }
       }
       
-      // simple blinking cursor if at this cell
+      // Cursor rendering - optimized for e-ink displays
       if(this.cursorX===cx && this.cursorY===cy){
-        const now=Date.now();
-        if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
-        if(this.cursorVisible){
-          this.ctx.fillStyle=this.textColor;
-          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
+        this.ctx.fillStyle=this.textColor;
+        
+        if(this.isKindle) {
+          // Solid block cursor for e-ink displays (always visible)
+          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, 2*pxSize);
+        } else {
+          // Blinking underline cursor for regular displays
+          const now=Date.now();
+          if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
+          if(this.cursorVisible){
+            this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
+          }
         }
       }
     }
@@ -245,6 +253,10 @@
               const program = new Map(); // Simple program storage
               window.SharedBasicProcessor.processLine(currentLine.trim(), program, displayInterface);
             }
+            
+            // Add new prompt after command execution
+            this.putChar(']');
+            this.drawCell(this.cursorX, this.cursorY, ']'); // Ensure cursor shows at prompt
             
             currentLine = '';
             // Clear input field
