@@ -1,3 +1,6 @@
+  // Indicate system version in debug area
+  const sysVer = document.getElementById('system-version');
+  if (sysVer) sysVer.textContent = 'Simple Renderer';
 // SimpleTRS80 fallback implementation
 // Minimal text-only renderer using 6x8 cells directly on the canvas
 (function(){
@@ -16,28 +19,10 @@
     ' ': [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   };
   
-  // Debug function to visualize glyph data
-  function debugGlyph(ch, glyph) {
-    if (ch === 'R') { // Only debug 'R' to avoid spam
-      console.log('=== GLYPH DEBUG for R ===');
-      for (let row = 0; row < 8; row++) {
-        const bits = glyph[row] || 0;
-        let line = '';
-        for (let col = 0; col < 6; col++) {
-          line += (bits & (1 << (5-col))) ? '█' : '·';
-        }
-        console.log(`Row ${row}: ${bits.toString(16).padStart(2,'0')} ${line}`);
-      }
-    }
-  }
+
   
   function getGlyph(ch){
-    // Debug font loading status
-    if(ch === 'R' && !window._fontDebugDone) {
-      console.log('🔤 Font loading check - FONT keys:', Object.keys(FONT).slice(0,10));
-      console.log('🔤 window.FONT_DATA available:', !!window.FONT_DATA);
-      window._fontDebugDone = true;
-    }
+
     
     // Try main font first
     if(FONT[ch]) return FONT[ch];
@@ -46,12 +31,12 @@
     
     // Try fallback font
     if(FALLBACK_FONT[ch]) {
-      if(ch !== ' ') console.log('🔤 Using fallback font for', ch);
+
       return FALLBACK_FONT[ch];
     }
     
     // Last resort - return a simple block
-    console.warn('🔤 No glyph found for', ch, 'using block');
+
     return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
   }
   class SimpleTRS80 {
@@ -70,9 +55,7 @@
   this.bgColor = '#ffffff';   // White background
   this.cellBg = '#ffffff';    // White cells
   
-  if(this.isKindle) {
-    console.log('Kindle ColorSoft detected - using same colors as desktop');
-  }
+
   this.cursorVisible = true;
   this.lastBlink = Date.now();
   this.fullRedraw();
@@ -81,22 +64,21 @@
   this.putChar(']'); // Add BASIC prompt like desktop version
   this.fullRedraw();
       
-      // Only set up window keydown for non-Kindle devices to avoid double input
+
+      // Input handling: desktop uses keyboard, Kindle uses input field
       if(!this.isKindle) {
         window.addEventListener('keydown', e=>this.onKey(e));
       }
+      // Kindle-specific input field handler (minimal tweak)
       this.setupInputHandling();
-      
-      // Kindle-specific canvas setup
+
+      // Kindle-specific canvas tweaks (minimal)
       if(this.isKindle) {
         // Force integer scaling for e-ink
         this.pixelSize = Math.max(1, Math.floor(this.pixelSize));
-        
         // Ensure crisp rendering
         this.canvas.style.imageRendering = 'pixelated';
         this.canvas.style.imageRendering = 'crisp-edges';
-        
-        console.log('Kindle optimizations applied');
       }
       
       // Start cursor blink timer for all devices
@@ -104,13 +86,7 @@
         this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
       }, 100); // Redraw cursor position every 100ms to ensure blinking works
       
-      // Basic info logging
-      console.log('SimpleTRS80 active:', {
-        isKindle: this.isKindle,
-        canvasSize: this.canvas.width + 'x' + this.canvas.height,
-        pixelSize: this.pixelSize,
-        devicePixelRatio: window.devicePixelRatio || 1
-      });
+
     }
     onKey(e){
       if(e.key.length===1){ this.putChar(e.key); }
@@ -276,20 +252,10 @@
             }
             
 
-              // Fix: If cursor is at start of line (after newline), move up and to end of previous line
-              if (this.cursorX === 0 && this.cursorY > 0) {
-                this.cursorY--;
-                // Find last non-space character in previous line
-                let lastChar = this.cols - 1;
-                while (lastChar > 0 && this.buffer[this.cursorY][lastChar] === ' ') {
-                  lastChar--;
-                }
-                this.cursorX = lastChar + 1;
-                if (this.cursorX >= this.cols) this.cursorX = this.cols - 1;
-              }
-              // Add new prompt after command execution
-              this.putChar(']');
-              this.drawCell(this.cursorX, this.cursorY, ']'); // Ensure cursor shows at prompt
+            // Always start prompt on a new line after command execution
+            this.newLine();
+            this.putChar(']');
+            this.drawCell(this.cursorX, this.cursorY, ']'); // Ensure cursor shows at prompt
             
             currentLine = '';
             // Clear input field
@@ -304,12 +270,20 @@
     }
     
     printText(text) {
+      // Print each character, handling newlines
+      let lastWasNewline = false;
       for (let i = 0; i < text.length; i++) {
         if (text[i] === '\n') {
           this.newLine();
+          lastWasNewline = true;
         } else {
           this.putChar(text[i]);
+          lastWasNewline = false;
         }
+      }
+      // Ensure only one newline after output
+      if (!lastWasNewline) {
+        this.newLine();
       }
     }
     

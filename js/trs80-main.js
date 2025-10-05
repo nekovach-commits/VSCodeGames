@@ -23,7 +23,11 @@
       setTimeout(initSystem, 100);
       return;
     }
-    
+
+    // Indicate system version in debug area
+    var sysVer = document.getElementById('system-version');
+    if (sysVer) sysVer.textContent = 'Advanced Renderer';
+
     console.log('All dependencies loaded, creating TRS80System class...');
     
     window.TRS80System = class TRS80System {

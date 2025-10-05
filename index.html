@@ -62,6 +62,7 @@
           <div>Device Type: <span id="device-type">Loading...</span></div>
           <div>Scale Factor: <span id="scale-factor">Loading...</span></div>
           <div>Pixel Scale: <span id="pixel-scale">Loading...</span></div>
+          <div>System Version: <span id="system-version">Detecting...</span></div>
         </div>
       </div>
     </div>
@@ -127,6 +128,14 @@
         if (pixelScaleEl) {
           const pixelScale = getPixelSize();
           pixelScaleEl.textContent = `${pixelScale}×${pixelScale}`;
+        }
+        
+        // System Version - simple/advanced renderer detection
+        const systemVersion = document.getElementById('system-version');
+        if (systemVersion) {
+          const isAdvanced = (window.devicePixelRatio || 1) > 1;
+          systemVersion.textContent = isAdvanced ? 'Advanced' : 'Simple';
+          systemVersion.style.color = isAdvanced ? '#006600' : '#cc0000';
         }
         
         // Max Width/Height - remove these
