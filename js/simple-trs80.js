@@ -275,9 +275,21 @@
               this.newLine();
             }
             
-            // Add new prompt after command execution
-            this.putChar(']');
-            this.drawCell(this.cursorX, this.cursorY, ']'); // Ensure cursor shows at prompt
+
+              // Fix: If cursor is at start of line (after newline), move up and to end of previous line
+              if (this.cursorX === 0 && this.cursorY > 0) {
+                this.cursorY--;
+                // Find last non-space character in previous line
+                let lastChar = this.cols - 1;
+                while (lastChar > 0 && this.buffer[this.cursorY][lastChar] === ' ') {
+                  lastChar--;
+                }
+                this.cursorX = lastChar + 1;
+                if (this.cursorX >= this.cols) this.cursorX = this.cols - 1;
+              }
+              // Add new prompt after command execution
+              this.putChar(']');
+              this.drawCell(this.cursorX, this.cursorY, ']'); // Ensure cursor shows at prompt
             
             currentLine = '';
             // Clear input field
