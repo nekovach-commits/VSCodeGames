@@ -42,27 +42,25 @@ window.TRS80_CONFIG = {
   TEXT_COLOR: '#000000',        // Black text and cursor
   INACTIVE_COLOR: '#cccccc',    // Light grey for UI elements
   
-  // === COMMODORE 64 COLOR PALETTE ===
-  // Standard 8 ANSI colors (0-7) + C64 extended colors (8-15)
+  // === APPLE IIe 16-COLOR PALETTE ===
+  // Most common Apple IIe colors (Double Hi-Res)
   C64_COLORS: {
-    // Standard ANSI colors (0-7)
-    0: { name: 'BLACK',       hex: '#000000', rgb: [0,   0,   0  ] },
-    1: { name: 'RED',         hex: '#AA0000', rgb: [170, 0,   0  ] },
-    2: { name: 'GREEN',       hex: '#00AA00', rgb: [0,   170, 0  ] },
-    3: { name: 'YELLOW',      hex: '#AA5500', rgb: [170, 85,  0  ] },
-    4: { name: 'BLUE',        hex: '#0000AA', rgb: [0,   0,   170] },
-    5: { name: 'MAGENTA',     hex: '#AA00AA', rgb: [170, 0,   170] },
-    6: { name: 'CYAN',        hex: '#00AAAA', rgb: [0,   170, 170] },
-    7: { name: 'WHITE',       hex: '#AAAAAA', rgb: [170, 170, 170] },
-    // Extended C64 colors (8-15) - keep original for compatibility
-    8: { name: 'ORANGE',      hex: '#6F4F25', rgb: [111, 79,  37 ] },
-    9: { name: 'BROWN',       hex: '#433900', rgb: [67,  57,  0  ] },
-    10: { name: 'LIGHT RED',   hex: '#9A6759', rgb: [154, 103, 89 ] },
-    11: { name: 'DARK GREY',   hex: '#444444', rgb: [68,  68,  68 ] },
-    12: { name: 'GREY',        hex: '#6C6C6C', rgb: [108, 108, 108] },
-    13: { name: 'LIGHT GREEN', hex: '#9AD284', rgb: [154, 210, 132] },
-    14: { name: 'LIGHT BLUE',  hex: '#6C5EB5', rgb: [108, 94,  181] },
-    15: { name: 'LIGHT GREY',  hex: '#959595', rgb: [149, 149, 149] }
+    0:  { name: 'BLACK',        hex: '#000000', rgb: [0, 0, 0] },
+    1:  { name: 'MAGENTA',      hex: '#DD09DD', rgb: [221, 9, 221] },
+    2:  { name: 'DARK BLUE',    hex: '#0000B2', rgb: [0, 0, 178] },
+    3:  { name: 'PURPLE',       hex: '#B200B2', rgb: [178, 0, 178] },
+    4:  { name: 'DARK GREEN',   hex: '#00B200', rgb: [0, 178, 0] },
+    5:  { name: 'GRAY1',        hex: '#B2B2B2', rgb: [178, 178, 178] },
+    6:  { name: 'MEDIUM BLUE',  hex: '#0000FF', rgb: [0, 0, 255] },
+    7:  { name: 'LIGHT BLUE',   hex: '#09DDDD', rgb: [9, 221, 221] },
+    8:  { name: 'BROWN',        hex: '#B26509', rgb: [178, 101, 9] },
+    9:  { name: 'ORANGE',       hex: '#FF9900', rgb: [255, 153, 0] },
+    10: { name: 'GRAY2',        hex: '#DDDDDD', rgb: [221, 221, 221] },
+    11: { name: 'PINK',         hex: '#FFB2B2', rgb: [255, 178, 178] },
+    12: { name: 'YELLOW',       hex: '#FFFF00', rgb: [255, 255, 0] },
+    13: { name: 'GREEN',        hex: '#00FF00', rgb: [0, 255, 0] },
+    14: { name: 'AQUA',         hex: '#00FFFF', rgb: [0, 255, 255] },
+    15: { name: 'WHITE',        hex: '#FFFFFF', rgb: [255, 255, 255] }
   },
   
   // Default C64-style colors
