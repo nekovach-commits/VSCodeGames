@@ -49,6 +49,7 @@
         try {
           // Load advanced system using script tags (avoiding ES6 modules for now)
           await loadScript('js/trs80-config.js');
+          await loadScript('js/trs80-font-vertical.js'); // Ensure FONT_DATA_VERTICAL is loaded
           await loadScript('js/trs80-font.js');
           await loadScript('js/trs80-display.js');
           await loadScript('js/trs80-keyboard.js');
@@ -81,21 +82,14 @@
       // Load font data first - required by all renderers
       console.log('Loading font data...');
       await loadScript('js/trs80-font.js');
-      if(window.FONT_DATA){
-        console.log('✓ Font data loaded successfully');
+      await loadScript('js/trs80-font-grph.js');
+      if(window.FONT_DATA && window.FONT_DATA_GRPH){
+        window.FONT_DATA = Object.assign({}, window.FONT_DATA, window.FONT_DATA_GRPH);
+        console.log('✓ Font data and GRPH data loaded and merged');
       } else {
-        console.error('Font data failed to load');
+        console.error('Font data or GRPH data failed to load');
       }
-      
-      // Load shared BASIC processor second - required by all renderers
-      console.log('Loading shared BASIC processor...');
-      await loadScript('js/shared-basic.js');
-      if(window.SharedBasicProcessor){
-        console.log('✓ SharedBasicProcessor loaded successfully');
-      } else {
-        console.error('SharedBasicProcessor failed to load');
-      }
-      
+
       // Canvas renderer for all devices (Kindle, desktop, mobile)
       console.log('Loading canvas renderer...');
       await loadScript('js/simple-trs80.js');
@@ -114,9 +108,7 @@
             await loadScript('js/trs80-font.js');
           }
           // Load BASIC processor for emergency fallback too
-          if(!window.SharedBasicProcessor){
-            await loadScript('js/shared-basic.js');
-          }
+
           await loadScript('js/simple-trs80.js');
           if(window.SimpleTRS80){ 
             new window.SimpleTRS80(canvas, pixelSize); 

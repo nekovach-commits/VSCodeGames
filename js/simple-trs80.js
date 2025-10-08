@@ -1,11 +1,20 @@
-  // Indicate system version in debug area
-  const sysVer = document.getElementById('system-version');
-  if (sysVer) sysVer.textContent = 'Simple Renderer';
+      // Indicate system version in debug area (run immediately, retry if not found)
+      function setSystemVersionLabel() {
+        var sysVer = document.getElementById('system-version');
+        if (sysVer) {
+          sysVer.textContent = 'Simple Renderer';
+        } else {
+          // Retry after DOM is ready
+          setTimeout(setSystemVersionLabel, 100);
+        }
+      }
+      setSystemVersionLabel();
 // SimpleTRS80 fallback implementation
 // Minimal text-only renderer using 6x8 cells directly on the canvas
 (function(){
   const CHAR_W=6, CHAR_H=8, COLS=40, ROWS=20;
-  const FONT = window.FONT_DATA || {};
+  // Merge GRPH font data if available
+  const FONT = Object.assign({}, window.FONT_DATA, window.FONT_DATA_GRPH || {});
   
   // Emergency fallback font data for basic characters if FONT_DATA fails
   // Using 5-pixel wide patterns (bits 7-3) to leave space for proper character spacing
@@ -24,20 +33,13 @@
   function getGlyph(ch){
 
     
-    // Try main font first
-    if(FONT[ch]) return FONT[ch];
-    const code = ch.charCodeAt(0);
-    if(FONT[code]) return FONT[code];
-    
-    // Try fallback font
-    if(FALLBACK_FONT[ch]) {
-
-      return FALLBACK_FONT[ch];
-    }
-    
-    // Last resort - return a simple block
-
-    return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
+  // Support all codes 1-255 (CHR$)
+  const code = ch.charCodeAt(0);
+  if (FONT[String.fromCharCode(code)]) return FONT[String.fromCharCode(code)];
+  // Fallback font for basic ASCII if needed
+  if (FALLBACK_FONT[ch]) return FALLBACK_FONT[ch];
+  // Last resort - return a simple block
+  return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
   }
   class SimpleTRS80 {
     constructor(canvas, pixelSize){

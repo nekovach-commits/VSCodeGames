@@ -5,9 +5,45 @@
 
 // TRS-80 Model 100 6x8 Font Data (with built-in spacing)
 window.FONT_DATA = {
+  // GRPH test: copy GRPH glyphs into CHR$(1)–CHR$(33)
+  '\x01': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x83'],
+  '\x02': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x84'],
+  '\x03': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x85'],
+  '\x04': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x86'],
+  '\x05': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x87'],
+  '\x06': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x88'],
+  '\x07': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x89'],
+  '\x08': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8A'],
+  '\x09': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8B'],
+  '\x0A': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8C'],
+  '\x0B': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8D'],
+  '\x0C': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8E'],
+  '\x0D': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x8F'],
+  '\x0E': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x90'],
+  '\x0F': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x91'],
+  '\x10': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x92'],
+  '\x11': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x93'],
+  '\x12': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x94'],
+  '\x13': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x95'],
+  '\x14': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x96'],
+  '\x15': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x97'],
+  '\x16': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x98'],
+  '\x17': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x99'],
+  '\x18': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9A'],
+  '\x19': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9B'],
+  '\x1A': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9C'],
+  '\x1B': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9D'],
+  '\x1C': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9E'],
+  '\x1D': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\x9F'],
+  '\x1E': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA0'],
+  '\x1F': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA1'],
+  '\x20': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA2'],
+  '\x21': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA3'],
+  '\x22': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA4'],
+  '\x23': window.FONT_DATA_GRPH && window.FONT_DATA_GRPH['\xA5'],
   // Control characters 1-31 (special TRS-80 graphics)
-  '\x01': [0x3C, 0x42, 0xA5, 0x81, 0xA5, 0x99, 0x42, 0x3C], // CHR$(1) - Smiley face ☺
-  '\x02': [0x3C, 0x7E, 0xDB, 0xFF, 0xDB, 0xE7, 0x7E, 0x3C], // CHR$(2) - Filled smiley ☻
+  '\x01': [0x78,0x76,0x62,0x4A,0x0E,0x00,0xEE,0x44], // CHR$(1) - Smiley face ☺ (shifted right)
+  '\x02': [0xFF,0xFF,0x44,0xEE,0x0C,0x4C,0x7F,0x4C], // CHR$(2) - Filled smiley ☻
   '\x03': [0x6C, 0xFE, 0xFE, 0xFE, 0x7C, 0x38, 0x10, 0x00], // CHR$(3) - Heart ♥
   '\x04': [0x10, 0x38, 0x7C, 0xFE, 0x7C, 0x38, 0x10, 0x00], // CHR$(4) - Diamond ♦
   '\x05': [0x38, 0x7C, 0x38, 0xFE, 0xFE, 0x7C, 0x38, 0x7C], // CHR$(5) - Club ♣
@@ -146,15 +182,15 @@ window.FONT_DATA = {
  * @param {string} color - Fill color for active pixels
  */
 window.drawChar = function(ctx, char, x, y, pixelSize, color) {
-  const fontData = FONT_DATA[char];
+  // Use vertical column font data for 6x8 grid
+  const fontData = window.FONT_DATA_VERTICAL[char];
   if (!fontData) return;
-  
+
   ctx.fillStyle = color;
-  
-  for (let row = 0; row < 8; row++) {
-    const rowData = fontData[row];
-    for (let col = 0; col < 6; col++) {
-      if (rowData & (1 << (5 - col))) {
+  for (let col = 0; col < 6; col++) {
+    const colData = fontData[col];
+    for (let row = 0; row < 8; row++) {
+      if (colData & (1 << row)) {
         const pixelX = x + col * pixelSize;
         const pixelY = y + row * pixelSize;
         ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);

@@ -80,9 +80,10 @@ window.TRS80Basic = class TRS80Basic {
     // Handle direct commands
     if (line.startsWith('PRINT ')) {
       const text = originalLine.substring(6).trim();
-      if (text.startsWith('"') && text.endsWith('"')) {
-        displayInterface.addText(text.slice(1, -1) + '\n');
-      }
+      // Evaluate the expression, supporting CHR$, variables, numbers, and quoted strings
+      let output = this.evaluateExpression(text);
+      output = String(output);
+      displayInterface.addText(output + '\n');
     } else if (line === 'CLS') {
       displayInterface.clearScreen();
     } else if (line === 'LIST') {
@@ -434,30 +435,10 @@ window.TRS80Basic = class TRS80Basic {
    * Get special character by character code (for CHR$ function)
    */
   getCharacterByCode(code) {
-    // For codes 1-31, return the actual character code as a special marker
-    // The display system will need to handle these specially
-    if (code >= 1 && code <= 31) {
+    // For codes 1-255, return the actual character code
+    if (code >= 1 && code <= 255) {
       return String.fromCharCode(code);
     }
-    
-    // For regular ASCII characters (32-126), return them normally
-    if (code >= 32 && code <= 126) {
-      return String.fromCharCode(code);
-    }
-    
-    // For extended graphics characters (128+), map to control codes
-    const extendedChars = {
-      219: String.fromCharCode(1),   // Solid block -> CHR$(1)
-      221: String.fromCharCode(2),   // Left half block -> CHR$(2)
-      222: String.fromCharCode(3),   // Right half block -> CHR$(3)
-      223: String.fromCharCode(4),   // Lower half block -> CHR$(4)
-      220: String.fromCharCode(5)    // Upper half block -> CHR$(5)
-    };
-    
-    if (extendedChars[code]) {
-      return extendedChars[code];
-    }
-    
     return '?'; // Unknown character
   }
 }
