@@ -369,13 +369,13 @@ window.TRS80Display = class TRS80Display {
     }
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    // Draw border frame
-    const borderColor = window.TRS80_CONFIG.C64_COLORS[1]; // White border
-    this.ctx.fillStyle = borderColor.hex;
-    this.ctx.fillRect(0, 0, this.canvas.width, BORDER_SIZE); // Top
-    this.ctx.fillRect(0, this.canvas.height - BORDER_SIZE, this.canvas.width, BORDER_SIZE); // Bottom  
-    this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
-    this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
+  // Draw border frame
+  const borderColor = window.TRS80_CONFIG.C64_COLORS[window.TRS80_CONFIG.BORDER_COLOR_INDEX]; // Grey border
+  this.ctx.fillStyle = borderColor.hex;
+  this.ctx.fillRect(0, 0, this.canvas.width, BORDER_SIZE); // Top
+  this.ctx.fillRect(0, this.canvas.height - BORDER_SIZE, this.canvas.width, BORDER_SIZE); // Bottom  
+  this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
+  this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
     // Render based on current mode
     if (this.isGraphicsMode) {
