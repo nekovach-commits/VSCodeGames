@@ -182,9 +182,27 @@ window.FONT_DATA = {
  * @param {string} color - Fill color for active pixels
  */
 window.drawChar = function(ctx, char, x, y, pixelSize, color) {
-  // Use vertical column font data for 6x8 grid
-  const fontData = window.FONT_DATA_VERTICAL[char];
-  if (!fontData) return;
+  // Use vertical column font data for 6x8 grid (supports extended codes)
+  let fontData = window.FONT_DATA_VERTICAL[char];
+
+  // Fallback: if character code >=128 and not found, try mapping through code point
+  if (!fontData) {
+    const code = char.charCodeAt(0);
+    // Example: ensure 131 maps to \x83 explicitly (alias) if missing
+    if (code === 131 && window.FONT_DATA_VERTICAL['\x83']) {
+      fontData = window.FONT_DATA_VERTICAL['\x83'];
+    }
+  }
+
+  if (!fontData) {
+    if (!window.__MISSING_GLYPHS_LOGGED) window.__MISSING_GLYPHS_LOGGED = new Set();
+    const code = char.charCodeAt(0);
+    if (!window.__MISSING_GLYPHS_LOGGED.has(code)) {
+      console.warn('Missing glyph for char code', code, 'literal:', JSON.stringify(char));
+      window.__MISSING_GLYPHS_LOGGED.add(code);
+    }
+    return; // Nothing to draw
+  }
 
   ctx.fillStyle = color;
   for (let col = 0; col < 6; col++) {
