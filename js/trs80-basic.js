@@ -415,15 +415,24 @@ window.TRS80Basic = class TRS80Basic {
     const originalExpr = expr;
     const upperExpr = expr.toUpperCase();
     
-    // Handle CHR$ function (now supports variable or expression)
-    const chrMatch = expr.match(/CHR\$\s*\(\s*([^\)]+)\s*\)/i);
+    // Handle CHR$ function (supports variable or arithmetic expression)
+    const chrMatch = expr.match(/^(?:CHR\$)\s*\(\s*(.+)\s*\)$/i);
     if (chrMatch) {
-      const inner = chrMatch[1].trim();
-      const codeVal = this.evaluateExpression(inner); // recursive evaluation
-      const charCode = parseInt(codeVal,10);
-      if (!isNaN(charCode)) {
-        return this.getCharacterByCode(charCode);
+      const innerRaw = chrMatch[1].trim();
+      // Fast path: single variable or number
+      if (/^[A-Z][A-Z0-9]*$/i.test(innerRaw)) {
+        const varName = innerRaw.toUpperCase();
+        if (this.variables.has(varName)) {
+          const v = this.variables.get(varName);
+          const code = parseInt(v,10);
+          if (!isNaN(code)) return this.getCharacterByCode(code);
+        }
       }
+      // Otherwise evaluate as expression
+      const evaluated = this.evaluateExpression(innerRaw === expr ? innerRaw : innerRaw);
+      const code = parseInt(evaluated,10);
+      if (!isNaN(code)) return this.getCharacterByCode(code);
+      return '?';
     }
     // Handle quoted strings (support simple concatenation with +)
     if (expr.includes('+')) {
