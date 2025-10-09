@@ -415,11 +415,15 @@ window.TRS80Basic = class TRS80Basic {
     const originalExpr = expr;
     const upperExpr = expr.toUpperCase();
     
-    // Handle CHR$ function
-    const chrMatch = expr.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
+    // Handle CHR$ function (now supports variable or expression)
+    const chrMatch = expr.match(/CHR\$\s*\(\s*([^\)]+)\s*\)/i);
     if (chrMatch) {
-      const charCode = parseInt(chrMatch[1]);
-      return this.getCharacterByCode(charCode);
+      const inner = chrMatch[1].trim();
+      const codeVal = this.evaluateExpression(inner); // recursive evaluation
+      const charCode = parseInt(codeVal,10);
+      if (!isNaN(charCode)) {
+        return this.getCharacterByCode(charCode);
+      }
     }
     // Handle quoted strings (support simple concatenation with +)
     if (expr.includes('+')) {
