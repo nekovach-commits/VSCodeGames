@@ -411,24 +411,43 @@ window.TRS80Basic = class TRS80Basic {
       const charCode = parseInt(chrMatch[1]);
       return this.getCharacterByCode(charCode);
     }
+    // Handle quoted strings (support simple concatenation with +)
+    if (expr.includes('+')) {
+      const parts = expr.split('+').map(p=>p.trim());
+      // If any part is quoted treat as string concat
+      if (parts.some(p => /^".*"$/.test(p))) {
+        return parts.map(p => {
+          if (/^".*"$/.test(p)) return p.slice(1,-1);
+          if (this.variables.has(p)) return this.variables.get(p);
+          if (!isNaN(p)) return parseInt(p,10);
+          return p; // fallback
+        }).join('');
+      }
+    }
     
-    // Handle quoted strings
     if (expr.startsWith('"') && expr.endsWith('"')) {
       return expr.slice(1, -1);
     }
     
-    // Handle numbers
-    if (!isNaN(expr)) {
-      return parseInt(expr);
+    // Arithmetic expression support (very simple, integers only): + - * /
+    if (/^[A-Z0-9\s+*\/\-]+$/.test(expr)) {
+      // Replace variables with values
+      expr = expr.replace(/[A-Z][A-Z0-9]*/g, (name) => {
+        if (this.variables.has(name)) return this.variables.get(name);
+        return name; // leave as-is
+      });
+      try {
+        // Evaluate safely by restricting characters (already filtered)
+        const result = Function('return (' + expr + ')')();
+        if (typeof result === 'number' && !isNaN(result)) return result;
+      } catch(e) { /* ignore */ }
     }
     
-    // Handle variables
-    if (this.variables.has(expr)) {
-      return this.variables.get(expr);
-    }
-    
-    // Default to treating as string
-    return expr;
+    // Numbers
+    if (!isNaN(expr)) return parseInt(expr,10);
+    // Variables
+    if (this.variables.has(expr)) return this.variables.get(expr);
+    return expr; // fallback raw
   }
   
   /**
@@ -440,5 +459,81 @@ window.TRS80Basic = class TRS80Basic {
       return String.fromCharCode(code);
     }
     return '?'; // Unknown character
+  }
+
+  /**
+   * Extended: implicit assignment support (A=5) when user types without LET
+   */
+  tryImplicitAssignment(line) {
+    const m = line.match(/^([A-Z][A-Z0-9]*)\s*=\s*(.+)$/i);
+    if (m) {
+      const varName = m[1].toUpperCase();
+      const valueExpr = m[2];
+      const value = this.evaluateExpression(valueExpr);
+      this.variables.set(varName, value);
+      return true;
+    }
+    return false;
+  }
+
+  /** FOR/NEXT loop handling **/
+  handleFor(line){
+    // Syntax: FOR I = start TO end [STEP step]
+    const m = line.match(/^FOR\s+([A-Z][A-Z0-9]*)\s*=\s*([^\s]+)\s+TO\s+([^\s]+)(?:\s+STEP\s+([^\s]+))?$/i);
+    if(!m) throw new Error('BAD FOR SYNTAX');
+    const varName = m[1].toUpperCase();
+    const startVal = this.evaluateExpression(m[2]);
+    const endVal = this.evaluateExpression(m[3]);
+    const stepVal = m[4] ? this.evaluateExpression(m[4]) : 1;
+    this.variables.set(varName, startVal);
+    // Push loop frame
+    this.forLoops.push({ varName, endVal, stepVal, lineIndex: this.programCounter });
+  }
+
+  handleNext(line){
+    const m = line.match(/^NEXT\s*([A-Z][A-Z0-9]*)?$/i);
+    if(!m) throw new Error('BAD NEXT SYNTAX');
+    const varFilter = m[1] ? m[1].toUpperCase() : null;
+    for (let i = this.forLoops.length -1; i >=0; i--) {
+      const frame = this.forLoops[i];
+      if (!varFilter || frame.varName === varFilter){
+        // Increment variable
+        const cur = this.variables.get(frame.varName) || 0;
+        const next = cur + frame.stepVal;
+        this.variables.set(frame.varName, next);
+        if ((frame.stepVal > 0 && next <= frame.endVal) || (frame.stepVal < 0 && next >= frame.endVal)) {
+          // Jump back to line after FOR line
+            this.programCounter = frame.lineIndex; // will be incremented in loop executor
+        } else {
+          // Loop finished
+          this.forLoops.splice(i,1);
+        }
+        return;
+      }
+    }
+    throw new Error('NEXT WITHOUT FOR');
+  }
+
+  /** Override executeProgram to integrate FOR/NEXT **/
+  executeProgram(lineNumbers) {
+    while (this.programCounter < lineNumbers.length && this.isRunning) {
+      const lineNum = lineNumbers[this.programCounter];
+      const commandOriginal = this.program.get(lineNum);
+      const command = commandOriginal.trim();
+      const upper = command.toUpperCase();
+      // FOR handling
+      if (upper.startsWith('FOR ')) {
+        this.handleFor(upper);
+      } else if (upper.startsWith('NEXT')) {
+        this.handleNext(upper);
+      } else if (this.tryImplicitAssignment(upper)) {
+        // implicit assignment done
+      } else {
+        this.executeCommand(command);
+      }
+      this.programCounter++;
+    }
+    this.isRunning = false;
+    this.isDirectMode = true;
   }
 }
