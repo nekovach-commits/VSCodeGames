@@ -87,11 +87,18 @@ window.TRS80Basic = class TRS80Basic {
     
     // Handle direct commands
     if (line.startsWith('PRINT ')) {
-      const text = originalLine.substring(6).trim();
-      // Evaluate the expression, supporting CHR$, variables, numbers, and quoted strings
-      let output = this.evaluateExpression(text);
-      output = String(output);
-      displayInterface.addText(output + '\n');
+      let exprPortion = originalLine.substring(6); // preserve original case
+      let suppressNewline = false;
+      // Detect trailing semicolon (not inside an open quote)
+      if (/;\s*$/.test(exprPortion)) {
+        const quoteCount = (exprPortion.match(/"/g) || []).length;
+        if (quoteCount % 2 === 0) { // balanced quotes => semicolon is outside
+          suppressNewline = true;
+          exprPortion = exprPortion.replace(/;\s*$/, '');
+        }
+      }
+      let value = this.evaluateExpression(exprPortion.trim());
+      displayInterface.addText(String(value) + (suppressNewline ? '' : '\n'));
     } else if (line === 'CLS') {
       displayInterface.clearScreen();
     } else if (line === 'LIST') {
@@ -219,6 +226,15 @@ window.TRS80Basic = class TRS80Basic {
     const chrTest = args.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
     console.log('CHR$ regex match result:', chrTest);
     
+    // Trailing semicolon suppression (outside quotes)
+    let suppressNewline = false;
+    if (/;\s*$/.test(args)) {
+      const quoteCount = (args.match(/"/g) || []).length;
+      if (quoteCount % 2 === 0) { // balanced quotes -> semicolon terminator
+        suppressNewline = true;
+        args = args.replace(/;\s*$/, '');
+      }
+    }
     let output = this.evaluateExpression(args);
     console.log('Expression evaluated to:', JSON.stringify(output), 'type:', typeof output);
     
@@ -230,7 +246,7 @@ window.TRS80Basic = class TRS80Basic {
       console.log('Adding character:', JSON.stringify(output[i]), 'char code:', output.charCodeAt(i));
       this.display.addChar(output[i]);
     }
-    this.display.addChar('\n'); // Add newline separately
+  if (!suppressNewline) this.display.addChar('\n');
     
     console.log('PRINT output complete');
   }  /**
