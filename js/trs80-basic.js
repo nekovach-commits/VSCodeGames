@@ -110,9 +110,19 @@ window.TRS80Basic = class TRS80Basic {
       // Use unified run path (supports FOR/NEXT, loops, etc.)
       this.cmdRun();
     } else if (line.startsWith('COLOR ')) {
-      const colorIndex = parseInt(line.substring(6), 10);
-      if (!isNaN(colorIndex)) {
-        displayInterface.setTextColor(colorIndex);
+      const expr = originalLine.substring(6).trim();
+      const colorIndex = parseInt(this.evaluateExpression(expr), 10);
+        if (!isNaN(colorIndex) && colorIndex >= 0 && colorIndex <= 15) {
+          displayInterface.setTextColor(colorIndex);
+        } else {
+          displayInterface.setTextColor(2);
+          displayInterface.addChar('?COLOR RANGE');
+          if (typeof displayInterface.newLine === 'function') {
+            displayInterface.newLine();
+          } else {
+            displayInterface.addChar('\n');
+          }
+          displayInterface.setTextColor(14);
       }
     }
   }
