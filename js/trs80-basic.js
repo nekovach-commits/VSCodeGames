@@ -100,10 +100,8 @@ window.TRS80Basic = class TRS80Basic {
         displayInterface.addText(lineNum + ' ' + this.program.get(lineNum) + '\n');
       }
     } else if (line === 'RUN') {
-      const sortedLines = Array.from(this.program.keys()).sort((a, b) => a - b);
-      for (const lineNum of sortedLines) {
-        this.processLine(this.program.get(lineNum));
-      }
+      // Use unified run path (supports FOR/NEXT, loops, etc.)
+      this.cmdRun();
     } else if (line.startsWith('COLOR ')) {
       const colorIndex = parseInt(line.substring(6), 10);
       if (!isNaN(colorIndex)) {
@@ -260,6 +258,8 @@ window.TRS80Basic = class TRS80Basic {
     
     this.isRunning = true;
     this.isDirectMode = false;
+    // Reset loop stack each run to avoid stale FOR/NEXT frames from prior executions
+    this.forLoops = [];
     
     // Get sorted line numbers
     const lineNumbers = Array.from(this.program.keys()).sort((a, b) => a - b);
