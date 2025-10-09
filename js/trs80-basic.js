@@ -495,12 +495,13 @@ window.TRS80Basic = class TRS80Basic {
   /** FOR/NEXT loop handling **/
   handleFor(line){
     // Syntax: FOR I = start TO end [STEP step]
-    const m = line.match(/^FOR\s+([A-Z][A-Z0-9]*)\s*=\s*([^\s]+)\s+TO\s+([^\s]+)(?:\s+STEP\s+([^\s]+))?$/i);
+    // Allow expressions with spaces until TO / STEP keywords
+    const m = line.match(/^FOR\s+([A-Z][A-Z0-9]*)\s*=\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
     if(!m) throw new Error('BAD FOR SYNTAX');
     const varName = m[1].toUpperCase();
-    const startVal = this.evaluateExpression(m[2]);
-    const endVal = this.evaluateExpression(m[3]);
-    const stepVal = m[4] ? this.evaluateExpression(m[4]) : 1;
+    const startVal = this.evaluateExpression(m[2].trim());
+    const endVal = this.evaluateExpression(m[3].trim());
+    const stepVal = m[4] ? this.evaluateExpression(m[4].trim()) : 1;
     this.variables.set(varName, startVal);
     // Push loop frame
     this.forLoops.push({ varName, endVal, stepVal, lineIndex: this.programCounter });
