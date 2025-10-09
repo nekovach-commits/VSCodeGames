@@ -111,18 +111,26 @@ window.TRS80Basic = class TRS80Basic {
       this.cmdRun();
     } else if (line.startsWith('COLOR ')) {
       const expr = originalLine.substring(6).trim();
-      const colorIndex = parseInt(this.evaluateExpression(expr), 10);
-        if (!isNaN(colorIndex) && colorIndex >= 0 && colorIndex <= 15) {
-          displayInterface.setTextColor(colorIndex);
-        } else {
-          displayInterface.setTextColor(2);
-          displayInterface.addChar('?COLOR RANGE');
-          if (typeof displayInterface.newLine === 'function') {
-            displayInterface.newLine();
-          } else {
-            displayInterface.addChar('\n');
-          }
-          displayInterface.setTextColor(14);
+      // Allow COLOR <fg>[,<bg>] patterns
+      let fgExpr = expr;
+      let bgExpr = null;
+      if (expr.includes(',')) {
+        const parts = expr.split(',');
+        fgExpr = parts[0].trim();
+        bgExpr = parts[1].trim();
+      }
+      const fg = parseInt(this.evaluateExpression(fgExpr), 10);
+      let ok = true;
+      if (isNaN(fg) || fg < 0 || fg > 15) ok = false; else displayInterface.setTextColor(fg);
+      if (bgExpr !== null) {
+        const bg = parseInt(this.evaluateExpression(bgExpr), 10);
+        if (isNaN(bg) || bg < 0 || bg > 15) ok = false; else if (this.display.setBackgroundColor) this.display.setBackgroundColor(bg);
+      }
+      if (!ok) {
+        displayInterface.setTextColor(2);
+        displayInterface.addChar('?COLOR RANGE');
+        displayInterface.addChar('\n');
+        displayInterface.setTextColor(14);
       }
     }
   }
@@ -361,9 +369,23 @@ window.TRS80Basic = class TRS80Basic {
    * COLOR command - set text color
    */
   cmdColor(args) {
-    const colorNum = parseInt(this.evaluateExpression(args));
-    if (colorNum >= 0 && colorNum <= 15) {
-      this.display.setTextColor(colorNum);
+    // Support COLOR <fg>[,<bg>] with expressions
+    let fgExpr = args;
+    let bgExpr = null;
+    if (args.includes(',')) {
+      const parts = args.split(',');
+      fgExpr = parts[0].trim();
+      bgExpr = parts[1].trim();
+    }
+    const fg = parseInt(this.evaluateExpression(fgExpr));
+    if (!isNaN(fg) && fg >= 0 && fg <= 15) {
+      this.display.setTextColor(fg);
+    }
+    if (bgExpr !== null) {
+      const bg = parseInt(this.evaluateExpression(bgExpr));
+      if (!isNaN(bg) && bg >= 0 && bg <= 15) {
+        this.display.setBackgroundColor(bg);
+      }
     }
   }
   
