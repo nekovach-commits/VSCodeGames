@@ -62,7 +62,15 @@ window.TRS80Basic = class TRS80Basic {
     if (!line.trim()) return;
     
     const originalLine = line;
-    line = line.trim().toUpperCase();
+    // Preserve original for implicit assignment; create uppercase copy for keyword tests
+    const rawTrimmed = line.trim();
+    // First attempt implicit assignment in direct mode (A=5)
+    if (!/^\d+\s/.test(rawTrimmed)) { // not a program line
+      if (this.tryImplicitAssignment(rawTrimmed)) {
+        return; // assignment done
+      }
+    }
+    line = rawTrimmed.toUpperCase();
     
     // Handle program lines (numbers)
     const numMatch = line.match(/^(\d+)\s*(.*)$/);
@@ -404,6 +412,8 @@ window.TRS80Basic = class TRS80Basic {
    */
   evaluateExpression(expr) {
     expr = expr.trim();
+    const originalExpr = expr;
+    const upperExpr = expr.toUpperCase();
     
     // Handle CHR$ function
     const chrMatch = expr.match(/CHR\$\s*\(\s*(\d+)\s*\)/i);
@@ -418,7 +428,8 @@ window.TRS80Basic = class TRS80Basic {
       if (parts.some(p => /^".*"$/.test(p))) {
         return parts.map(p => {
           if (/^".*"$/.test(p)) return p.slice(1,-1);
-          if (this.variables.has(p)) return this.variables.get(p);
+          const up = p.toUpperCase();
+          if (this.variables.has(up)) return this.variables.get(up);
           if (!isNaN(p)) return parseInt(p,10);
           return p; // fallback
         }).join('');
@@ -430,9 +441,9 @@ window.TRS80Basic = class TRS80Basic {
     }
     
     // Arithmetic expression support (very simple, integers only): + - * /
-    if (/^[A-Z0-9\s+*\/\-]+$/.test(expr)) {
+    if (/^[A-Z0-9\s+*\/\-]+$/.test(upperExpr)) {
       // Replace variables with values
-      expr = expr.replace(/[A-Z][A-Z0-9]*/g, (name) => {
+      expr = upperExpr.replace(/[A-Z][A-Z0-9]*/g, (name) => {
         if (this.variables.has(name)) return this.variables.get(name);
         return name; // leave as-is
       });
@@ -446,8 +457,9 @@ window.TRS80Basic = class TRS80Basic {
     // Numbers
     if (!isNaN(expr)) return parseInt(expr,10);
     // Variables
-    if (this.variables.has(expr)) return this.variables.get(expr);
-    return expr; // fallback raw
+    const upperSingle = expr.toUpperCase();
+    if (this.variables.has(upperSingle)) return this.variables.get(upperSingle);
+    return originalExpr; // fallback raw
   }
   
   /**
