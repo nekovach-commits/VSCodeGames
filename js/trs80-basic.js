@@ -119,8 +119,8 @@ window.TRS80Basic = class TRS80Basic {
   executeCommand(command) {
     console.log('BASIC executeCommand called with:', JSON.stringify(command));
     console.log('Command length:', command.length);
-    const parts = command.split(/\s+/);
-    const cmd = parts[0];
+    const parts = command.trim().split(/\s+/);
+    const cmd = parts[0].toUpperCase();
     const args = parts.slice(1);
     console.log('Command:', JSON.stringify(cmd), 'Args:', args);
     console.log('Args joined:', JSON.stringify(args.join(' ')));
@@ -136,6 +136,13 @@ window.TRS80Basic = class TRS80Basic {
           
         case 'LET':
           this.cmdLet(parts.slice(1).join(' '));
+          break;
+        case 'FOR':
+          // Allow FOR in executeCommand when typed directly
+          this.handleFor(command.toUpperCase());
+          break;
+        case 'NEXT':
+          this.handleNext(command.toUpperCase());
           break;
           
         case 'RUN':
