@@ -11,8 +11,12 @@ window.TRS80Display = class TRS80Display {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     
+    // Debug controls and render scheduling
+    this.debug = false; // set to true to enable verbose logs
+    this.renderScheduled = false; // coalesce renders via requestAnimationFrame
+    
     // Debug: Log initial canvas size
-    console.log(`Module init - canvas size: ${this.canvas.width}×${this.canvas.height}`);
+    if (this.debug) console.log(`Module init - canvas size: ${this.canvas.width}×${this.canvas.height}`);
     
     // Assume canvas pre-sized by boot loader for full 40x20 grid (no legacy 10-row logic)
     // Derive pixel size directly from width/height ratios
@@ -28,7 +32,7 @@ window.TRS80Display = class TRS80Display {
     this.canvas.setAttribute('tabindex', '0');
     this.canvas.style.outline = 'none';
     
-    console.log(`✓ Using pixel size: ${this.pixelSize}×${this.pixelSize}, char size: ${this.charWidth}×${this.charHeight}`);
+  if (this.debug) console.log(`✓ Using pixel size: ${this.pixelSize}×${this.pixelSize}, char size: ${this.charWidth}×${this.charHeight}`);
     
     // Display state
     this.cursorRow = 0;
@@ -54,7 +58,7 @@ window.TRS80Display = class TRS80Display {
     this.initializeBuffer();
     this.initializeGraphicsBuffer();
     
-    console.log('TRS-80 Display initialized');
+  if (this.debug) console.log('TRS-80 Display initialized');
   }
   
   /**
@@ -78,7 +82,19 @@ window.TRS80Display = class TRS80Display {
     for (let y = 0; y < this.graphicsHeight; y++) {
       this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR);
     }
-    console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels`);
+    if (this.debug) console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels`);
+  }
+  
+  /**
+   * Schedule a render on the next animation frame (coalesces many updates)
+   */
+  requestRender() {
+    if (this.renderScheduled) return;
+    this.renderScheduled = true;
+    window.requestAnimationFrame(() => {
+      this.renderScheduled = false;
+      this.render();
+    });
   }
   
   /**
@@ -86,18 +102,20 @@ window.TRS80Display = class TRS80Display {
    * @param {string} char - Character to add
    */
   addChar(char) {
-    console.log('TRS80Display.addChar called with:', JSON.stringify(char));
-    console.log('Current cursor position: row', this.cursorRow, 'col', this.cursorCol);
+    if (this.debug) {
+      console.log('TRS80Display.addChar called with:', JSON.stringify(char));
+      console.log('Current cursor position: row', this.cursorRow, 'col', this.cursorCol);
+    }
     
     if (char === '\n') {
-      console.log('Processing newline');
+  if (this.debug) console.log('Processing newline');
       this.cursorRow++;
       this.cursorCol = 0;
       if (this.cursorRow >= window.TRS80_CONFIG.BUFFER_SIZE) {
         this.cursorRow = window.TRS80_CONFIG.BUFFER_SIZE - 1;
       }
     } else {
-      console.log('Adding character to textBuffer at', this.cursorRow, this.cursorCol);
+  if (this.debug) console.log('Adding character to textBuffer at', this.cursorRow, this.cursorCol);
       this.textBuffer[this.cursorRow][this.cursorCol] = char;
       this.colorBuffer[this.cursorRow][this.cursorCol] = {
         text: this.currentTextColor,
@@ -112,14 +130,15 @@ window.TRS80Display = class TRS80Display {
         }
       }
     }
-    console.log('New cursor position: row', this.cursorRow, 'col', this.cursorCol);
-    console.log('Buffer content at current row:', JSON.stringify(this.textBuffer[this.cursorRow].join('')));
+    if (this.debug) {
+      console.log('New cursor position: row', this.cursorRow, 'col', this.cursorCol);
+      console.log('Buffer content at current row:', JSON.stringify(this.textBuffer[this.cursorRow].join('')));
+    }
     
     this.adjustScrollToShowCursor();
     
-    // Force a render after adding characters
-    console.log('Forcing render after addChar');
-    this.render();
+    // Coalesce renders for performance
+    this.requestRender();
   }
   
   /**
@@ -208,6 +227,7 @@ window.TRS80Display = class TRS80Display {
     this.cursorRow = 0;
     this.cursorCol = 0;
     this.scrollOffset = 0;
+    this.requestRender();
   }
   
   /**
@@ -217,7 +237,7 @@ window.TRS80Display = class TRS80Display {
   setTextColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentTextColor = colorIndex;
-      console.log(`Text color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      if (this.debug) console.log(`Text color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -228,7 +248,7 @@ window.TRS80Display = class TRS80Display {
   setBackgroundColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentBackgroundColor = colorIndex;
-      console.log(`Background color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      if (this.debug) console.log(`Background color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -251,7 +271,7 @@ window.TRS80Display = class TRS80Display {
    */
   toggleGraphicsMode() {
     this.isGraphicsMode = !this.isGraphicsMode;
-    console.log(`Graphics mode: ${this.isGraphicsMode ? 'ON' : 'OFF'}`);
+    if (this.debug) console.log(`Graphics mode: ${this.isGraphicsMode ? 'ON' : 'OFF'}`);
   }
   
   /**
@@ -261,7 +281,7 @@ window.TRS80Display = class TRS80Display {
   setPixelColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentPixelColor = colorIndex;
-      console.log(`Pixel color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+      if (this.debug) console.log(`Pixel color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }
   
@@ -275,7 +295,7 @@ window.TRS80Display = class TRS80Display {
     if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
-      console.log(`Pixel drawn at (${x},${y}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+      if (this.debug) console.log(`Pixel drawn at (${x},${y}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
     }
   }
   
@@ -315,7 +335,7 @@ window.TRS80Display = class TRS80Display {
       }
     }
     
-    console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+    if (this.debug) console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
   }
   
   /**
@@ -325,7 +345,7 @@ window.TRS80Display = class TRS80Display {
     for (let y = 0; y < this.graphicsHeight; y++) {
       this.graphicsBuffer[y].fill(this.currentBackgroundColor);
     }
-    console.log('Graphics buffer cleared');
+    if (this.debug) console.log('Graphics buffer cleared');
   }
   
   /**
