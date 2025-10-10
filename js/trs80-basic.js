@@ -153,11 +153,54 @@ window.TRS80Basic = class TRS80Basic {
         const y1 = parseInt(this.evaluateExpression(parts[1].trim()), 10);
         const x2 = parseInt(this.evaluateExpression(parts[2].trim()), 10);
         const y2 = parseInt(this.evaluateExpression(parts[3].trim()), 10);
-        if (!this.display.isGraphicsMode) this.display.toggleGraphicsMode();
         this.display.drawLine(x1, y1, x2, y2);
       } else {
         this.display.setTextColor(2);
         this.display.addChar('?LINE X1,Y1,X2,Y2\n');
+        this.display.setTextColor(14);
+      }
+    } else if (line.startsWith('RECT ')) {
+      const expr = originalLine.substring(5).trim();
+      // Syntax: RECT x1,y1,x2,y2[,F]
+      const parts = expr.split(',').map(p=>p.trim());
+      if (parts.length === 4 || parts.length === 5) {
+        const x1 = parseInt(this.evaluateExpression(parts[0]), 10);
+        const y1 = parseInt(this.evaluateExpression(parts[1]), 10);
+        const x2 = parseInt(this.evaluateExpression(parts[2]), 10);
+        const y2 = parseInt(this.evaluateExpression(parts[3]), 10);
+        const filled = parts.length === 5 && parts[4].toUpperCase() === 'F';
+        this.display.drawRect(x1, y1, x2, y2, filled);
+      } else {
+        this.display.setTextColor(2);
+        this.display.addChar('?RECT X1,Y1,X2,Y2[,F]\n');
+        this.display.setTextColor(14);
+      }
+    } else if (line.startsWith('CIRCLE ')) {
+      const expr = originalLine.substring(7).trim();
+      // Syntax: CIRCLE cx,cy,r[,F]
+      const parts = expr.split(',').map(p=>p.trim());
+      if (parts.length === 3 || parts.length === 4) {
+        const cx = parseInt(this.evaluateExpression(parts[0]), 10);
+        const cy = parseInt(this.evaluateExpression(parts[1]), 10);
+        const r = parseInt(this.evaluateExpression(parts[2]), 10);
+        const filled = parts.length === 4 && parts[3].toUpperCase() === 'F';
+        this.display.drawCircle(cx, cy, r, filled);
+      } else {
+        this.display.setTextColor(2);
+        this.display.addChar('?CIRCLE CX,CY,R[,F]\n');
+        this.display.setTextColor(14);
+      }
+    } else if (line.startsWith('FILL ')) {
+      const expr = originalLine.substring(5).trim();
+      // Syntax: FILL x,y
+      const parts = expr.split(',').map(p=>p.trim());
+      if (parts.length === 2) {
+        const x = parseInt(this.evaluateExpression(parts[0]), 10);
+        const y = parseInt(this.evaluateExpression(parts[1]), 10);
+        this.display.floodFill(x, y);
+      } else {
+        this.display.setTextColor(2);
+        this.display.addChar('?FILL X,Y\n');
         this.display.setTextColor(14);
       }
     }
@@ -222,6 +265,42 @@ window.TRS80Basic = class TRS80Basic {
           
         case 'LINE':
           this.cmdLine(parts.slice(1).join(' '));
+          break;
+        case 'RECT':
+          // RECT x1,y1,x2,y2[,F]
+          this.display.drawRect(
+            parseInt(this.evaluateExpression(args.join(' ').split(',')[0].trim()),10),
+            parseInt(this.evaluateExpression(args.join(' ').split(',')[1].trim()),10),
+            parseInt(this.evaluateExpression(args.join(' ').split(',')[2].trim()),10),
+            parseInt(this.evaluateExpression(args.join(' ').split(',')[3].trim()),10),
+            (args.join(' ').split(',').length===5 && args.join(' ').split(',')[4].trim().toUpperCase()==='F')
+          );
+          break;
+        case 'CIRCLE':
+          // CIRCLE cx,cy,r[,F]
+          {
+            const a = args.join(' ').split(',').map(s=>s.trim());
+            const cx = parseInt(this.evaluateExpression(a[0]),10);
+            const cy = parseInt(this.evaluateExpression(a[1]),10);
+            const r  = parseInt(this.evaluateExpression(a[2]),10);
+            const filled = (a.length===4 && a[3].toUpperCase()==='F');
+            this.display.drawCircle(cx, cy, r, filled);
+          }
+          break;
+        case 'FILL':
+          // FILL x,y
+          {
+            const a = args.join(' ').split(',').map(s=>s.trim());
+            if (a.length===2) {
+              const x = parseInt(this.evaluateExpression(a[0]),10);
+              const y = parseInt(this.evaluateExpression(a[1]),10);
+              this.display.floodFill(x, y);
+            } else {
+              this.display.setTextColor(2);
+              this.display.addChar('?FILL X,Y\n');
+              this.display.setTextColor(14);
+            }
+          }
           break;
           
         case 'HTAB':
@@ -391,6 +470,9 @@ window.TRS80Basic = class TRS80Basic {
    */
   cmdCls() {
     this.display.clearScreen();
+    if (this.display.clearGraphics) {
+      this.display.clearGraphics();
+    }
   }
   
   /**

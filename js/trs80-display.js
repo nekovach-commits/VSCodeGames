@@ -294,6 +294,8 @@ window.TRS80Display = class TRS80Display {
    * @param {number} colorIndex - Optional color (uses current if not specified)
    */
   drawPixel(x, y, colorIndex = null) {
+    // Ensure graphics layer is active
+    this.isGraphicsMode = true;
     if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
@@ -311,6 +313,8 @@ window.TRS80Display = class TRS80Display {
    * @param {number} colorIndex - Optional color
    */
   drawLine(x1, y1, x2, y2, colorIndex = null) {
+    // Ensure graphics layer is active
+    this.isGraphicsMode = true;
     const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
     
     const dx = Math.abs(x2 - x1);
@@ -350,6 +354,113 @@ window.TRS80Display = class TRS80Display {
       this.graphicsBuffer[y].fill(this.currentBackgroundColor);
     }
     if (this.debug) console.log('Graphics buffer cleared');
+    this.requestRender();
+  }
+
+  /**
+   * Draw rectangle (outline or filled)
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
+   * @param {boolean} filled
+   * @param {number|null} colorIndex
+   */
+  drawRect(x1, y1, x2, y2, filled = false, colorIndex = null) {
+    this.isGraphicsMode = true;
+    const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
+    const minX = Math.max(0, Math.min(x1, x2));
+    const maxX = Math.min(this.graphicsWidth - 1, Math.max(x1, x2));
+    const minY = Math.max(0, Math.min(y1, y2));
+    const maxY = Math.min(this.graphicsHeight - 1, Math.max(y1, y2));
+    if (filled) {
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          this.graphicsBuffer[y][x] = color;
+        }
+      }
+    } else {
+      for (let x = minX; x <= maxX; x++) {
+        this.graphicsBuffer[minY][x] = color;
+        this.graphicsBuffer[maxY][x] = color;
+      }
+      for (let y = minY; y <= maxY; y++) {
+        this.graphicsBuffer[y][minX] = color;
+        this.graphicsBuffer[y][maxX] = color;
+      }
+    }
+    if (this.debug) console.log(`Rectangle ${filled ? 'filled' : 'outline'} from (${minX},${minY}) to (${maxX},${maxY})`);
+    this.requestRender();
+  }
+
+  /**
+   * Draw circle (outline or filled) using midpoint algorithm
+   * @param {number} cx
+   * @param {number} cy
+   * @param {number} r
+   * @param {boolean} filled
+   * @param {number|null} colorIndex
+   */
+  drawCircle(cx, cy, r, filled = false, colorIndex = null) {
+    this.isGraphicsMode = true;
+    const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
+    let x = r;
+    let y = 0;
+    let err = 0;
+    const plot = (px, py) => {
+      if (px >= 0 && px < this.graphicsWidth && py >= 0 && py < this.graphicsHeight) {
+        this.graphicsBuffer[py][px] = color;
+      }
+    };
+    const hline = (x1, x2, yy) => {
+      const min = Math.max(0, Math.min(x1, x2));
+      const max = Math.min(this.graphicsWidth - 1, Math.max(x1, x2));
+      if (yy < 0 || yy >= this.graphicsHeight) return;
+      for (let xx = min; xx <= max; xx++) this.graphicsBuffer[yy][xx] = color;
+    };
+    while (x >= y) {
+      if (filled) {
+        hline(cx - x, cx + x, cy + y);
+        hline(cx - y, cx + y, cy + x);
+        hline(cx - x, cx + x, cy - y);
+        hline(cx - y, cx + y, cy - x);
+      } else {
+        plot(cx + x, cy + y); plot(cx + y, cy + x);
+        plot(cx - y, cy + x); plot(cx - x, cy + y);
+        plot(cx - x, cy - y); plot(cx - y, cy - x);
+        plot(cx + y, cy - x); plot(cx + x, cy - y);
+      }
+      y += 1;
+      if (err <= 0) {
+        err += 2 * y + 1;
+      }
+      if (err > 0) {
+        x -= 1;
+        err -= 2 * x + 1;
+      }
+    }
+    if (this.debug) console.log(`Circle ${filled ? 'filled' : 'outline'} at (${cx},${cy}) r=${r}`);
+    this.requestRender();
+  }
+
+  /**
+   * Flood fill starting at (x,y) replacing target color with current
+   */
+  floodFill(x, y, colorIndex = null) {
+    this.isGraphicsMode = true;
+    const newColor = colorIndex !== null ? colorIndex : this.currentPixelColor;
+    if (x < 0 || y < 0 || x >= this.graphicsWidth || y >= this.graphicsHeight) return;
+    const target = this.graphicsBuffer[y][x];
+    if (target === newColor) return;
+    const stack = [[x, y]];
+    while (stack.length) {
+      const [cx, cy] = stack.pop();
+      if (cx < 0 || cy < 0 || cx >= this.graphicsWidth || cy >= this.graphicsHeight) continue;
+      if (this.graphicsBuffer[cy][cx] !== target) continue;
+      this.graphicsBuffer[cy][cx] = newColor;
+      stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+    }
+    if (this.debug) console.log(`Flood fill from (${x},${y})`);
     this.requestRender();
   }
   
