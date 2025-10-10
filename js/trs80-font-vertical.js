@@ -222,3 +222,19 @@ window.FONT_DATA_VERTICAL = {
   '\xFE': [252,248,240,224,192,128],
   '\xFF': [85,170,85,170,85,170]
 };
+
+// Auto-generate control characters 1–31 as vertical line bitmasks across 6 columns.
+// Each bit (LSB = leftmost column) turns on a full-height vertical line in that column.
+(function(){
+  if (!window.FONT_DATA_VERTICAL) return;
+  for (let code = 1; code <= 31; code++) {
+    const ch = String.fromCharCode(code);
+    if (!window.FONT_DATA_VERTICAL[ch]) {
+      const cols = [0,0,0,0,0,0];
+      for (let col = 0; col < 6; col++) {
+        if (code & (1 << col)) cols[col] = 255; // full 8-pixel height
+      }
+      window.FONT_DATA_VERTICAL[ch] = cols;
+    }
+  }
+})();
