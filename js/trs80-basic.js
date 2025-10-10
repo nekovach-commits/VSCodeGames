@@ -203,6 +203,10 @@ window.TRS80Basic = class TRS80Basic {
         this.display.addChar('?FILL X,Y\n');
         this.display.setTextColor(14);
       }
+    } else if (line.startsWith('IF ')) {
+      // Direct mode IF support
+      const expr = originalLine.substring(3).trim();
+      this.cmdIf(expr);
     }
   }
   
@@ -301,6 +305,9 @@ window.TRS80Basic = class TRS80Basic {
               this.display.setTextColor(14);
             }
           }
+          break;
+        case 'IF':
+          this.cmdIf(parts.slice(1).join(' '));
           break;
           
         case 'HTAB':
@@ -562,6 +569,67 @@ window.TRS80Basic = class TRS80Basic {
   cmdEnd() {
     this.isRunning = false;
     this.display.addChar('Program ended\n');
+  }
+
+  /**
+   * IF <condition> THEN <statement> [ELSE <statement>]
+   * Supports numeric comparisons: =, <>, <, <=, >, >=
+   */
+  cmdIf(rest) {
+    // Split on THEN (first occurrence)
+    const thenIdx = rest.toUpperCase().indexOf(' THEN ');
+    if (thenIdx === -1) {
+      this.display.setTextColor(2);
+      this.display.addChar('?IF THEN\n');
+      this.display.setTextColor(14);
+      return;
+    }
+    const condStr = rest.substring(0, thenIdx).trim();
+    const afterThen = rest.substring(thenIdx + 6).trim();
+    // Optional ELSE
+    let thenStmt = afterThen;
+    let elseStmt = null;
+    const elseIdx = afterThen.toUpperCase().indexOf(' ELSE ');
+    if (elseIdx !== -1) {
+      thenStmt = afterThen.substring(0, elseIdx).trim();
+      elseStmt = afterThen.substring(elseIdx + 6).trim();
+    }
+    const cond = this.evaluateCondition(condStr);
+    const stmt = cond ? thenStmt : elseStmt;
+    if (stmt) {
+      // Try implicit assignment first (e.g., C=C+1)
+      if (!this.tryImplicitAssignment(stmt)) {
+        // Otherwise execute as a command line (allow commands like PRINT "OK")
+        this.executeCommand(stmt);
+      }
+    }
+  }
+
+  /** Evaluate simple numeric condition */
+  evaluateCondition(expr) {
+    // Support operators in order of decreasing length
+    const ops = ['<=', '>=', '<>', '<', '>', '='];
+    const upper = expr.toUpperCase();
+    for (const op of ops) {
+      const idx = upper.indexOf(op);
+      if (idx !== -1) {
+        const left = expr.substring(0, idx).trim();
+        const right = expr.substring(idx + op.length).trim();
+        const l = parseInt(this.evaluateExpression(left), 10);
+        const r = parseInt(this.evaluateExpression(right), 10);
+        switch (op) {
+          case '<=': return l <= r;
+          case '>=': return l >= r;
+          case '<>': return l !== r;
+          case '<': return l < r;
+          case '>': return l > r;
+          case '=': return l === r;
+        }
+      }
+    }
+    // Fallback: non-zero means true
+    const v = parseInt(this.evaluateExpression(expr), 10);
+    return !!v;
   }
   
   /**
