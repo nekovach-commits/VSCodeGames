@@ -237,6 +237,8 @@ window.TRS80Display = class TRS80Display {
   setTextColor(colorIndex) {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentTextColor = colorIndex;
+      // Keep graphics pixel color in sync with text foreground for simplicity
+      this.currentPixelColor = colorIndex;
       if (this.debug) console.log(`Text color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
     }
   }

@@ -132,6 +132,34 @@ window.TRS80Basic = class TRS80Basic {
         displayInterface.addChar('\n');
         displayInterface.setTextColor(14);
       }
+    } else if (line.startsWith('PLOT ')) {
+      const expr = originalLine.substring(5).trim();
+      const parts = expr.split(',');
+      if (parts.length === 2) {
+        const x = parseInt(this.evaluateExpression(parts[0].trim()), 10);
+        const y = parseInt(this.evaluateExpression(parts[1].trim()), 10);
+        if (!this.display.isGraphicsMode) this.display.toggleGraphicsMode();
+        this.display.drawPixel(x, y);
+      } else {
+        this.display.setTextColor(2);
+        this.display.addChar('?PLOT X,Y\n');
+        this.display.setTextColor(14);
+      }
+    } else if (line.startsWith('LINE ')) {
+      const expr = originalLine.substring(5).trim();
+      const parts = expr.split(',');
+      if (parts.length === 4) {
+        const x1 = parseInt(this.evaluateExpression(parts[0].trim()), 10);
+        const y1 = parseInt(this.evaluateExpression(parts[1].trim()), 10);
+        const x2 = parseInt(this.evaluateExpression(parts[2].trim()), 10);
+        const y2 = parseInt(this.evaluateExpression(parts[3].trim()), 10);
+        if (!this.display.isGraphicsMode) this.display.toggleGraphicsMode();
+        this.display.drawLine(x1, y1, x2, y2);
+      } else {
+        this.display.setTextColor(2);
+        this.display.addChar('?LINE X1,Y1,X2,Y2\n');
+        this.display.setTextColor(14);
+      }
     }
   }
   
@@ -402,7 +430,7 @@ window.TRS80Basic = class TRS80Basic {
     const y = parseInt(this.evaluateExpression(coords[1].trim()));
     
     // Switch to graphics mode if not already
-    if (!this.display.graphicsMode) {
+    if (!this.display.isGraphicsMode) {
       this.display.toggleGraphicsMode();
     }
     
@@ -424,7 +452,7 @@ window.TRS80Basic = class TRS80Basic {
     const y2 = parseInt(this.evaluateExpression(coords[3].trim()));
     
     // Switch to graphics mode if not already
-    if (!this.display.graphicsMode) {
+    if (!this.display.isGraphicsMode) {
       this.display.toggleGraphicsMode();
     }
     
