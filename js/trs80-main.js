@@ -10,11 +10,13 @@
   
   // Check if all dependencies are loaded
   function checkDependencies() {
+    // Advanced renderer needs config, display, keyboard, BASIC, and the vertical font renderer
     return window.TRS80_CONFIG && 
            window.TRS80Display && 
            window.TRS80Keyboard && 
-           window.TRS80Basic && 
-           window.FONT_DATA;
+           window.TRS80Basic &&
+           window.FONT_DATA_VERTICAL &&
+           typeof window.drawChar === 'function';
   }
   
   function initSystem() {

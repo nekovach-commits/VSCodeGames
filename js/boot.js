@@ -79,7 +79,7 @@
           }
         }
       }
-      // Load font data first - required by all renderers
+      // Load font data for fallback renderer
       console.log('Loading font data...');
       await loadScript('js/trs80-font.js');
       await loadScript('js/trs80-font-grph.js');
