@@ -429,11 +429,7 @@ window.TRS80Basic = class TRS80Basic {
     const x = parseInt(this.evaluateExpression(coords[0].trim()));
     const y = parseInt(this.evaluateExpression(coords[1].trim()));
     
-    // Switch to graphics mode if not already
-    if (!this.display.isGraphicsMode) {
-      this.display.toggleGraphicsMode();
-    }
-    
+    // Do not auto-toggle graphics mode; text overlay remains visible
     this.display.drawPixel(x, y);
   }
   
@@ -451,11 +447,7 @@ window.TRS80Basic = class TRS80Basic {
     const x2 = parseInt(this.evaluateExpression(coords[2].trim()));
     const y2 = parseInt(this.evaluateExpression(coords[3].trim()));
     
-    // Switch to graphics mode if not already
-    if (!this.display.isGraphicsMode) {
-      this.display.toggleGraphicsMode();
-    }
-    
+    // Do not auto-toggle graphics mode; text overlay remains visible
     this.display.drawLine(x1, y1, x2, y2);
   }
   

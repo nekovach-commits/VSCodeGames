@@ -298,6 +298,7 @@ window.TRS80Display = class TRS80Display {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
       if (this.debug) console.log(`Pixel drawn at (${x},${y}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+      this.requestRender();
     }
   }
   
@@ -338,6 +339,7 @@ window.TRS80Display = class TRS80Display {
     }
     
     if (this.debug) console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+    this.requestRender();
   }
   
   /**
@@ -348,6 +350,7 @@ window.TRS80Display = class TRS80Display {
       this.graphicsBuffer[y].fill(this.currentBackgroundColor);
     }
     if (this.debug) console.log('Graphics buffer cleared');
+    this.requestRender();
   }
   
   /**
@@ -399,17 +402,12 @@ window.TRS80Display = class TRS80Display {
   this.ctx.fillRect(0, 0, BORDER_SIZE, this.canvas.height); // Left
   this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
-    // Render based on current mode
+    // Render graphics layer first (if enabled), then always render text and cursor on top
     if (this.isGraphicsMode) {
       this.renderGraphics(BORDER_SIZE);
-    } else {
-      this.renderText(BORDER_SIZE);
     }
-    
-    // Always render cursor in text mode
-    if (!this.isGraphicsMode) {
-      this.renderCursor(BORDER_SIZE);
-    }
+    this.renderText(BORDER_SIZE);
+    this.renderCursor(BORDER_SIZE);
   }
   
   /**
