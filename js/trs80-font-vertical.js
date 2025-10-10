@@ -1,5 +1,37 @@
 // TRS-80 Model 100 FONT DATA VERTICAL: ASCII 33–126 and GRPH 131–255
 window.FONT_DATA_VERTICAL = {
+  // Control characters 1–31 rendered as vertical line bitmasks across 6 columns
+  '\x01': [255,0,0,0,0,0],
+  '\x02': [0,255,0,0,0,0],
+  '\x03': [255,255,0,0,0,0],
+  '\x04': [0,0,255,0,0,0],
+  '\x05': [255,0,255,0,0,0],
+  '\x06': [0,255,255,0,0,0],
+  '\x07': [255,255,255,0,0,0],
+  '\x08': [0,0,0,255,0,0],
+  '\x09': [255,0,0,255,0,0],
+  '\x0A': [0,255,0,255,0,0],
+  '\x0B': [255,255,0,255,0,0],
+  '\x0C': [0,0,255,255,0,0],
+  '\x0D': [255,0,255,255,0,0],
+  '\x0E': [0,255,255,255,0,0],
+  '\x0F': [255,255,255,255,0,0],
+  '\x10': [0,0,0,0,255,0],
+  '\x11': [255,0,0,0,255,0],
+  '\x12': [0,255,0,0,255,0],
+  '\x13': [255,255,0,0,255,0],
+  '\x14': [0,0,255,0,255,0],
+  '\x15': [255,0,255,0,255,0],
+  '\x16': [0,255,255,0,255,0],
+  '\x17': [255,255,255,0,255,0],
+  '\x18': [0,0,0,255,255,0],
+  '\x19': [255,0,0,255,255,0],
+  '\x1A': [0,255,0,255,255,0],
+  '\x1B': [255,255,0,255,255,0],
+  '\x1C': [0,0,255,255,255,0],
+  '\x1D': [255,0,255,255,255,0],
+  '\x1E': [0,255,255,255,255,0],
+  '\x1F': [255,255,255,255,255,0],
   // ASCII 33–126
   '!': [0,0,95,0,0,0],
   '"': [0,7,0,7,0,0],
@@ -222,19 +254,3 @@ window.FONT_DATA_VERTICAL = {
   '\xFE': [252,248,240,224,192,128],
   '\xFF': [85,170,85,170,85,170]
 };
-
-// Auto-generate control characters 1–31 as vertical line bitmasks across 6 columns.
-// Each bit (LSB = leftmost column) turns on a full-height vertical line in that column.
-(function(){
-  if (!window.FONT_DATA_VERTICAL) return;
-  for (let code = 1; code <= 31; code++) {
-    const ch = String.fromCharCode(code);
-    if (!window.FONT_DATA_VERTICAL[ch]) {
-      const cols = [0,0,0,0,0,0];
-      for (let col = 0; col < 6; col++) {
-        if (code & (1 << col)) cols[col] = 255; // full 8-pixel height
-      }
-      window.FONT_DATA_VERTICAL[ch] = cols;
-    }
-  }
-})();
