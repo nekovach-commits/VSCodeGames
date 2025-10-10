@@ -49,8 +49,8 @@
         try {
           // Load advanced system using script tags (avoiding ES6 modules for now)
           await loadScript('js/trs80-config.js');
-          await loadScript('js/trs80-font-vertical.js'); // Ensure FONT_DATA_VERTICAL is loaded
-          await loadScript('js/trs80-font.js');
+          await loadScript('js/trs80-font-vertical.js'); // FONT_DATA_VERTICAL + drawChar
+          // await loadScript('js/trs80-font.js'); // not needed; consolidated into vertical file
           await loadScript('js/trs80-display.js');
           await loadScript('js/trs80-keyboard.js');
           await loadScript('js/trs80-basic.js');
