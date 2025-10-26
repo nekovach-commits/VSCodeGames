@@ -91,8 +91,8 @@
       if(!this.isKindle) {
         window.addEventListener('keydown', e=>this.onKey(e));
       }
-      // Kindle-specific input field handler (minimal tweak)
-      this.setupInputHandling();
+  // Kindle-specific input field handler (minimal tweak)
+  if(this.isKindle) this.setupInputHandling();
 
       // Kindle-specific canvas tweaks (minimal)
       if(this.isKindle) {
