@@ -174,12 +174,13 @@ window.TRS80Basic = class TRS80Basic {
       // Syntax: RECT x1,y1,x2,y2[,F]
       const parts = expr.split(',').map(p=>p.trim());
       if (parts.length === 4 || parts.length === 5) {
-        const x1 = parseInt(this.evaluateExpression(parts[0]), 10);
-        const y1 = parseInt(this.evaluateExpression(parts[1]), 10);
-        const x2 = parseInt(this.evaluateExpression(parts[2]), 10);
-        const y2 = parseInt(this.evaluateExpression(parts[3]), 10);
-        const filled = parts.length === 5 && parts[4].toUpperCase() === 'F';
-        this.display.drawRect(x1, y1, x2, y2, filled);
+  const x1 = parseInt(this.evaluateExpression(parts[0]), 10);
+  const y1 = parseInt(this.evaluateExpression(parts[1]), 10);
+  const x2 = parseInt(this.evaluateExpression(parts[2]), 10);
+  const y2 = parseInt(this.evaluateExpression(parts[3]), 10);
+  const filled = parts.length === 5 && parts[4].toUpperCase() === 'F';
+  if (typeof this.display.isGraphicsMode !== 'undefined') this.display.isGraphicsMode = true;
+  this.display.drawRect(x1, y1, x2, y2, filled);
       } else {
         this.display.setTextColor(2);
         this.display.addChar('?RECT X1,Y1,X2,Y2[,F]\n');
@@ -190,11 +191,12 @@ window.TRS80Basic = class TRS80Basic {
       // Syntax: CIRCLE cx,cy,r[,F]
       const parts = expr.split(',').map(p=>p.trim());
       if (parts.length === 3 || parts.length === 4) {
-        const cx = parseInt(this.evaluateExpression(parts[0]), 10);
-        const cy = parseInt(this.evaluateExpression(parts[1]), 10);
-        const r = parseInt(this.evaluateExpression(parts[2]), 10);
-        const filled = parts.length === 4 && parts[3].toUpperCase() === 'F';
-        this.display.drawCircle(cx, cy, r, filled);
+  const cx = parseInt(this.evaluateExpression(parts[0]), 10);
+  const cy = parseInt(this.evaluateExpression(parts[1]), 10);
+  const r = parseInt(this.evaluateExpression(parts[2]), 10);
+  const filled = parts.length === 4 && parts[3].toUpperCase() === 'F';
+  if (typeof this.display.isGraphicsMode !== 'undefined') this.display.isGraphicsMode = true;
+  this.display.drawCircle(cx, cy, r, filled);
       } else {
         this.display.setTextColor(2);
         this.display.addChar('?CIRCLE CX,CY,R[,F]\n');
@@ -205,9 +207,10 @@ window.TRS80Basic = class TRS80Basic {
       // Syntax: FILL x,y
       const parts = expr.split(',').map(p=>p.trim());
       if (parts.length === 2) {
-        const x = parseInt(this.evaluateExpression(parts[0]), 10);
-        const y = parseInt(this.evaluateExpression(parts[1]), 10);
-        this.display.floodFill(x, y);
+  const x = parseInt(this.evaluateExpression(parts[0]), 10);
+  const y = parseInt(this.evaluateExpression(parts[1]), 10);
+  if (typeof this.display.isGraphicsMode !== 'undefined') this.display.isGraphicsMode = true;
+  this.display.floodFill(x, y);
       } else {
         this.display.setTextColor(2);
         this.display.addChar('?FILL X,Y\n');
