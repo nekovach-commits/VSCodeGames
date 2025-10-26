@@ -79,10 +79,12 @@
           }
         }
       }
-      // Load font data for fallback renderer
-      console.log('Loading font data...');
-      await loadScript('js/trs80-font.js');
-      await loadScript('js/trs80-font-grph.js');
+  // Load font data for fallback renderer
+  console.log('Loading font data...');
+  // Prefer vertical font (enables same glyphs for simple renderer); GRPH remains optional
+  try { await loadScript('js/trs80-font-vertical.js'); } catch(_) {}
+  // Legacy FONT_DATA no longer needed; keep GRPH for optional compatibility
+  await loadScript('js/trs80-font-grph.js');
       if(window.FONT_DATA && window.FONT_DATA_GRPH){
         window.FONT_DATA = Object.assign({}, window.FONT_DATA, window.FONT_DATA_GRPH);
         console.log('✓ Font data and GRPH data loaded and merged');

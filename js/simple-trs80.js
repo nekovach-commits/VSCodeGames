@@ -15,6 +15,8 @@
   const CHAR_W=6, CHAR_H=8, COLS=40, ROWS=20;
   // Merge GRPH font data if available
   const FONT = Object.assign({}, window.FONT_DATA, window.FONT_DATA_GRPH || {});
+  const VFONT = window.FONT_DATA_VERTICAL || null;
+  const VCONV_CACHE = new Map();
   
   // Emergency fallback font data for basic characters if FONT_DATA fails
   // Using 5-pixel wide patterns (bits 7-3) to leave space for proper character spacing
@@ -30,16 +32,34 @@
   
 
   
+  function vToRows(cols){
+    // cols: length-6 array where each value has 8 bits of vertical pixels (LSB = row0)
+    const rows = new Array(8).fill(0);
+    for (let row=0; row<8; row++){
+      let bits = 0;
+      for (let col=0; col<6; col++){
+        if (cols[col] & (1<<row)) bits |= (1<<(5-col));
+      }
+      rows[row] = bits;
+    }
+    return rows;
+  }
   function getGlyph(ch){
-
-    
-  // Support all codes 1-255 (CHR$)
-  const code = ch.charCodeAt(0);
-  if (FONT[String.fromCharCode(code)]) return FONT[String.fromCharCode(code)];
-  // Fallback font for basic ASCII if needed
-  if (FALLBACK_FONT[ch]) return FALLBACK_FONT[ch];
-  // Last resort - return a simple block
-  return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
+    // Prefer vertical font if available
+    if (VFONT){
+      const v = VFONT[ch] || VFONT[String.fromCharCode(ch.charCodeAt(0))];
+      if (v){
+        if (!VCONV_CACHE.has(ch)) VCONV_CACHE.set(ch, vToRows(v));
+        return VCONV_CACHE.get(ch);
+      }
+    }
+    // Support all codes 1-255 (CHR$)
+    const code = ch.charCodeAt(0);
+    if (FONT[String.fromCharCode(code)]) return FONT[String.fromCharCode(code)];
+    // Fallback font for basic ASCII if needed
+    if (FALLBACK_FONT[ch]) return FALLBACK_FONT[ch];
+    // Last resort - return a simple block
+    return [0x7F, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7F, 0x00];
   }
   class SimpleTRS80 {
     constructor(canvas, pixelSize){
