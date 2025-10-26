@@ -40,6 +40,15 @@ window.TRS80Basic = class TRS80Basic {
    * @param {string} line - The BASIC command line
    */
   processLine(line) {
+    // Apple II style graphics/text mode commands
+    if (line.trim() === 'GR') {
+      if (typeof this.display.isGraphicsMode !== 'undefined') this.display.isGraphicsMode = true;
+      return;
+    }
+    if (line.trim() === 'TEXT') {
+      if (typeof this.display.isGraphicsMode !== 'undefined') this.display.isGraphicsMode = false;
+      return;
+    }
     console.log('BASIC processLine called with:', line);
     if (!line.trim()) return;
     
