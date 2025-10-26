@@ -44,7 +44,7 @@ window.TRS80Display = class TRS80Display {
     this.lastBlinkTime = Date.now();
     
     // Graphics mode support
-    this.isGraphicsMode = false;
+  // this.isGraphicsMode = false; // Always show graphics under text
     this.graphicsBuffer = []; // Pixel-level graphics buffer
     this.graphicsWidth = 40 * 6;  // 240 pixels wide (40 chars × 6 pixels)
     this.graphicsHeight = 20 * 8; // 160 pixels tall (20 rows × 8 pixels)
@@ -272,8 +272,8 @@ window.TRS80Display = class TRS80Display {
    * Toggle between text and graphics mode
    */
   toggleGraphicsMode() {
-    this.isGraphicsMode = !this.isGraphicsMode;
-    if (this.debug) console.log(`Graphics mode: ${this.isGraphicsMode ? 'ON' : 'OFF'}`);
+    // No-op: always show graphics under text
+    if (this.debug) console.log('Graphics mode toggle called (no-op, always on)');
   }
   
   /**
@@ -295,7 +295,7 @@ window.TRS80Display = class TRS80Display {
    */
   drawPixel(x, y, colorIndex = null) {
     // Ensure graphics layer is active
-    this.isGraphicsMode = true;
+  // this.isGraphicsMode = true; // Always show graphics
     if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
@@ -314,7 +314,7 @@ window.TRS80Display = class TRS80Display {
    */
   drawLine(x1, y1, x2, y2, colorIndex = null) {
     // Ensure graphics layer is active
-    this.isGraphicsMode = true;
+  // this.isGraphicsMode = true; // Always show graphics
     const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
     
     const dx = Math.abs(x2 - x1);
@@ -367,7 +367,7 @@ window.TRS80Display = class TRS80Display {
    * @param {number|null} colorIndex
    */
   drawRect(x1, y1, x2, y2, filled = false, colorIndex = null) {
-    this.isGraphicsMode = true;
+  // this.isGraphicsMode = true; // Always show graphics
     const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
     const minX = Math.max(0, Math.min(x1, x2));
     const maxX = Math.min(this.graphicsWidth - 1, Math.max(x1, x2));
@@ -402,7 +402,7 @@ window.TRS80Display = class TRS80Display {
    * @param {number|null} colorIndex
    */
   drawCircle(cx, cy, r, filled = false, colorIndex = null) {
-    this.isGraphicsMode = true;
+  // this.isGraphicsMode = true; // Always show graphics
     const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
     let x = r;
     let y = 0;
@@ -447,7 +447,7 @@ window.TRS80Display = class TRS80Display {
    * Flood fill starting at (x,y) replacing target color with current
    */
   floodFill(x, y, colorIndex = null) {
-    this.isGraphicsMode = true;
+  // this.isGraphicsMode = true; // Always show graphics
     const newColor = colorIndex !== null ? colorIndex : this.currentPixelColor;
     if (x < 0 || y < 0 || x >= this.graphicsWidth || y >= this.graphicsHeight) return;
     const target = this.graphicsBuffer[y][x];
@@ -514,9 +514,7 @@ window.TRS80Display = class TRS80Display {
   this.ctx.fillRect(this.canvas.width - BORDER_SIZE, 0, BORDER_SIZE, this.canvas.height); // Right
     
     // Render graphics layer first (if enabled), then always render text and cursor on top
-    if (this.isGraphicsMode) {
-      this.renderGraphics(BORDER_SIZE);
-    }
+    this.renderGraphics(BORDER_SIZE);
     this.renderText(BORDER_SIZE);
     this.renderCursor(BORDER_SIZE);
   }
