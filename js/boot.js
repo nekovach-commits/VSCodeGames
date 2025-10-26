@@ -106,8 +106,11 @@
       if(!window.SimpleTRS80){
         try {
           // Load font data for emergency fallback too
-          if(!window.FONT_DATA){
-            await loadScript('js/trs80-font.js');
+          if(!window.FONT_DATA_VERTICAL){
+            try { await loadScript('js/trs80-font-vertical.js'); } catch(_) {}
+          }
+          if(!window.FONT_DATA_GRPH){
+            try { await loadScript('js/trs80-font-grph.js'); } catch(_) {}
           }
           // Load BASIC processor for emergency fallback too
 
