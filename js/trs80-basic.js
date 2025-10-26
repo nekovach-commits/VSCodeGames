@@ -97,7 +97,17 @@ window.TRS80Basic = class TRS80Basic {
           exprPortion = exprPortion.replace(/;\s*$/, '');
         }
       }
-      let value = this.evaluateExpression(exprPortion.trim());
+      exprPortion = exprPortion.trim();
+      let value;
+      if (exprPortion.startsWith('"') && exprPortion.endsWith('"')) {
+        // Quoted string: print as text
+        value = exprPortion.slice(1, -1);
+      } else {
+        // Variable or expression: print value (0 if undefined variable)
+        let v = this.evaluateExpression(exprPortion);
+        if (typeof v === 'undefined' || v === null || (typeof v === 'string' && v === exprPortion)) v = 0;
+        value = v;
+      }
       displayInterface.addText(String(value) + (suppressNewline ? '' : '\n'));
     } else if (line === 'CLS') {
       displayInterface.clearScreen();
