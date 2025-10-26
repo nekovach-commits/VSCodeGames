@@ -102,28 +102,8 @@
         console.error('SimpleTRS80 class not found');
       }
     } catch(e){
-      console.error('Boot failure, attempting emergency fallback', e);
-      if(!window.SimpleTRS80){
-        try {
-          // Load font data for emergency fallback too
-          if(!window.FONT_DATA_VERTICAL){
-            try { await loadScript('js/trs80-font-vertical.js'); } catch(_) {}
-          }
-          if(!window.FONT_DATA_GRPH){
-            try { await loadScript('js/trs80-font-grph.js'); } catch(_) {}
-          }
-          // Load BASIC processor for emergency fallback too
-
-          await loadScript('js/simple-trs80.js');
-          if(window.SimpleTRS80){ 
-            new window.SimpleTRS80(canvas, pixelSize); 
-            console.log('✓ Emergency canvas fallback loaded');
-          }
-        } catch(e2) {
-          console.error('All fallbacks failed:', e2);
-          document.body.innerHTML += '<div style="color:red;font-family:monospace;padding:20px;">BOOT FAILURE: ' + e.message + '</div>';
-        }
-      }
+      console.error('Boot failure:', e);
+      document.body.innerHTML += '<div style="color:red;font-family:monospace;padding:20px;">BOOT FAILURE: ' + e.message + '</div>';
     }
   }
   start();
