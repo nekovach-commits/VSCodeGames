@@ -12,7 +12,7 @@ window.TRS80Display = class TRS80Display {
     this.ctx = canvas.getContext('2d');
     
     // Debug controls and render scheduling
-    this.debug = false; // set to true to enable verbose logs
+  this.debug = true; // set to true to enable verbose logs
     this.renderScheduled = false; // coalesce renders via requestAnimationFrame
     
     // Debug: Log initial canvas size
@@ -27,6 +27,9 @@ window.TRS80Display = class TRS80Display {
     if (this.pixelSize < 1) this.pixelSize = 1;
     this.charWidth = 6 * this.pixelSize;
     this.charHeight = 8 * this.pixelSize;
+    if (this.debug) {
+      console.log('[DEBUG] pixelSize:', this.pixelSize, 'charWidth:', this.charWidth, 'charHeight:', this.charHeight);
+    }
     
     // Make canvas focusable for touch devices
     this.canvas.setAttribute('tabindex', '0');
@@ -68,8 +71,8 @@ window.TRS80Display = class TRS80Display {
     for (let i = 0; i < window.TRS80_CONFIG.BUFFER_SIZE; i++) {
       this.textBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill(' ');
       this.colorBuffer[i] = new Array(window.TRS80_CONFIG.SCREEN_WIDTH).fill({
-        text: window.TRS80_CONFIG.DEFAULT_TEXT_COLOR,
-        background: window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR
+        text: 0, // Black
+        background: 15 // White
       });
     }
   }
@@ -79,10 +82,15 @@ window.TRS80Display = class TRS80Display {
    */
   initializeGraphicsBuffer() {
     this.graphicsBuffer = [];
+    // Fill with white (index 15) for graphics rendering
+    const whiteColor = 15;
     for (let y = 0; y < this.graphicsHeight; y++) {
-      this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR);
+      this.graphicsBuffer[y] = new Array(this.graphicsWidth).fill(whiteColor);
     }
-    if (this.debug) console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels`);
+    if (this.debug) {
+      console.log(`Graphics buffer initialized: ${this.graphicsWidth}×${this.graphicsHeight} pixels (white)`);
+      console.log('First row of graphicsBuffer:', this.graphicsBuffer[0].slice(0, 20));
+    }
   }
   
   /**
@@ -153,6 +161,7 @@ window.TRS80Display = class TRS80Display {
       this.cursorCol = window.TRS80_CONFIG.SCREEN_WIDTH - 1;
       this.textBuffer[this.cursorRow][this.cursorCol] = ' ';
     }
+    // Only call adjustScrollToShowCursor once
     this.adjustScrollToShowCursor();
   }
   
@@ -240,6 +249,10 @@ window.TRS80Display = class TRS80Display {
       // Keep graphics pixel color in sync with text foreground for simplicity
       this.currentPixelColor = colorIndex;
       if (this.debug) console.log(`Text color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+    } else {
+      // Default to black if invalid
+      this.currentTextColor = 0;
+      this.currentPixelColor = 0;
     }
   }
   
@@ -251,6 +264,9 @@ window.TRS80Display = class TRS80Display {
     if (colorIndex >= 0 && colorIndex <= 15) {
       this.currentBackgroundColor = colorIndex;
       if (this.debug) console.log(`Background color set to: ${window.TRS80_CONFIG.C64_COLORS[colorIndex].name}`);
+    } else {
+      // Default to white if invalid
+      this.currentBackgroundColor = 15;
     }
   }
   
@@ -261,8 +277,8 @@ window.TRS80Display = class TRS80Display {
     for (let row = 0; row < window.TRS80_CONFIG.BUFFER_SIZE; row++) {
       for (let col = 0; col < window.TRS80_CONFIG.SCREEN_WIDTH; col++) {
         this.colorBuffer[row][col] = {
-          text: this.colorBuffer[row][col].text,
-          background: this.currentBackgroundColor
+          text: 0, // Black
+          background: 15 // White
         };
       }
     }
@@ -294,13 +310,20 @@ window.TRS80Display = class TRS80Display {
    * @param {number} colorIndex - Optional color (uses current if not specified)
    */
   drawPixel(x, y, colorIndex = null) {
+    if (this.debug) {
+      console.log(`[drawPixel] CALLED with (${x},${y}), colorIndex: ${colorIndex}`);
+    }
     // Ensure graphics layer is active
-  // this.isGraphicsMode = true; // Always show graphics
+    // this.isGraphicsMode = true; // Always show graphics
     if (x >= 0 && x < this.graphicsWidth && y >= 0 && y < this.graphicsHeight) {
       const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
       this.graphicsBuffer[y][x] = color;
-      if (this.debug) console.log(`Pixel drawn at (${x},${y}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+      if (this.debug) {
+        console.log(`[drawPixel] Pixel drawn at (${x},${y}) with color index ${color} (${window.TRS80_CONFIG.C64_COLORS[color]?.name})`);
+      }
       this.requestRender();
+    } else if (this.debug) {
+      console.warn(`[drawPixel] Out of bounds: (${x},${y})`);
     }
   }
   
@@ -313,24 +336,31 @@ window.TRS80Display = class TRS80Display {
    * @param {number} colorIndex - Optional color
    */
   drawLine(x1, y1, x2, y2, colorIndex = null) {
+    if (this.debug) {
+      console.log(`[drawLine] CALLED with (${x1},${y1}) to (${x2},${y2}), colorIndex: ${colorIndex}`);
+    }
     // Ensure graphics layer is active
-  // this.isGraphicsMode = true; // Always show graphics
+    // this.isGraphicsMode = true; // Always show graphics
     const color = colorIndex !== null ? colorIndex : this.currentPixelColor;
-    
     const dx = Math.abs(x2 - x1);
     const dy = Math.abs(y2 - y1);
     const sx = x1 < x2 ? 1 : -1;
     const sy = y1 < y2 ? 1 : -1;
     let err = dx - dy;
-    
     let x = x1;
     let y = y1;
-    
+    let pixelCount = 0;
+    let safety = 0;
+    const MAX_PIXELS = 10000;
     while (true) {
+      // Break if out of bounds to prevent infinite loop
+      if (x < 0 || x >= this.graphicsWidth || y < 0 || y >= this.graphicsHeight) {
+        if (this.debug) console.warn('[drawLine] Out of bounds, breaking', {x, y, x1, y1, x2, y2, pixelCount});
+        break;
+      }
       this.drawPixel(x, y, color);
-      
+      pixelCount++;
       if (x === x2 && y === y2) break;
-      
       const e2 = 2 * err;
       if (e2 > -dy) {
         err -= dy;
@@ -340,9 +370,15 @@ window.TRS80Display = class TRS80Display {
         err += dx;
         y += sy;
       }
+      safety++;
+      if (safety > MAX_PIXELS) {
+        if (this.debug) console.error('[drawLine] Safety break: too many pixels', {x1, y1, x2, y2, pixelCount});
+        break;
+      }
     }
-    
-    if (this.debug) console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color ${window.TRS80_CONFIG.C64_COLORS[color].name}`);
+    if (this.debug) {
+      console.log(`Line drawn from (${x1},${y1}) to (${x2},${y2}) with color index ${color} (${window.TRS80_CONFIG.C64_COLORS[color]?.name}), pixels: ${pixelCount}`);
+    }
     this.requestRender();
   }
   
@@ -350,10 +386,11 @@ window.TRS80Display = class TRS80Display {
    * Clear graphics buffer
    */
   clearGraphics() {
+    // Always clear to white (index 15)
     for (let y = 0; y < this.graphicsHeight; y++) {
-      this.graphicsBuffer[y].fill(this.currentBackgroundColor);
+      this.graphicsBuffer[y].fill(15);
     }
-    if (this.debug) console.log('Graphics buffer cleared');
+    if (this.debug) console.log('Graphics buffer cleared to white');
     this.requestRender();
   }
 
@@ -496,13 +533,8 @@ window.TRS80Display = class TRS80Display {
     }
     
     // Clear canvas with background color (white if transparent)
-    if (window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR === -1) {
-      // Transparent background - use white
-      this.ctx.fillStyle = '#ffffff';
-    } else {
-      const bgColor = window.TRS80_CONFIG.C64_COLORS[window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR];
-      this.ctx.fillStyle = bgColor.hex;
-    }
+    // Always use white for background
+    this.ctx.fillStyle = '#ffffff';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
   // Draw border frame
@@ -560,13 +592,19 @@ window.TRS80Display = class TRS80Display {
    * Render graphics mode display
    */
   renderGraphics(BORDER_SIZE) {
-    // Render each pixel from graphics buffer
+    if (this.debug) {
+      console.log('[DEBUG] renderGraphics called');
+      console.log('Canvas size:', this.canvas.width, this.canvas.height);
+      console.log('Graphics buffer size:', this.graphicsWidth, this.graphicsHeight);
+      console.log('pixelSize:', this.pixelSize, 'charWidth:', this.charWidth, 'charHeight:', this.charHeight);
+    }
+    // Always render every pixel in the graphics buffer, including background color
     for (let y = 0; y < this.graphicsHeight; y++) {
       for (let x = 0; x < this.graphicsWidth; x++) {
         const colorIndex = this.graphicsBuffer[y][x];
         const color = window.TRS80_CONFIG.C64_COLORS[colorIndex];
-        
-        if (color && colorIndex !== window.TRS80_CONFIG.DEFAULT_BACKGROUND_COLOR) {
+        // Always draw the pixel, even if it's the background color (white)
+        if (color) {
           this.ctx.fillStyle = color.hex;
           const canvasX = BORDER_SIZE + x * this.pixelSize;
           const canvasY = BORDER_SIZE + y * this.pixelSize;

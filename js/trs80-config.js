@@ -65,7 +65,7 @@ window.TRS80_CONFIG = {
   
   // Default C64-style colors
   DEFAULT_TEXT_COLOR: 0,      // Black (Apple IIe default)
-  DEFAULT_BACKGROUND_COLOR: -1, // Transparent (white background)
+  DEFAULT_BACKGROUND_COLOR: 15, // White (force white, not magenta)
   BORDER_COLOR_INDEX: 5, // Use GRAY1 (Apple IIe color index 5) for border
   
   // === CURSOR BEHAVIOR ===

@@ -89,7 +89,7 @@
 
       // Input handling: desktop uses keyboard, Kindle uses input field
       if(!this.isKindle) {
-        window.addEventListener('keydown', e=>this.onKey(e));
+  window.addEventListener('keydown', e=>this.onKey(e));
       }
   // Kindle-specific input field handler (minimal tweak)
   if(this.isKindle) this.setupInputHandling();
@@ -113,7 +113,11 @@
     onKey(e){
       if(e.key.length===1){ this.putChar(e.key); }
       else if(e.key==='Enter'){ this.newLine(); }
-      else if(e.key==='Backspace'){ this.backspace(); e.preventDefault(); }
+      else if(e.key==='Backspace'){ 
+        // Only handle backspace once per keypress
+        this.backspace(); 
+        e.preventDefault(); 
+      }
     }
     putChar(ch){
       this.buffer[this.cursorY][this.cursorX]=ch;
