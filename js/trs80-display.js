@@ -12,7 +12,7 @@ window.TRS80Display = class TRS80Display {
     this.ctx = canvas.getContext('2d');
     
     // Debug controls and render scheduling
-  this.debug = true; // set to true to enable verbose logs
+  this.debug = false; // set to true to enable verbose logs
     this.renderScheduled = false; // coalesce renders via requestAnimationFrame
     
     // Debug: Log initial canvas size

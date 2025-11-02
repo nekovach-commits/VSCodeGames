@@ -253,21 +253,7 @@ window.TRS80Basic = class TRS80Basic {
     return;
   }
   
-  /**
-   * Execute program lines
-   */
-  executeProgram(lineNumbers) {
-    while (this.programCounter < lineNumbers.length && this.isRunning) {
-      const lineNum = lineNumbers[this.programCounter];
-      const command = this.program.get(lineNum);
-      
-      this.executeCommand(command);
-      this.programCounter++;
-    }
-    
-    this.isRunning = false;
-    this.isDirectMode = true;
-  }
+  // Removed early duplicate executeProgram; see the unified implementation at the bottom of the class.
   
   /**
    * LIST command - show program
@@ -317,6 +303,20 @@ window.TRS80Basic = class TRS80Basic {
     if (this.display.clearGraphics) {
       this.display.clearGraphics();
     }
+  }
+
+  /**
+   * RUN command - execute the current program
+   */
+  cmdRun() {
+    const lineNumbers = Array.from(this.program.keys()).sort((a, b) => a - b);
+    if (lineNumbers.length === 0) {
+      return; // nothing to run
+    }
+    this.isRunning = true;
+    this.isDirectMode = false;
+    this.programCounter = 0;
+    this.executeProgram(lineNumbers);
   }
   
   /**
@@ -406,6 +406,15 @@ window.TRS80Basic = class TRS80Basic {
   cmdEnd() {
     this.isRunning = false;
     this.display.addChar('Program ended\n');
+  }
+
+  /**
+   * Execute a single BASIC statement in program mode
+   * Route through the same parser as direct mode for parity
+   */
+  executeCommand(command) {
+    if (!command) return;
+    this.processLine(command);
   }
 
   /**
@@ -602,7 +611,7 @@ window.TRS80Basic = class TRS80Basic {
     throw new Error('NEXT WITHOUT FOR');
   }
 
-  /** Override executeProgram to integrate FOR/NEXT **/
+  /** Override executeProgram to integrate FOR/NEXT and unify execution path **/
   executeProgram(lineNumbers) {
     while (this.programCounter < lineNumbers.length && this.isRunning) {
       const lineNum = lineNumbers[this.programCounter];
