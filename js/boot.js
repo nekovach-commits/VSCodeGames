@@ -22,7 +22,13 @@
   const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple;
   const isOldBrowser = !window.Promise || !window.fetch || typeof Symbol === 'undefined';
   function loadScript(src, type='text/javascript'){
-    return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); });
+    return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=(e)=>reject(new Error('Failed to load '+src)); document.head.appendChild(s); });
+  }
+  function updateStatus(text, color){
+    try{
+      const el = document.getElementById('status-msg');
+      if (el){ el.textContent = 'System Status: ' + text; if(color) el.style.color = color; }
+    }catch(_){/* no-op */}
   }
   async function start(){
     // Debug info
@@ -68,15 +74,9 @@
           }
         } catch(advancedError) {
           console.error('Advanced system failed to load:', advancedError);
-          console.error('Error details:', advancedError.stack);
-          
-          if(isKindle) {
-            console.error('KINDLE: Advanced system failed - this should not happen!');
-            // Don't fall back for Kindle - we want to see what's wrong
-            throw advancedError;
-          } else {
-            console.log('Falling back to simple system...');
-          }
+          if (advancedError && advancedError.stack) console.error('Error details:', advancedError.stack);
+          console.warn('Falling back to simple system for all devices (including Kindle)...');
+          updateStatus('Advanced failed, using simple renderer', '#cc6600');
         }
       }
   // Load font data for fallback renderer
@@ -94,16 +94,20 @@
 
       // Canvas renderer for all devices (Kindle, desktop, mobile)
       console.log('Loading canvas renderer...');
+      updateStatus('Starting simple canvas renderer…', '#006600');
       await loadScript('js/simple-trs80.js');
       if(window.SimpleTRS80){ 
         new window.SimpleTRS80(canvas, pixelSize); 
         console.log('✓ Canvas renderer loaded successfully');
+        updateStatus('Ready', '#006600');
       } else {
         console.error('SimpleTRS80 class not found');
+        updateStatus('Renderer error', '#cc0000');
       }
     } catch(e){
       console.error('Boot failure:', e);
-      document.body.innerHTML += '<div style="color:red;font-family:monospace;padding:20px;">BOOT FAILURE: ' + e.message + '</div>';
+      updateStatus('Boot failure', '#cc0000');
+      document.body.innerHTML += '<div style="color:red;font-family:monospace;padding:20px;">BOOT FAILURE: ' + (e && e.message ? e.message : e) + '</div>';
     }
   }
   start();
