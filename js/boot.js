@@ -97,9 +97,50 @@
       updateStatus('Starting simple canvas renderer…', '#006600');
       await loadScript('js/simple-trs80.js');
       if(!window.SimpleTRS80){
-        console.error('SimpleTRS80 class not found');
-        updateStatus('Renderer error', '#cc0000');
-        return;
+        console.warn('SimpleTRS80 class not found after loading file. Defining ultra-simple ES5 fallback.');
+        updateStatus('Using ultra-simple ES5 renderer', '#cc6600');
+        // Ultra-simple ES5 renderer (no classes/arrow/let/const)
+        (function(){
+          function SimpleTRS80ES5(cvs, px){
+            var self = this;
+            self.canvas = cvs || document.getElementById('retro-canvas');
+            self.ctx = self.canvas.getContext('2d');
+            self.pixelSize = px || parseInt(self.canvas && self.canvas.getAttribute('data-pixel-size') || '2', 10);
+            self.cols = 40; self.rows = 20; self.cursorX = 0; self.cursorY = 0;
+            self.textColor = '#000000'; self.bgColor = '#ffffff';
+            self.buffer = [];
+            for (var r=0;r<self.rows;r++){ var row=[]; for(var c=0;c<self.cols;c++) row.push(' '); self.buffer.push(row); }
+            self.ctx.fillStyle = self.bgColor; self.ctx.fillRect(0,0,self.canvas.width,self.canvas.height);
+            self.cursorVisible = true; self.lastBlink = Date.now();
+            setInterval(function(){ self.drawCell(self.cursorX, self.cursorY, self.buffer[self.cursorY][self.cursorX]); }, 400);
+            self.printText('READY\n'); self.putChar(']');
+            var inp = document.getElementById('kindle-input');
+            if (inp){
+              var line = ''; var prev = '';
+              inp.addEventListener('input', function(e){
+                var v = e.target.value; if(v.length>prev.length){ var add=v.slice(prev.length); for(var i=0;i<add.length;i++){ self.putChar(add.charAt(i)); line+=add.charAt(i);} }
+                else if(v.length<prev.length){ var rem=prev.length-v.length; while(rem-->0){ self.backspace(); line = line.slice(0, -1);} }
+                prev = v;
+              });
+              inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ try{ if (window.SharedBasicProcessor && line.replace(/\s+/g,'')) { window.SharedBasicProcessor.processLine(line); } }catch(err){ }
+                self.newLine(); self.putChar(']'); e.target.value=''; prev=''; line=''; e.preventDefault(); } });
+            }
+          }
+          SimpleTRS80ES5.prototype.drawCell = function(cx,cy,ch){
+            var ps=this.pixelSize, x0=cx*6*ps, y0=cy*8*ps;
+            this.ctx.fillStyle=this.bgColor; this.ctx.fillRect(x0,y0,6*ps,8*ps);
+            // underline cursor
+            if (this.cursorX===cx && this.cursorY===cy){ var now=Date.now(); if(now-this.lastBlink>500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
+              if(this.cursorVisible){ this.ctx.fillStyle=this.textColor; this.ctx.fillRect(x0, y0+7*ps, 6*ps, ps); }
+            }
+            if(ch===' ') return; this.ctx.fillStyle=this.textColor; this.ctx.fillRect(x0+ps, y0+ps, ps, ps); // very simple block for visibility
+          };
+          SimpleTRS80ES5.prototype.putChar = function(ch){ var px=this.cursorX, py=this.cursorY; this.buffer[py][px]=ch; this.cursorX++; if(this.cursorX>=this.cols) this.newLine(); this.drawCell(px,py,ch); this.drawCell(this.cursorX,this.cursorY,this.buffer[this.cursorY][this.cursorX]); };
+          SimpleTRS80ES5.prototype.newLine = function(){ this.cursorX=0; this.cursorY++; if(this.cursorY>=this.rows){ this.buffer.shift(); var row=[]; for(var c=0;c<this.cols;c++) row.push(' '); this.buffer.push(row); this.cursorY=this.rows-1; } };
+          SimpleTRS80ES5.prototype.backspace = function(){ if(this.cursorX>0){ this.cursorX--; this.buffer[this.cursorY][this.cursorX]=' '; this.drawCell(this.cursorX,this.cursorY,' ');} };
+          SimpleTRS80ES5.prototype.printText = function(t){ for(var i=0;i<t.length;i++){ if(t.charAt(i)==='\n') this.newLine(); else this.putChar(t.charAt(i)); } };
+          window.SimpleTRS80 = SimpleTRS80ES5;
+        })();
       }
 
       // Create simple renderer instance first
