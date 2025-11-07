@@ -92,6 +92,18 @@
         console.error('Font data or GRPH data failed to load');
       }
 
+      // Load BASIC interpreter for simple renderer
+      console.log('Loading BASIC interpreter...');
+      await loadScript('js/trs80-config.js');
+      await loadScript('js/trs80-basic.js');
+      if(window.TRS80Basic){
+        const basicInstance = new window.TRS80Basic();
+        window.SharedBasicProcessor = basicInstance;
+        console.log('✓ BASIC interpreter loaded');
+      } else {
+        console.error('TRS80Basic class not found');
+      }
+
       // Canvas renderer for all devices (Kindle, desktop, mobile)
       console.log('Loading canvas renderer...');
       updateStatus('Starting simple canvas renderer…', '#006600');
