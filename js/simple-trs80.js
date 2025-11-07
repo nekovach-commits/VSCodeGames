@@ -17,6 +17,11 @@
   const FONT = Object.assign({}, window.FONT_DATA, window.FONT_DATA_GRPH || {});
   const VFONT = window.FONT_DATA_VERTICAL || null;
   const VCONV_CACHE = new Map();
+  // 16-color palette (C64-like), indices 0..15
+  const COLORS = [
+    '#000000', '#ffffff', '#880000', '#aaffee', '#cc44cc', '#00cc55', '#0000aa', '#eeee77',
+    '#dd8855', '#664400', '#ff7777', '#333333', '#777777', '#aaff66', '#0088ff', '#bbbbbb'
+  ];
   
   // Emergency fallback font data for basic characters if FONT_DATA fails
   // Using 5-pixel wide patterns (bits 7-3) to leave space for proper character spacing
@@ -74,12 +79,16 @@
       this.currentBackgroundColor = '#ffffff';
   this.ctx.imageSmoothingEnabled=false;
   
-  // Use same colors as advanced system; force black text on Kindle for visibility
+  // Color support (Kindle Colorsoft supports color)
   this.isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent);
-  this.textColor = this.isKindle ? '#000000' : '#0066cc';
-  this.bgColor = '#ffffff';   // White background
-  this.cellBg = '#ffffff';    // White cells
-  
+  this.textColor = COLORS[14]; // default light blue
+  this.bgColor = COLORS[1];    // white
+  this.cellBg = this.bgColor;
+  // Current color indices (for graphics)
+  this.currentPixelColorIndex = 14;
+  this.currentBackgroundColorIndex = 1;
+  this.currentPixelColor = this.currentPixelColorIndex;
+  this.currentBackgroundColor = this.currentBackgroundColorIndex;
 
   // Graphics buffer (drawn beneath text)
   this.gw = COLS*CHAR_W; // 240
@@ -142,45 +151,48 @@
       this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
     }
     setBackgroundColor(index){
-      // Kindle: force white/black
-      const einkBg = ['#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff'];
-      const bg = this.isKindle ? (einkBg[index] || '#ffffff') : (index === 0 ? '#000000' : '#ffffff');
+      const ci = (index|0) & 15;
+      const bg = COLORS[ci] || COLORS[1];
       this.bgColor = bg;
       this.cellBg = bg;
-      this.currentBackgroundColor = bg;
+      this.currentBackgroundColorIndex = ci;
+      this.currentBackgroundColor = ci;
       this.fullRedraw();
     }
     // Graphics implementation (monochrome) under text
     _setG(x,y,val){ if(x>=0&&y>=0&&x<this.gw&&y<this.gh){ this.gbuf[y][x]=val?1:0; } }
     _getG(x,y){ return (x>=0&&y>=0&&x<this.gw&&y<this.gh) ? this.gbuf[y][x] : 0; }
     _redrawCellForPixel(x,y){ const cx = Math.floor(x/CHAR_W), cy = Math.floor(y/CHAR_H); if(cx>=0&&cy>=0&&cx<this.cols&&cy<this.rows){ this.drawCell(cx,cy,this.buffer[cy][cx]); } }
-    drawPixel(x, y, color) { this._setG(x|0, y|0, 1); this._redrawCellForPixel(x|0, y|0); }
+    drawPixel(x, y, color) { const ci = (typeof color==='number')? (color&15) : this.currentPixelColorIndex; this._setG(x|0, y|0, ci); this._redrawCellForPixel(x|0, y|0); }
     drawLine(x1, y1, x2, y2, color) {
+      const ci = (typeof color==='number')? (color&15) : this.currentPixelColorIndex;
       x1|=0; y1|=0; x2|=0; y2|=0;
       let dx = Math.abs(x2-x1), sx = x1<x2?1:-1;
       let dy = -Math.abs(y2-y1), sy = y1<y2?1:-1; let err = dx+dy;
-      while(true){ this._setG(x1,y1,1); this._redrawCellForPixel(x1,y1); if(x1===x2&&y1===y2) break; const e2=2*err; if(e2>=dy){ err+=dy; x1+=sx; } if(e2<=dx){ err+=dx; y1+=sy; } }
+      while(true){ this._setG(x1,y1,ci); this._redrawCellForPixel(x1,y1); if(x1===x2&&y1===y2) break; const e2=2*err; if(e2>=dy){ err+=dy; x1+=sx; } if(e2<=dx){ err+=dx; y1+=sy; } }
     }
     drawRect(x1, y1, x2, y2, filled=false, color) {
+      const ci = (typeof color==='number')? (color&15) : this.currentPixelColorIndex;
       x1|=0; y1|=0; x2|=0; y2|=0; if(x1>x2){const t=x1;x1=x2;x2=t;} if(y1>y2){const t=y1;y1=y2;y2=t;}
-      if(filled){ for(let y=y1;y<=y2;y++){ for(let x=x1;x<=x2;x++){ this._setG(x,y,1); } } }
-      else { for(let x=x1;x<=x2;x++){ this._setG(x,y1,1); this._setG(x,y2,1);} for(let y=y1;y<=y2;y++){ this._setG(x1,y,1); this._setG(x2,y,1);} }
+      if(filled){ for(let y=y1;y<=y2;y++){ for(let x=x1;x<=x2;x++){ this._setG(x,y,ci); } } }
+      else { for(let x=x1;x<=x2;x++){ this._setG(x,y1,ci); this._setG(x,y2,ci);} for(let y=y1;y<=y2;y++){ this._setG(x1,y,ci); this._setG(x2,y,ci);} }
       // Redraw impacted cells
       this._redrawCellForPixel(x1,y1); this._redrawCellForPixel(x2,y2);
     }
     drawCircle(cx, cy, r, filled=false) {
+      const ci = this.currentPixelColorIndex;
       cx|=0; cy|=0; r|=0; let x=r, y=0, err=0;
-      const plot=(px,py)=>{ this._setG(px,py,1); this._redrawCellForPixel(px,py); };
+      const plot=(px,py)=>{ this._setG(px,py,ci); this._redrawCellForPixel(px,py); };
       while(x>=y){
-        if(filled){ for(let ix=cx-x; ix<=cx+x; ix++){ this._setG(ix, cy+y,1); this._setG(ix, cy-y,1);} for(let ix=cx-y; ix<=cx+y; ix++){ this._setG(ix, cy+x,1); this._setG(ix, cy-x,1);} }
+        if(filled){ for(let ix=cx-x; ix<=cx+x; ix++){ this._setG(ix, cy+y,ci); this._setG(ix, cy-y,ci);} for(let ix=cx-y; ix<=cx+y; ix++){ this._setG(ix, cy+x,ci); this._setG(ix, cy-x,ci);} }
         else { plot(cx+x, cy+y); plot(cx+y, cy+x); plot(cx-y, cy+x); plot(cx-x, cy+y); plot(cx-x, cy-y); plot(cx-y, cy-x); plot(cx+y, cy-x); plot(cx+x, cy-y); }
         y++; if(err<=0){ err+=2*y+1; } if(err>0){ x--; err-=2*x+1; }
       }
     }
     floodFill(x, y) {
       x|=0; y|=0; if(this._getG(x,y)) return; const w=this.gw,h=this.gh; const q=[[x,y]]; const seen=new Set();
-      const key=(a,b)=>a+','+b; seen.add(key(x,y));
-      while(q.length){ const [cx,cy]=q.pop(); if(cx<0||cy<0||cx>=w||cy>=h) continue; if(this._getG(cx,cy)) continue; this._setG(cx,cy,1); this._redrawCellForPixel(cx,cy);
+      const key=(a,b)=>a+','+b; seen.add(key(x,y)); const ci = this.currentPixelColorIndex;
+      while(q.length){ const p=q.pop(); const cx=p[0], cy=p[1]; if(cx<0||cy<0||cx>=w||cy>=h) continue; if(this._getG(cx,cy)) continue; this._setG(cx,cy,ci); this._redrawCellForPixel(cx,cy);
         const n=[[cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]]; for(let i=0;i<4;i++){ const nx=n[i][0], ny=n[i][1]; const k=key(nx,ny); if(nx>=0&&ny>=0&&nx<w&&ny<h&&!seen.has(k)&&!this._getG(nx,ny)){ seen.add(k); q.push([nx,ny]); } }
       }
     }
@@ -253,12 +265,13 @@
       const gxStart = cx*CHAR_W, gxEnd = gxStart + CHAR_W;
       const gyStart = cy*CHAR_H, gyEnd = gyStart + CHAR_H;
       const effectivePixelSize = this.isKindle ? Math.max(1, Math.floor(pxSize)) : pxSize;
-      this.ctx.fillStyle = '#000000';
       for (let gy = gyStart; gy < gyEnd; gy++) {
         const row = this.gbuf[gy];
         if (!row) continue;
         for (let gx = gxStart; gx < gxEnd; gx++) {
-          if (row[gx]) {
+          const ci = row[gx] | 0;
+          if (ci) {
+            this.ctx.fillStyle = COLORS[ci] || '#000000';
             const px = Math.floor(x0 + (gx - gxStart) * effectivePixelSize);
             const py = Math.floor(y0 + (gy - gyStart) * effectivePixelSize);
             this.ctx.fillRect(px, py, effectivePixelSize, effectivePixelSize);
@@ -407,15 +420,10 @@
     }
     
     setTextColor(colorIndex) {
-      if(this.isKindle) {
-        // For e-ink: only use black/white for maximum contrast
-        const einkColors = ['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#ffffff'];
-        this.textColor = einkColors[colorIndex] || '#000000';
-      } else {
-        // Full color palette for regular displays
-        const colors = ['#000000', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'];
-        this.textColor = colors[colorIndex] || '#0066cc';
-      }
+      const ci = (colorIndex|0) & 15;
+      this.textColor = COLORS[ci] || this.textColor;
+      this.currentPixelColorIndex = ci;
+      this.currentPixelColor = ci;
     }
     
     clearScreen() {
