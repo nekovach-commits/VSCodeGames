@@ -175,9 +175,6 @@
       const pxSize=this.pixelSize;
       const x0=cx*CHAR_W*pxSize; const y0=cy*CHAR_H*pxSize;
       
-      // Debug glyph data for troubleshooting
-      debugGlyph(ch, glyph);
-      
       // Clear cell background
       this.ctx.fillStyle=this.cellBg;
       this.ctx.fillRect(x0,y0,CHAR_W*pxSize,CHAR_H*pxSize);
