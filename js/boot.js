@@ -21,8 +21,18 @@
   const forceSimple = params.get('mode') === 'simple';
   const isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent) || forceSimple;
   const isOldBrowser = !window.Promise || !window.fetch || typeof Symbol === 'undefined';
+  function getCacheBust(){
+    try{
+      const meta = document.querySelector('meta[name="cache-bust"]');
+      return meta ? meta.getAttribute('content') : (''+Date.now());
+    }catch(_){ return ''+Date.now(); }
+  }
+  function withBust(src){
+    const v = getCacheBust();
+    return src + (src.indexOf('?')===-1 ? ('?v='+encodeURIComponent(v)) : ('&v='+encodeURIComponent(v)));
+  }
   function loadScript(src, type='text/javascript'){
-    return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.type=type; s.onload=resolve; s.onerror=(e)=>reject(new Error('Failed to load '+src)); document.head.appendChild(s); });
+    return new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=withBust(src); s.type=type; s.onload=resolve; s.onerror=(e)=>reject(new Error('Failed to load '+src)); document.head.appendChild(s); });
   }
   function updateStatus(text, color){
     try{
@@ -95,9 +105,15 @@
       // Canvas renderer for all devices (Kindle, desktop, mobile)
       console.log('Loading canvas renderer...');
       updateStatus('Starting simple canvas renderer…', '#006600');
-      await loadScript('js/simple-trs80.js');
-      if(!window.SimpleTRS80){
-        console.warn('SimpleTRS80 class not found after loading file. Defining ultra-simple ES5 fallback.');
+      let simpleCtorAvailable = false;
+      try {
+        await loadScript('js/simple-trs80.js');
+        simpleCtorAvailable = !!window.SimpleTRS80;
+      } catch(loadErr){
+        console.warn('Failed to load simple-trs80.js:', loadErr && loadErr.message ? loadErr.message : loadErr);
+      }
+      if(!simpleCtorAvailable){
+        console.warn('SimpleTRS80 not available. Defining ultra-simple ES5 fallback.');
         updateStatus('Using ultra-simple ES5 renderer', '#cc6600');
         // Ultra-simple ES5 renderer (no classes/arrow/let/const)
         (function(){
@@ -114,6 +130,7 @@
             self.cursorVisible = true; self.lastBlink = Date.now();
             setInterval(function(){ self.drawCell(self.cursorX, self.cursorY, self.buffer[self.cursorY][self.cursorX]); }, 400);
             self.printText('READY\n'); self.putChar(']');
+            try { var ver=document.getElementById('system-version'); if (ver) { ver.textContent='Ultra Simple (ES5)'; ver.style.color='#006600'; } } catch(_){ }
             var inp = document.getElementById('kindle-input');
             if (inp){
               var line = ''; var prev = '';
