@@ -153,11 +153,10 @@
     setBackgroundColor(index){
       const ci = (index|0) & 15;
       const bg = COLORS[ci] || COLORS[1];
-      this.bgColor = bg;
       this.cellBg = bg;
       this.currentBackgroundColorIndex = ci;
       this.currentBackgroundColor = ci;
-      this.fullRedraw();
+      // Don't redraw everything - just update cell background for future characters
     }
     // Graphics implementation (monochrome) under text
     _setG(x,y,val){ if(x>=0&&y>=0&&x<this.gw&&y<this.gh){ this.gbuf[y][x]=val?1:0; } }
@@ -279,31 +278,33 @@
         }
       }
       
-      // Skip drawing for spaces
-      if(ch === ' ') return;
-      
-  // Draw character pixels with high contrast
-  this.ctx.fillStyle=this.textColor;
-      
-      for(let row=0; row<CHAR_H; row++){
-        const bits = glyph[row] || 0;
-        for(let col=0; col<CHAR_W; col++){
-          if(bits & (1 << (5-col))){
-            // Use integer coordinates for crisp pixels on e-ink
-            const px = Math.floor(x0+col*effectivePixelSize);
-            const py = Math.floor(y0+row*effectivePixelSize);
-            this.ctx.fillRect(px, py, effectivePixelSize, effectivePixelSize);
+      // Draw character pixels with high contrast (skip if space and not at cursor)
+      const isCursor = (this.cursorX===cx && this.cursorY===cy);
+      if(ch !== ' ' || isCursor){
+        this.ctx.fillStyle=this.textColor;
+        
+        if(ch !== ' '){
+          for(let row=0; row<CHAR_H; row++){
+            const bits = glyph[row] || 0;
+            for(let col=0; col<CHAR_W; col++){
+              if(bits & (1 << (5-col))){
+                // Use integer coordinates for crisp pixels on e-ink
+                const px = Math.floor(x0+col*effectivePixelSize);
+                const py = Math.floor(y0+row*effectivePixelSize);
+                this.ctx.fillRect(px, py, effectivePixelSize, effectivePixelSize);
+              }
+            }
           }
         }
       }
       
       // Cursor rendering - solid block for visibility on e-ink
-      if(this.cursorX===cx && this.cursorY===cy){
+      if(isCursor){
         // Blinking block cursor
         const now=Date.now();
-        if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
+        if(now - this.lastBlink > 400){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
         if(this.cursorVisible){
-          // Invert: draw full block in text color
+          // Draw full block in text color
           this.ctx.fillStyle=this.textColor;
           this.ctx.fillRect(x0, y0, CHAR_W*effectivePixelSize, CHAR_H*effectivePixelSize);
         }
