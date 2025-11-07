@@ -202,7 +202,7 @@ window.TRS80Basic = class TRS80Basic {
         const y2 = parseInt(this.evaluateExpression(match[4]), 10);
         const filled = match[5] && match[5].toUpperCase() === 'F';
         if (filled) {
-          this.display.drawRect(x1, y1, x2, y2, true, this.display.currentBackgroundColor);
+          this.display.drawRect(x1, y1, x2, y2, true, this.display.currentPixelColor);
         } else {
           this.display.drawRect(x1, y1, x2, y2, false, this.display.currentPixelColor);
         }
