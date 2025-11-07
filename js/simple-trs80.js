@@ -297,16 +297,15 @@
         }
       }
       
-      // Cursor rendering - underline; thicker on Kindle
+      // Cursor rendering - solid block for visibility on e-ink
       if(this.cursorX===cx && this.cursorY===cy){
-        this.ctx.fillStyle=this.textColor;
-        
-        // Blinking underline cursor
+        // Blinking block cursor
         const now=Date.now();
         if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
         if(this.cursorVisible){
-          const thickness = Math.max(2, effectivePixelSize);
-          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*effectivePixelSize, CHAR_W*effectivePixelSize, thickness);
+          // Invert: draw full block in text color
+          this.ctx.fillStyle=this.textColor;
+          this.ctx.fillRect(x0, y0, CHAR_W*effectivePixelSize, CHAR_H*effectivePixelSize);
         }
       }
     }

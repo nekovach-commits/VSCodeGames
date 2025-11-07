@@ -143,16 +143,16 @@ window.TRS80Basic = class TRS80Basic {
       }
       const fg = parseInt(this.evaluateExpression(fgExpr), 10);
       let ok = true;
-      if (isNaN(fg) || fg < 0 || fg > 15) ok = false; else displayInterface.setTextColor(fg);
+      if (isNaN(fg) || fg < 0 || fg > 15) ok = false; else this.display.setTextColor(fg);
       if (bgExpr !== null) {
         const bg = parseInt(this.evaluateExpression(bgExpr), 10);
         if (isNaN(bg) || bg < 0 || bg > 15) ok = false; else if (this.display.setBackgroundColor) this.display.setBackgroundColor(bg);
       }
       if (!ok) {
-        displayInterface.setTextColor(2);
-        displayInterface.addChar('?COLOR RANGE');
-        displayInterface.addChar('\n');
-        displayInterface.setTextColor(14);
+        this.display.setTextColor(2);
+        this.display.addChar('?COLOR RANGE');
+        this.display.addChar('\n');
+        this.display.setTextColor(14);
       }
       return;
     }
