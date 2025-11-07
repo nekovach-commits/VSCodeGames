@@ -124,7 +124,7 @@
     }
     // BASIC display compatibility layer
     addChar(ch){
-      if (ch === '\\n') { this.newLine(); return; }
+      if (ch === '\n') { this.newLine(); return; }
       this.putChar(ch);
     }
     moveCursorTo(col, row) {
@@ -309,7 +309,7 @@
                 // Prefer instance method; fall back to global if exposed
                 if (typeof basic.processLine === 'function') {
                   basic.processLine(currentLine.trim());
-                } else if (typeof window.SharedBasicProcessor?.processLine === 'function') {
+                } else if (window.SharedBasicProcessor && typeof window.SharedBasicProcessor.processLine === 'function') {
                   window.SharedBasicProcessor.processLine(currentLine.trim());
                 }
               } catch (err) {
