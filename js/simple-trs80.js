@@ -69,6 +69,9 @@
       this.cols=COLS; this.rows=ROWS;
       this.cursorX=0; this.cursorY=0;
       this.buffer = Array.from({length: ROWS},()=>Array(COLS).fill(' '));
+      // Minimal graphics/color state for BASIC compatibility
+      this.currentPixelColor = '#000000';
+      this.currentBackgroundColor = '#ffffff';
   this.ctx.imageSmoothingEnabled=false;
   
   // Use same colors as advanced system for all devices (including Kindle ColorSoft)
@@ -119,6 +122,35 @@
         e.preventDefault(); 
       }
     }
+    // BASIC display compatibility layer
+    addChar(ch){
+      if (ch === '\\n') { this.newLine(); return; }
+      this.putChar(ch);
+    }
+    moveCursorTo(col, row) {
+      const prevX = this.cursorX, prevY = this.cursorY;
+      this.cursorX = Math.max(0, Math.min(this.cols-1, col|0));
+      this.cursorY = Math.max(0, Math.min(this.rows-1, row|0));
+      // Redraw previous and new cursor cells
+      this.drawCell(prevX, prevY, this.buffer[prevY][prevX]);
+      this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
+    }
+    setBackgroundColor(index){
+      // Kindle: force white/black
+      const einkBg = ['#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff','#ffffff'];
+      const bg = this.isKindle ? (einkBg[index] || '#ffffff') : (index === 0 ? '#000000' : '#ffffff');
+      this.bgColor = bg;
+      this.cellBg = bg;
+      this.currentBackgroundColor = bg;
+      this.fullRedraw();
+    }
+    // Graphics stubs (no-op to avoid crashes; simple renderer is text-first)
+    drawPixel(x, y, color) { /* no-op in simple renderer */ }
+    drawLine(x1, y1, x2, y2, color) { /* no-op */ }
+    drawRect(x1, y1, x2, y2, filled=false, color) { /* no-op */ }
+    drawCircle(cx, cy, r, filled=false) { /* no-op */ }
+    floodFill(x, y) { /* no-op */ }
+    clearGraphics() { /* no-op */ }
     putChar(ch){
       // Save previous cursor position
       const prevX = this.cursorX, prevY = this.cursorY;
