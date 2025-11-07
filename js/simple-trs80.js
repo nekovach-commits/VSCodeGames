@@ -74,12 +74,17 @@
       this.currentBackgroundColor = '#ffffff';
   this.ctx.imageSmoothingEnabled=false;
   
-  // Use same colors as advanced system for all devices (including Kindle ColorSoft)
+  // Use same colors as advanced system; force black text on Kindle for visibility
   this.isKindle = /Kindle|Silk|KF|ColorSoft/i.test(navigator.userAgent);
-  this.textColor = '#0066cc'; // Same light blue as desktop for all devices
+  this.textColor = this.isKindle ? '#000000' : '#0066cc';
   this.bgColor = '#ffffff';   // White background
   this.cellBg = '#ffffff';    // White cells
   
+
+  // Graphics buffer (drawn beneath text)
+  this.gw = COLS*CHAR_W; // 240
+  this.gh = ROWS*CHAR_H; // 160
+  this.gbuf = Array.from({length: this.gh}, () => new Uint8Array(this.gw));
 
   this.cursorVisible = true;
   this.lastBlink = Date.now();
@@ -108,8 +113,9 @@
       
       // Start cursor blink timer for all devices
       setInterval(() => {
+        // Force redraw of current cursor cell to toggle underline
         this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
-      }, 100); // Redraw cursor position every 100ms to ensure blinking works
+      }, 300); // Slightly slower for e-ink visibility
       
 
     }
@@ -144,13 +150,41 @@
       this.currentBackgroundColor = bg;
       this.fullRedraw();
     }
-    // Graphics stubs (no-op to avoid crashes; simple renderer is text-first)
-    drawPixel(x, y, color) { /* no-op in simple renderer */ }
-    drawLine(x1, y1, x2, y2, color) { /* no-op */ }
-    drawRect(x1, y1, x2, y2, filled=false, color) { /* no-op */ }
-    drawCircle(cx, cy, r, filled=false) { /* no-op */ }
-    floodFill(x, y) { /* no-op */ }
-    clearGraphics() { /* no-op */ }
+    // Graphics implementation (monochrome) under text
+    _setG(x,y,val){ if(x>=0&&y>=0&&x<this.gw&&y<this.gh){ this.gbuf[y][x]=val?1:0; } }
+    _getG(x,y){ return (x>=0&&y>=0&&x<this.gw&&y<this.gh) ? this.gbuf[y][x] : 0; }
+    _redrawCellForPixel(x,y){ const cx = Math.floor(x/CHAR_W), cy = Math.floor(y/CHAR_H); if(cx>=0&&cy>=0&&cx<this.cols&&cy<this.rows){ this.drawCell(cx,cy,this.buffer[cy][cx]); } }
+    drawPixel(x, y, color) { this._setG(x|0, y|0, 1); this._redrawCellForPixel(x|0, y|0); }
+    drawLine(x1, y1, x2, y2, color) {
+      x1|=0; y1|=0; x2|=0; y2|=0;
+      let dx = Math.abs(x2-x1), sx = x1<x2?1:-1;
+      let dy = -Math.abs(y2-y1), sy = y1<y2?1:-1; let err = dx+dy;
+      while(true){ this._setG(x1,y1,1); this._redrawCellForPixel(x1,y1); if(x1===x2&&y1===y2) break; const e2=2*err; if(e2>=dy){ err+=dy; x1+=sx; } if(e2<=dx){ err+=dx; y1+=sy; } }
+    }
+    drawRect(x1, y1, x2, y2, filled=false, color) {
+      x1|=0; y1|=0; x2|=0; y2|=0; if(x1>x2){const t=x1;x1=x2;x2=t;} if(y1>y2){const t=y1;y1=y2;y2=t;}
+      if(filled){ for(let y=y1;y<=y2;y++){ for(let x=x1;x<=x2;x++){ this._setG(x,y,1); } } }
+      else { for(let x=x1;x<=x2;x++){ this._setG(x,y1,1); this._setG(x,y2,1);} for(let y=y1;y<=y2;y++){ this._setG(x1,y,1); this._setG(x2,y,1);} }
+      // Redraw impacted cells
+      this._redrawCellForPixel(x1,y1); this._redrawCellForPixel(x2,y2);
+    }
+    drawCircle(cx, cy, r, filled=false) {
+      cx|=0; cy|=0; r|=0; let x=r, y=0, err=0;
+      const plot=(px,py)=>{ this._setG(px,py,1); this._redrawCellForPixel(px,py); };
+      while(x>=y){
+        if(filled){ for(let ix=cx-x; ix<=cx+x; ix++){ this._setG(ix, cy+y,1); this._setG(ix, cy-y,1);} for(let ix=cx-y; ix<=cx+y; ix++){ this._setG(ix, cy+x,1); this._setG(ix, cy-x,1);} }
+        else { plot(cx+x, cy+y); plot(cx+y, cy+x); plot(cx-y, cy+x); plot(cx-x, cy+y); plot(cx-x, cy-y); plot(cx-y, cy-x); plot(cx+y, cy-x); plot(cx+x, cy-y); }
+        y++; if(err<=0){ err+=2*y+1; } if(err>0){ x--; err-=2*x+1; }
+      }
+    }
+    floodFill(x, y) {
+      x|=0; y|=0; if(this._getG(x,y)) return; const w=this.gw,h=this.gh; const q=[[x,y]]; const seen=new Set();
+      const key=(a,b)=>a+','+b; seen.add(key(x,y));
+      while(q.length){ const [cx,cy]=q.pop(); if(cx<0||cy<0||cx>=w||cy>=h) continue; if(this._getG(cx,cy)) continue; this._setG(cx,cy,1); this._redrawCellForPixel(cx,cy);
+        const n=[[cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]]; for(let i=0;i<4;i++){ const nx=n[i][0], ny=n[i][1]; const k=key(nx,ny); if(nx>=0&&ny>=0&&nx<w&&ny<h&&!seen.has(k)&&!this._getG(nx,ny)){ seen.add(k); q.push([nx,ny]); } }
+      }
+    }
+    clearGraphics() { for(let y=0;y<this.gh;y++){ this.gbuf[y].fill(0);} this.fullRedraw(); }
     putChar(ch){
       // Save previous cursor position
       const prevX = this.cursorX, prevY = this.cursorY;
@@ -214,15 +248,29 @@
       // Clear cell background
       this.ctx.fillStyle=this.cellBg;
       this.ctx.fillRect(x0,y0,CHAR_W*pxSize,CHAR_H*pxSize);
+
+      // Draw graphics layer under text for this cell region
+      const gxStart = cx*CHAR_W, gxEnd = gxStart + CHAR_W;
+      const gyStart = cy*CHAR_H, gyEnd = gyStart + CHAR_H;
+      const effectivePixelSize = this.isKindle ? Math.max(1, Math.floor(pxSize)) : pxSize;
+      this.ctx.fillStyle = '#000000';
+      for (let gy = gyStart; gy < gyEnd; gy++) {
+        const row = this.gbuf[gy];
+        if (!row) continue;
+        for (let gx = gxStart; gx < gxEnd; gx++) {
+          if (row[gx]) {
+            const px = Math.floor(x0 + (gx - gxStart) * effectivePixelSize);
+            const py = Math.floor(y0 + (gy - gyStart) * effectivePixelSize);
+            this.ctx.fillRect(px, py, effectivePixelSize, effectivePixelSize);
+          }
+        }
+      }
       
       // Skip drawing for spaces
       if(ch === ' ') return;
       
-      // Draw character pixels with high contrast
-      this.ctx.fillStyle=this.textColor;
-      
-      // Kindle-specific pixel size adjustment
-      const effectivePixelSize = this.isKindle ? Math.max(1, Math.floor(pxSize)) : pxSize;
+  // Draw character pixels with high contrast
+  this.ctx.fillStyle=this.textColor;
       
       for(let row=0; row<CHAR_H; row++){
         const bits = glyph[row] || 0;
@@ -236,15 +284,16 @@
         }
       }
       
-      // Cursor rendering - same for all devices (including Kindle ColorSoft)
+      // Cursor rendering - underline; thicker on Kindle
       if(this.cursorX===cx && this.cursorY===cy){
         this.ctx.fillStyle=this.textColor;
         
-        // Blinking underline cursor for all devices (Kindle ColorSoft can handle this)
+        // Blinking underline cursor
         const now=Date.now();
         if(now - this.lastBlink > 500){ this.cursorVisible=!this.cursorVisible; this.lastBlink=now; }
         if(this.cursorVisible){
-          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*pxSize, CHAR_W*pxSize, pxSize);
+          const thickness = Math.max(2, effectivePixelSize);
+          this.ctx.fillRect(x0, y0+ (CHAR_H-1)*effectivePixelSize, CHAR_W*effectivePixelSize, thickness);
         }
       }
     }
