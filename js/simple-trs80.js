@@ -120,15 +120,19 @@
       }
     }
     putChar(ch){
-      this.buffer[this.cursorY][this.cursorX]=ch;
-      this.drawCell(this.cursorX,this.cursorY,ch);
+      // Save previous cursor position
+      const prevX = this.cursorX, prevY = this.cursorY;
+      // Write character to buffer at previous position
+      this.buffer[prevY][prevX] = ch;
+      // Advance cursor
       this.cursorX++;
-      if(this.cursorX>=this.cols){ 
-        this.newLine(); 
-      } else {
-        // Redraw cursor at new position
-        this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
+      if (this.cursorX >= this.cols) {
+        this.newLine();
       }
+      // Redraw previous cell WITHOUT cursor underline (cursor moved)
+      this.drawCell(prevX, prevY, this.buffer[prevY][prevX]);
+      // Redraw current cursor cell (may be space)
+      this.drawCell(this.cursorX, this.cursorY, this.buffer[this.cursorY][this.cursorX]);
     }
     backspace(){
       if(this.cursorX>0){ 
@@ -261,14 +265,25 @@
             
             // Process BASIC command if SharedBasicProcessor is available
             // Note: Don't call this.newLine() here as BASIC processor handles its own line endings
-            if (window.SharedBasicProcessor && currentLine.trim()) {
+            const basic = (this.basic || window.SharedBasicProcessor);
+            if (basic && currentLine.trim()) {
               const displayInterface = {
                 addText: (text) => this.printText(text),
                 setTextColor: (colorIndex) => this.setTextColor(colorIndex),
                 clearScreen: () => this.clearScreen()
               };
               const program = new Map(); // Simple program storage
-              window.SharedBasicProcessor.processLine(currentLine.trim(), program, displayInterface);
+              try {
+                // Prefer instance method; fall back to global if exposed
+                if (typeof basic.processLine === 'function') {
+                  basic.processLine(currentLine.trim());
+                } else if (typeof window.SharedBasicProcessor?.processLine === 'function') {
+                  window.SharedBasicProcessor.processLine(currentLine.trim());
+                }
+              } catch (err) {
+                console.error('BASIC processing error:', err);
+                this.printText('?ERROR\n');
+              }
             } else if (currentLine.trim() === '') {
               // Only add newline for empty commands
               this.newLine();

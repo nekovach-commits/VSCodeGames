@@ -92,30 +92,35 @@
         console.error('Font data or GRPH data failed to load');
       }
 
-      // Load BASIC interpreter for simple renderer
-      console.log('Loading BASIC interpreter...');
-      await loadScript('js/trs80-config.js');
-      await loadScript('js/trs80-basic.js');
-      if(window.TRS80Basic){
-        const basicInstance = new window.TRS80Basic();
-        window.SharedBasicProcessor = basicInstance;
-        console.log('✓ BASIC interpreter loaded');
-      } else {
-        console.error('TRS80Basic class not found');
-      }
-
       // Canvas renderer for all devices (Kindle, desktop, mobile)
       console.log('Loading canvas renderer...');
       updateStatus('Starting simple canvas renderer…', '#006600');
       await loadScript('js/simple-trs80.js');
-      if(window.SimpleTRS80){ 
-        new window.SimpleTRS80(canvas, pixelSize); 
-        console.log('✓ Canvas renderer loaded successfully');
-        updateStatus('Ready', '#006600');
-      } else {
+      if(!window.SimpleTRS80){
         console.error('SimpleTRS80 class not found');
         updateStatus('Renderer error', '#cc0000');
+        return;
       }
+
+      // Create simple renderer instance first
+      const simple = new window.SimpleTRS80(canvas, pixelSize);
+      console.log('✓ Canvas renderer loaded successfully');
+
+      // Load BASIC interpreter and wire to simple renderer
+      console.log('Loading BASIC interpreter...');
+      await loadScript('js/trs80-config.js');
+      await loadScript('js/trs80-basic.js');
+      if(window.TRS80Basic){
+        const basicInstance = new window.TRS80Basic(simple, /*keyboard*/ null);
+        // Expose to simple renderer and global for compatibility
+        simple.basic = basicInstance;
+        window.SharedBasicProcessor = basicInstance;
+        console.log('✓ BASIC interpreter loaded and wired to simple renderer');
+      } else {
+        console.error('TRS80Basic class not found');
+      }
+
+      updateStatus('Ready', '#006600');
     } catch(e){
       console.error('Boot failure:', e);
       updateStatus('Boot failure', '#cc0000');
